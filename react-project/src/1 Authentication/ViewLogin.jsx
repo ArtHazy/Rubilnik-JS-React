@@ -36,7 +36,7 @@ export const ViewLogin = () => {
             <div className='grid'>
                 <a style={{color:"GrayText"}}><small>join the game</small></a>
                 {/* TODO войти как гость */}
-                {/* <a href="/join"><small>join the game</small></a> */}
+                <a href="/join"><small>join the game</small></a>
                 {' | '}
                 <a href="/register"><small>register</small></a>
             </div>

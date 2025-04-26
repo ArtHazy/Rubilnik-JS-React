@@ -33,6 +33,7 @@ export function replaceValues(objReceiver, objGiver){
 }
 
 export function loadQuizFromFile(file, quiz, upd){
+    console.log("upd", upd);
     console.log(file);
     if (file instanceof File) {
         if (file.size>limits.maxQuizFileSise) { alert('file size is too big') }
@@ -43,6 +44,9 @@ export function loadQuizFromFile(file, quiz, upd){
                 let ft = e.target.result
                 console.log(file.size, ft.byteLength);
                 let loadedQuiz = JSON.parse(ft)
+
+                loadedQuiz.id = quiz.id;
+
                 replaceValues(quiz, loadedQuiz)
                 upd()
             }

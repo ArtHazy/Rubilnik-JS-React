@@ -97,6 +97,8 @@ export function http_post_quiz(validation,quiz, onload){
  * @param {Function} onload
  */
 export function http_put_quiz(validation, quiz, onload){
+    console.log("qqq",quiz);
+    console.log(validation);
     let isOk, quizRes;
     delete quiz.isInDB
     validation = {id:validation.id, password:validation.password}

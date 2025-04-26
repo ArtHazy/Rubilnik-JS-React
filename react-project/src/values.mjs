@@ -8,4 +8,5 @@ export const limits = {
     maxQuizFileSise: 1024,
 }
 export const CORE_SERVER_URL = 'http://'+(import.meta.env.VITE_BACKEND_URL)
-export const CORE_SERVER_URL_WS = 'ws://'+(import.meta.env.VITE_BACKEND_URL)+'/socket'
+// export const CORE_SERVER_URL_WS = 'ws://'+(import.meta.env.VITE_BACKEND_URL)+'/socket'
+export const CORE_SERVER_URL_WS = 'ws://'+(import.meta.env.VITE_WS_BACKEND_URL)+'/ws'
