@@ -27,18 +27,20 @@ const QuestionNode = ({ id, data }) => {
       borderRadius: '10px',
       border: '2px solid #FFD700',
       minWidth: '200px',
+      minHeight: '400px',
       boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
     }}>
       <Terminal type="target" position={ Position.Top } />
       <div style={{ fontWeight: 'bold', marginBottom: '10px' }}>❓ {data.label}</div>
       <input 
         aria-label="Email" 
-        //id="text" 
+        id="text" 
         name="text" 
         className="nodrag" 
         placeholder="Enter your question"
         value={data.title}
-        onChange={(e) => data.updateTitle(e.target.value)}
+        onBlur={() => data.upd()}
+        onChange={(e) => data.updateTitle(e.target.value)} //question.title = e.target.value; upd();
       />
       <div style={{ fontSize: '0.8em', color: '#666' }}>
         {data.choices?.map((choice, i) => (

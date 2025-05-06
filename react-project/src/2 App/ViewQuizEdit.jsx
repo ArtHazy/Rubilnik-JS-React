@@ -32,6 +32,7 @@ const drop_up = <span className="material-symbols-outlined">arrow_drop_up</span>
 export const ViewQuizEdit = () => {
     const {ind} = useParams()
     const self = getSelfFromLocalStorage()
+    //const self = useMemo(() => getSelfFromLocalStorage(), [localStorage.getItem('self')]);
     let quiz = self.quizzes[ind]
     Array.isArray(quiz.questions)? null : quiz.questions = []
     const questions = quiz.questions
@@ -44,7 +45,7 @@ export const ViewQuizEdit = () => {
     return (
         <div style={{ height: '100vh', width: '100vw' }}>
             <ReactFlowProvider>
-                <ReactFlowComponent quiz={quiz} upd={upd} />
+                <ReactFlowComponent self={self} quiz={quiz} upd={upd} />
                 {/* <Editor quiz={quiz} upd={upd} /> */}
             </ReactFlowProvider>
         </div>

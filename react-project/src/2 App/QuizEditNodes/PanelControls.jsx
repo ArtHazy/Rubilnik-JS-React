@@ -22,6 +22,7 @@ export const PanelControls = ({ quiz, ind, upd }) => {
             //     upd(true);
             // }
             let self = getSelfFromLocalStorage();
+            console.log(self);
             //putSelfInLocalStorage(self);
             http_put_quiz(self, quiz, ()=>{});
 

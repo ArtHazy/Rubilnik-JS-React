@@ -87,7 +87,7 @@ const convertToQuizFormat = (nodes, edges) => {
   return { restoreQuestions, restoreGraphEdges };
 }
 
-const convertToFlowElements = (quiz) => {
+const convertToFlowElements = (self, quiz, upd) => {
   const nodes = [];
   const edges = [];
 
@@ -102,7 +102,13 @@ const convertToFlowElements = (quiz) => {
         x: Number(question.position?.x) || 0,
         y: Number(question.position?.y) || 0
       },
-      data: { label: question.title },
+      data: { 
+        label: question.title,
+        upd: upd,
+        updateTitle: (title) => {
+          question.title = title;
+        },
+      },
 
       //ссылка на quiz.question
       question: question,
@@ -117,7 +123,7 @@ const convertToFlowElements = (quiz) => {
         //изменяемые поля, должны обновляться в choice
         position: {
           x: Number(choice.position?.x) || 0, // Гарантируем число
-          y: Number(choice.position?.y) || 0
+          y: Number(choice.position?.y) || (index+1)*100
         },
         data: {
           label: choice.title,
@@ -187,8 +193,7 @@ const convertToFlowElements = (quiz) => {
 //   }, [nodes, edges, saveToDatabase]);
 // };
 
-const ReactFlowComponent = ({ quiz = { questions: [] }, upd }) => {
-
+const ReactFlowComponent = ({ self, quiz, upd }) => {
   // if (quiz.graphEdges === "") {
   //   quiz.graphEdges = null;
   // } 
@@ -198,9 +203,6 @@ const ReactFlowComponent = ({ quiz = { questions: [] }, upd }) => {
   // console.log("quiz", quiz.questions);
 
   const { id: quizId } = quiz;
-  const self = useMemo(() => getSelfFromLocalStorage(), [localStorage.getItem('self')]);
-  // const self = getSelfFromLocalStorage();
-
   const {ind} = useParams();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -225,8 +227,9 @@ const ReactFlowComponent = ({ quiz = { questions: [] }, upd }) => {
     setNodes((nds) => nds.concat(newNode));
   };
 
+  //InitialNodes
   useEffect(() => {
-    const { nodes: convertedNodes, edges: convertedEdges  } = convertToFlowElements(quiz);
+    const { nodes: convertedNodes, edges: convertedEdges  } = convertToFlowElements(self, quiz, upd);
     setNodes(convertedNodes);
     setEdges(convertedEdges);
   }, [quiz.questions]);
@@ -250,6 +253,7 @@ const ReactFlowComponent = ({ quiz = { questions: [] }, upd }) => {
 
       selfOld.quizzes[ind] = updatedQuiz;
       putSelfInLocalStorage(selfOld);
+      // console.log("initialQUIZ", updatedQuiz);
       // localStorage.setItem('editor', JSON.stringify({ nodes, edges }));
     // }, 0);
     
