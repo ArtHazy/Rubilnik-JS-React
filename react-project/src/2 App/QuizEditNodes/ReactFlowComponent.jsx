@@ -8,11 +8,13 @@ import ReactFlow, {
   useReactFlow,
   MiniMap, ControlButton, SelectionMode, applyEdgeChanges, applyNodeChanges, ReactFlowProvider, BaseEdge, Panel
 } from 'reactflow';
+import { useParams } from 'react-router-dom';
 import throttle from 'lodash/throttle';
 
 import "./styles.scss";
 
 import '@xyflow/react/dist/base.css';
+import './styles.scss';
 
 import { PanelControls } from './PanelControls';
 import QuestionNode from './QuestionNode';
@@ -20,16 +22,14 @@ import ChoiceNode from './ChoiceNode';
 import Sidebar from './Sidebar';
 import CustomEdge from './CustomEdge';
 
+
 import { MarkerType } from '@xyflow/react';
 
-import { useNavigate, useParams } from "react-router-dom"
 import { limits } from '../../values.mjs';
 import { Actions } from '../App';
 import { downloadJson, getSelfFromLocalStorage, loadQuizFromFile, putSelfInLocalStorage} from "../../functions.mjs"
 import { startRoomAsHost } from "../ViewLibrary"
 import { http_post_quiz, http_put_quiz } from "../../HTTP_requests.mjs"
-
-const panOnDrag = [1, 2];
 
 const rfStyle = {
   //backgroundColor: '#D0C0F7',
@@ -45,90 +45,61 @@ const EndNode = () => (
 
 const nodeColor = (node) => {
   switch (node.type) {
-    case 'question':
-      return '#6ede87';
-    case 'choice':
-      return '#6865A5';
-    default:
-      return '#ff0072';
+    case 'question': return '#6ede87';
+    case 'choice': return '#6865A5';
+    default: return '#ff0072';
   }
 };
 
 const nodeTypes = {
   question: QuestionNode,
   choice: ChoiceNode,
-  end: EndNode
 };
 
 const edgeTypes = {
-  'customEdge': CustomEdge,
-}
+  customEdge: CustomEdge,
+};
 
-// const asyncThrottle = (func, wait) => {
-//   const throttled = throttle((...args) => {
-//     return func(...args);
-//   }, wait);
-//   return (...args) => new Promise(resolve => {
-//     throttled(...args).then(resolve);
-//   });
-// };
+const panOnDrag = [1, 2];
 
 const convertToQuizFormat = (nodes, edges) => {
-  const restoreQuestions = [];
-  const restoreGraphEdges = "";
-  nodes.forEach(node => {
-    if (node.type === 'question') {
-      restoreQuestions.push(node.question);
-    }
-  });
+  const restoreQuestions = nodes
+    .filter(n => n.type === 'question')
+    .map(n => n.data.question);
 
-  //graphEdges EDIT
+  return {
+    restoreQuestions,
+    restoreGraphEdges: "" // placeholder // TODO
+  };
+};
 
-  return { restoreQuestions, restoreGraphEdges };
-}
 
 const convertToFlowElements = (self, quiz, upd) => {
   const nodes = [];
   const edges = [];
-
-  quiz.questions?.forEach(question => {
-    // Основной узел вопроса
+  // QuestionNode component params
+  quiz.questions?.forEach((question) => {
     nodes.push({
       id: String(question.id),
       type: 'question',
-
-      //изменяемые поля, должны обновляться в question
+      data: { question, upd },
+      //
       position: {
         x: Number(question.position?.x) || 0,
         y: Number(question.position?.y) || 0
       },
-      data: { 
-        label: question.title,
-        upd: upd,
-        updateTitle: (title) => {
-          question.title = title;
-        },
-      },
-
-      //ссылка на quiz.question
-      question: question,
+      // question
     });
-
-    // Узлы для вариантов ответов
-    question?.choices?.forEach((choice, index) => {
+    // ChoiceNode component params
+    question.choices?.forEach((choice, index) => {
       nodes.push({
         id: String(choice.id),
         type: 'choice',
-
-        //изменяемые поля, должны обновляться в choice
+        data: { choice, upd },
+        //
         position: {
-          x: Number(choice.position?.x) || 0, // Гарантируем число
-          y: Number(choice.position?.y) || (index+1)*100
-        },
-        data: {
-          label: choice.title,
-          value: choice.value
-          // targetQuestionId: choice.targetQuestionId
+          x: Number(choice.position?.x) || 0,
+          y: Number(choice.position?.y) || (index + 1) * 100
         },
         extent: 'parent',
         parentId: String(question.id),
@@ -155,43 +126,10 @@ const convertToFlowElements = (self, quiz, upd) => {
     });
   });
 
-  return { nodes, edges };
+  return { nodes, edges: [] }; // edges are not reconstructed in this version
 };
 
-// 1. Добавим хук для автосохранения в БД
-// const useAutoSave = (nodes, edges, quizId) => {
-//   const saveToDatabase = useCallback(
-//     throttle(async (restoredQuiz) => {
-//       try {
-//         await http_put_quiz(quizId, restoredQuiz);
-//         console.log('Автосохранение выполнено');
-//       } catch (error) {
-//         console.error('Ошибка автосохранения:', error);
-//       }
-//     }, 5000), // Сохраняем в БД не чаще чем раз в 5 секунд
-//     [quizId]
-//   );
 
-//   useEffect(() => {
-//     const handleBeforeUnload = async (e) => {
-//       const restoredQuiz = convertToQuizFormat(nodes, edges);
-//       await http_put_quiz(self, restoredQuiz, ()=>{});
-//     };
-
-//     window.addEventListener('beforeunload', handleBeforeUnload);
-//     return () => {
-//       window.removeEventListener('beforeunload', handleBeforeUnload);
-//     };
-//   }, [nodes, edges, restoredQuiz]);
-
-  // 3. Основной эффект для периодического сохранения
-//   useEffect(() => {
-//     if (nodes.length > 0 || edges.length > 0) {
-//       const restoredQuiz = convertToQuizFormat(nodes, edges);
-//       saveToDatabase(restoredQuiz);
-//     }
-//   }, [nodes, edges, saveToDatabase]);
-// };
 
 const ReactFlowComponent = ({ self, quiz, upd }) => {
   // if (quiz.graphEdges === "") {
@@ -202,7 +140,6 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
   // console.log("initialNodes", initialNodes);
   // console.log("quiz", quiz.questions);
 
-  const { id: quizId } = quiz;
   const {ind} = useParams();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -229,39 +166,30 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
 
   //InitialNodes
   useEffect(() => {
-    const { nodes: convertedNodes, edges: convertedEdges  } = convertToFlowElements(self, quiz, upd);
-    setNodes(convertedNodes);
-    setEdges(convertedEdges);
+    const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(self, quiz, upd);
+    setNodes(initialNodes);
+    setEdges(initialEdges);
   }, [quiz.questions]);
 
-  //autoSaveToLocalStorage
   useEffect(() => {
-    // const throttledSave = throttle(() => { //IMPORTANT SUPER IMPORTANT оптимизация кол-ва сохранений при обновлении
-      const selfOld = getSelfFromLocalStorage();
-      const { restoreQuestions, restoreGraphEdges } = convertToQuizFormat(nodes, edges);
-      // console.log("restoreQuestions", restoreQuestions);
-      const updatedQuiz = {
-        id: quiz.id,
-        title: quiz.title,
-        isInDB: quiz.isInDB, //true
-        startEndNodesPositions: "{}",
-        dateCreated: quiz.dateCreated,
-        dateSaved: Date.now(),
-        questions: restoreQuestions,
-        graphEdges: restoreGraphEdges,
-      };
-
-      selfOld.quizzes[ind] = updatedQuiz;
-      putSelfInLocalStorage(selfOld);
-      // console.log("initialQUIZ", updatedQuiz);
-      // localStorage.setItem('editor', JSON.stringify({ nodes, edges }));
-    // }, 0);
+    const selfOld = getSelfFromLocalStorage();
+    const { restoreQuestions, restoreGraphEdges } = convertToQuizFormat(nodes, edges);
+    // console.log("!!", restoreQuestions);
     
-    // throttledSave();
-    // return () => throttledSave.cancel();
+    const updatedQuiz = {
+      ...quiz,
+      questions: restoreQuestions,
+      graphEdges: restoreGraphEdges,
+      startEndNodesPositions: "{}",
+      dateSaved: Date.now()
+    };
+    selfOld.quizzes[ind] = updatedQuiz;
+    putSelfInLocalStorage(selfOld);
   }, [nodes, edges]);
 
   const handleNodesChange = (changes) => {
+    // console.log("change");
+    
     // Фильтруем изменения позиции
     const finishedPositionChanges = changes.filter(
       change => change.type === 'position' && !change.dragging // Обновляем только когда закончили перетаскивание
@@ -279,14 +207,15 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
 
               return {
                   ...node,
-                  question: {
-                      ...node.question,
+                  data: {
+                    question: {
+                      ...node.data.question,
                       position: node.position,
+                    }
                   }
               };
           });
       }
-
       return updatedNodes;
     });
   };
@@ -307,7 +236,7 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
     }, 5000),
     [ind, self, quiz.id]
   );
-  
+
   // useEffect(() => {
   //   // Сохраняем при размонтировании компонента
   //   return () => handleAutoSave();
@@ -318,57 +247,34 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
   // }, [nodes, edges, handleAutoSave]);
 
 
-  // const handleUpdateQuiz = useCallback(() => {
-  //   const updatedQuestions = convertToQuestions(nodes, edges);
-  //   upd({ ...quiz, questions: updatedQuestions });
-  // }, [nodes, edges, quiz, upd]);
-
-  // const handleNodesChange = useCallback(
-  //   (changes) => {
-  //     changes.forEach(change => {
-  //       if (change.type === 'remove') {
-  //         const nodeId = change.id;
-  //         if (nodeId.startsWith('q')) {
-  //           const qIndex = parseInt(nodeId.replace('q', ''));
-  //           handleDeleteQuestion(qIndex);
-  //         }
-  //       } else if (change.type === 'position' && change.dragging) {
-  //         const nodeId = change.id;
-  //         if (nodeId.startsWith('q')) {
-  //           const qIndex = parseInt(nodeId.replace('q', ''));
-  //           const question = quiz.questions[qIndex];
-  //           if (question) {
-  //             question.position = change.position;
-  //             quiz.isInDB = false;
-  //             upd();
-  //           }
-  //         }
-  //       }
-  //     });
-      
-  //     onNodesChange(changes);
-  //   },
-  //   [quiz, upd, onNodesChange]
-  // );
-
-  const onDrop = useCallback(
-    (event) => {
-      event.preventDefault();
-      const type = event.dataTransfer.getData('application/reactflow');
-      const position = screenToFlowPosition({ 
-        x: event.clientX, 
-        y: event.clientY 
-      });
-      const newNode = {
-        id: `${Date.now()}`,
+  const onDrop = useCallback((event) => {
+    event.preventDefault();
+    const type = event.dataTransfer.getData('application/reactflow');
+    const position = screenToFlowPosition({ 
+      x: event.clientX, 
+      y: event.clientY 
+    });
+    const id = `${Date.now()}`
+    let newNode
+    if (type=="question"){
+      newNode = {
+        id:id,
         type,
         position,
-        data: { label: `Новый вопрос` },
+        data: { question:{id,title:"new",position,choices:[]} }
       };
+    } else if (type=="choice") {
+      newNode = {
+        id:id,
+        type,
+        position,
+        data: { choice:{id,title:"new",position,value:0} }
+      };
+    }
+      putSelfInLocalStorage(self)
       setNodes((nds) => nds.concat(newNode));
-    },
-    [screenToFlowPosition] //setNodes
-  );    
+  },[screenToFlowPosition] );    //setNodes
+
 
   const onConnect = useCallback(
     (connection) => {
@@ -394,7 +300,7 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
     e.preventDefault();
     setContextMenuNode(node);
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
-}, []);
+  }, []);
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
@@ -408,9 +314,9 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
           top: '50%',
           transform: 'translateY(-50%)',
         }}>
-          <Sidebar />
+        <Sidebar />
       </Panel>
-      
+
       <div style={{ flex: 1, position: 'relative' }}
         onClick={useCallback(() => {
           setContextMenuNode(null);
@@ -422,14 +328,12 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
           onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes} 
-          onNodeContextMenu={onNodeContextMenu}
-          style={rfStyle}
-
           onDrop={onDrop}
           onDragOver={(e) => e.preventDefault()}
-          
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          onNodeContextMenu={onNodeContextMenu}
+          style={rfStyle}
           onNodeClick={(e, node) => {
             if (node.type === 'question') {
               setSelectedQuestion(node);
@@ -473,7 +377,7 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
               background: 'white',
               boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
               borderRadius: '4px',
-              zIndex: 1000,
+              zIndex: 1000
             }}
           >
             <div
@@ -496,11 +400,11 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
         {selectedQuestion && (
           <div style={{
             position: 'absolute',
-            top: '20px',
-            right: '20px',
+            top: 20,
+            right: 20,
             background: 'white',
-            padding: '20px',
-            borderRadius: '8px',
+            padding: 20,
+            borderRadius: 8,
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
           }}>
             <h3>Управление вопросом</h3>

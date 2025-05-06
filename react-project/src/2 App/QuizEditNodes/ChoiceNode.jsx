@@ -1,7 +1,13 @@
 import { Handle, Position } from 'reactflow';
 import Terminal from './Terminal';
+import { useState } from 'react';
 
 const ChoiceNode = ({ data }) => {
+  const {choice,upd} = data
+
+  const [title, setTitle] = useState(choice.title)
+  choice.title = title
+
   return (
     <div style={{
       background: '#E3F2FD',
@@ -12,25 +18,16 @@ const ChoiceNode = ({ data }) => {
     }}>
       <Terminal type="source" position={ Position.Bottom } />
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <span>💡 {data.label}</span>
-        <button 
-          onClick={data.deleteChoice}
-          style={{ 
-            marginLeft: '8px',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#ff4444'
-          }}
-        >
-          {/* {rem} */}
-          ×
-        </button>
+        💡
         <input
-            value={data.title}
+            value={choice.title}
             placeholder="Enter your choice"
             className="nodrag" 
-            onChange={(e) => data.updateTitle(e.target.value)}
+            // onBlur={upd()}
+            onChange={(e) => {
+              choice.title = e.target.value
+              setTitle(e.target.value)
+            }}
         />
       </div>
     </div>

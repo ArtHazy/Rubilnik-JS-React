@@ -1,12 +1,17 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Handle, Position } from 'reactflow';
 import Terminal from './Terminal';
 
-const QuestionNode = ({ id, data }) => {
+const QuestionNode = ({ id, type, data }) => {
+  
+  let { question, upd} = data
 
-  const onChange = useCallback((evt) => {
-    console.log(evt.target.value);
-  }, []);
+  const [title, setTitle] = useState(question.title)
+  question.title = title
+
+  // const onChange = useCallback((evt) => {
+  //   console.log(evt.target.value);
+  // }, []);
 
   // const groupArea = {
   //   x: Position.x - 200,  // Расширяем область на 200px в каждую сторону
@@ -27,20 +32,26 @@ const QuestionNode = ({ id, data }) => {
       borderRadius: '10px',
       border: '2px solid #FFD700',
       minWidth: '200px',
-      minHeight: '400px',
+      minHeight: '300px',
       boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
     }}>
       <Terminal type="target" position={ Position.Top } />
-      <div style={{ fontWeight: 'bold', marginBottom: '10px' }}>❓ {data.label}</div>
+      ❓
       <input 
-        aria-label="Email" 
         id="text" 
         name="text" 
         className="nodrag" 
         placeholder="Enter your question"
-        value={data.title}
-        onBlur={() => data.upd()}
-        onChange={(e) => data.updateTitle(e.target.value)} //question.title = e.target.value; upd();
+        // value={data.title}
+        value={question.title}
+        onBlur={() => upd()}
+        // onChange={(e) => data.updateTitle(e.target.value)}
+        onChange={(e) => {
+          question.title = e.target.value // из "self"
+          setTitle(e.target.value) // локальное
+          // question.title=e.target.value 
+          // upd()
+        }} //question.title = e.target.value; upd();
       />
       <div style={{ fontSize: '0.8em', color: '#666' }}>
         {data.choices?.map((choice, i) => (
