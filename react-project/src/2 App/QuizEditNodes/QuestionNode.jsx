@@ -11,8 +11,6 @@ import { putSelfInLocalStorage } from '../../functions.mjs';
 const QuestionNode = ({ id, type, data }) => {
   
   let { question, upd, self} = data
-  console.log("!",self);
-  
 
   const [title, setTitle] = useState(question.title)
   // question.title = title

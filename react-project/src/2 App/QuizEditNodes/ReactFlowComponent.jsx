@@ -149,7 +149,6 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
   const {ind} = useParams();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [contextMenuNode, setContextMenuNode] = useState(null);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
   const contextMenuRef = useRef(null);
@@ -158,7 +157,7 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
   const handleAddQuestion = () => {
     quiz.isInDB = false;
     const newNode = {
-      id: `${Date.now()}`, // Используем уникальный ID
+      id: Date.now(), // Используем уникальный ID
       title: "Question " + (nodes.length + 1),
       position: { 
         x: 50, 
@@ -170,10 +169,24 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
     setNodes((nds) => nds.concat(newNode));
   };
 
+  /** @param {number} id */
+  const deleteQuestion = (id)=>{
+    // console.log("!01!!",nodes);
+    // quiz.questions.forEach((question)=>{
+    //   console.log("!!!",question.id!=Number(id));
+    // })
+    quiz.questions = quiz.questions.filter( (question)=>question.id!=Number(id) ) 
+    putSelfInLocalStorage(self)
+  }
+  /** @param {number} id */
+  const deleteChoice = (id)=>{
+    quiz.questions.forEach( (question)=>{
+      question.choices.filter( (choice)=>(choice.id != id) )
+    })
+  }
+
   //InitialNodes
   useEffect(() => {
-    console.log("!S!",self);
-    
     const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(self, quiz, upd);
     setNodes(initialNodes);
     setEdges(initialEdges);
@@ -272,38 +285,27 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
 
 
   const onDrop = useCallback((event) => {
-    
-    
     event.preventDefault();
     const type = event.dataTransfer.getData('application/reactflow');
     const position = screenToFlowPosition({ 
       x: event.clientX, 
       y: event.clientY 
     });
-    const id = `${Date.now()}`
+    const id = Date.now().toString()
     let newNode
 
-    console.log("ondrop",self);
-
     if (type=="question"){
-      console.log("qestion type",self);
-      
-      newNode = {
-        id:id,
-        type,
-        position,
-        data: { question:{id,title:"new",position,choices:[]}, self }
-      };
+      /** @type {Question} */
+      let newQuestion = {id,title:"new",position,choices:[]}
+      quiz.questions.push(newQuestion)
+      newNode = { id, type, position, data: { question:newQuestion, self } };
     } else if (type=="choice") {
-      newNode = {
-        id:id,
-        type,
-        position,
-        data: { choice:{id,title:"new",position,value:0}, self }
-      };
+      /** @type {Choice} */
+      let newChoice = {id,title:"new",position,value:0}
+      newNode = { id, type, position, data: { choice:newChoice, self } };
     }
-      putSelfInLocalStorage(self)
-      setNodes((nds) => nds.concat(newNode));
+    putSelfInLocalStorage(self)
+    setNodes((nds) => nds.concat(newNode));
   },[screenToFlowPosition] );    //setNodes
 
 
@@ -314,7 +316,7 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
           ...connection,
           type: 'customEdge',
           animated: true,
-          id: `e${Date.now()}`, //!!!!!!!!!!!!
+          id: Date.now(), //!!!!!!!!!!!!
           //   markerEnd: {
           //     type:MarkerType.ArrowClosed,
           //     width:20,
@@ -365,11 +367,6 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
           edgeTypes={edgeTypes}
           onNodeContextMenu={onNodeContextMenu}
           style={rfStyle}
-          onNodeClick={(e, node) => {
-            if (node.type === 'question') {
-              setSelectedQuestion(node);
-            }
-          }}
           fitView
           panOnScroll
           selectionOnDrag
@@ -419,32 +416,12 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
               }}
               onClick={() => {
                 contextMenuNode.type === 'question' 
-                  ? handleDeleteQuestion(contextMenuNode.id) 
-                  : deleteChoice(contextMenuNode);
+                  ? deleteQuestion(contextMenuNode.id) 
+                  : deleteChoice(contextMenuNode.id)
               }}
             >
               Удалить {contextMenuNode.type === 'question' ? 'вопрос' : 'ответ'}
             </div>
-          </div>
-        )}
-
-        {selectedQuestion && (
-          <div style={{
-            position: 'absolute',
-            top: 20,
-            right: 20,
-            background: 'white',
-            padding: 20,
-            borderRadius: 8,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-          }}>
-            <h3>Управление вопросом</h3>
-            <button onClick={handleAddQuestion}>Добавить вопрос</button>
-            <button onClick={() => deleteQuestion(selectedQuestion.id)}>
-              Удалить вопрос
-            </button>
-            
-            <button onClick={() => setSelectedQuestion(null)}>Закрыть</button>
           </div>
         )}
       </div>
