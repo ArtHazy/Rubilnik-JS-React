@@ -68,11 +68,6 @@ export const ViewQuestion = ({isHost, socket, roomId, quizLength, setQuizLength,
     <div className="ViewQuestion">
       <div className="head">
         <div className="title">{currentQuestion?.title}</div>
-        <div className="progress">
-          {console.log(currentQuestionInd+" "+quizLength)}
-          <progress value={currentQuestionInd / quizLength}></progress>
-          <div className="numbers">{currentQuestionInd+1+"/"+quizLength}</div>
-        </div>
       </div>
       <div className="body">
         <div className="choices">{ renderChoices() }</div>

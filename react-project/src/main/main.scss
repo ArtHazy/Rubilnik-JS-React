@@ -2,7 +2,7 @@
 @import "./mixin.scss";
 
 :root{
-  --def-gap: .3cm;
+  --def-gap: .2cm;
   --def-transition: .3s;
   --def-border-radius: 8px;
 
@@ -49,7 +49,12 @@ body,#root {
   a { color: var(--color-split2); }
 }
 
-
+.form{
+  margin: auto;
+  box-sizing: border-box;
+  color: var(--color-split2);
+  text-transform: uppercase;
+}
 
 button {
   display: flex;
@@ -74,7 +79,10 @@ input, button{
 }
 input{@include input-style();}
 input[type='text'],input[type='password'],input[type='email']{
-  height: 1.5em;
+  //height: 1.5em;
+  font-size:  1.3em;
+  font-weight: lighter;
+  height: 1.6em;
   border: transparent;
   border-radius: 4px;
   &:focus{outline: var(--choice-1-color) solid 2px  ; outline-offset: 2px}

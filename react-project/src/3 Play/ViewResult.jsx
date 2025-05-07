@@ -1,4 +1,5 @@
 import "./ViewResult.scss"
+import winIcon from "../images/win.svg";
 
 export const ViewResult = ({/*usersChoices,*/ results}) => {
 
@@ -12,7 +13,7 @@ export const ViewResult = ({/*usersChoices,*/ results}) => {
         {/*usersScores*/results.map((entry, index)=>
           <div key={index} className={"entry " + (index==0? "first":"")}>
             {console.log(entry)}
-            <div className={"index"}> {index + 1} </div>
+            <div className={"index"}> {index==0? <img src={winIcon} alt={"win"}></img> : index + 1} </div>
             <div className={"name"}> {entry.id + " : " + entry.name} </div>
             <div className={"score"}> {entry.score} </div>
           </div>)}

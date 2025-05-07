@@ -5,7 +5,7 @@
 .ViewSelf{
     @include view();
     height: 100svh;
-    .form{ margin: auto; box-sizing: border-box}
+    //.form{ margin: auto; box-sizing: border-box}; color: var(--color-split2);
 }
 
 .ViewSelf, .ViewJoin, .ViewLibrary{ padding-bottom: 2cm; }
