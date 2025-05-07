@@ -3,9 +3,10 @@ import { ViewLobby } from "./ViewLobby";
 import { ViewQuestion } from "./ViewQuestion";
 import { ViewResult } from "./ViewResult";
 import { useEffect, useState } from "react";
-import { ViewError, ViewLoading } from "../ViewError";
+import { ViewError, ViewLoading } from "../4 Error/ViewError";
 import { WSPlayAPI } from "../WS_communication.mjs";
 import { useLocation, useParams } from "react-router-dom";
+import "./Play.scss"
 
 export const Play = () => {
     

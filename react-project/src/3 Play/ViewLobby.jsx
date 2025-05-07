@@ -1,4 +1,5 @@
 import { getSelfFromLocalStorage } from "../functions.mjs"
+import "./ViewLobby.scss"
 
 export const ViewLobby = ({isHost, roomId, socket}) => {
   return <div className="ViewLobby">

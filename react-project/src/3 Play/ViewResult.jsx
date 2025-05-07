@@ -1,3 +1,5 @@
+import "./ViewResult.scss"
+
 export const ViewResult = ({/*usersChoices,*/ results}) => {
 
   return (

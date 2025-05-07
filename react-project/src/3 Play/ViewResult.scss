@@ -1,0 +1,16 @@
+@import "../main/mixin.scss";
+
+.ViewResult{
+    @include view();
+    .scores{
+    @include grid();
+    padding: 0;
+    max-width: 30cm;
+    .entry{
+        border-radius: var(--def-border-radius);
+        &.first{ background-color:  var(--color-gold); color: var(--color-dark) }
+        @include grid();
+        grid-template-columns: 1fr 5fr 1fr;
+    }
+    }
+}

@@ -1,15 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './2 App/App.jsx'
+import App from '../2 App/App.jsx'
 import './main.scss'
 //scss
 import { createBrowserRouter,RouterProvider} from "react-router-dom";
-import { ViewLogin } from './1 Authentication/ViewLogin.jsx';
-import { ViewRegister } from './1 Authentication/ViewRegister.jsx';
-import { ViewQuizEdit } from './2 App/ViewQuizEdit.jsx';
-import { Play } from './3 Play/Play.jsx';
-import { ViewJoin } from './2 App/ViewJoin.jsx';
-import { ViewError } from './ViewError.jsx';
+import { ViewLogin } from '../1 Authentication/ViewLogin.jsx';
+import { ViewRegister } from '../1 Authentication/ViewRegister.jsx';
+import { ViewQuizEdit } from '../2 App/ViewQuizEdit.jsx';
+import { Play } from '../3 Play/Play.jsx';
+import { ViewJoin } from '../2 App/ViewJoin.jsx';
+import { ViewError } from '../4 Error/ViewError.jsx';
 
 
 const router = createBrowserRouter([

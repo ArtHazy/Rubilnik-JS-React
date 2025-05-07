@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
 import { limits } from "../values.mjs"
+import "./ViewJoin.scss"
 
 export const ViewJoin = () => {
     let self = getSelfFromLocalStorage();

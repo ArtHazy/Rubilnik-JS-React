@@ -1,0 +1,47 @@
+@import "../main/mixin.scss";
+
+.ViewLibrary{
+  @include view();
+  margin-bottom: 2cm;
+   
+  .QuizTile{
+    button{@include outline-hover();}
+    display: grid;
+    gap: calc(var(--def-gap)/2);
+    grid-template-columns: 1fr 5fr 1fr;
+    width: 100%;
+    height: 3cm;
+    position: relative;
+    .quiz-button{
+      height: 100%;
+      flex-grow:1;
+    }
+  }
+  #add{
+    @include outline-hover();
+    padding: var(--def-gap);
+    transition: var(--def-transition);
+    @media (pointer: fine){
+      &:hover{padding: calc(var(--def-gap)*2)}
+    }
+  }
+  .grid{
+    @include grid();
+    padding: 0;
+    margin: var(--def-gap) 0;
+    grid-template-columns: repeat(auto-fill, minmax(8cm,1fr));
+    grid-auto-rows: auto; 
+    
+  
+    // background: 
+    //   linear-gradient(to bottom right, #D7CCAD, transparent),
+    //   radial-gradient(#709B95, transparent),
+    //   linear-gradient(to bottom left, #0FD4CD, transparent),
+    //   linear-gradient(to left, #B0ABD6, transparent),
+    //   linear-gradient(to top right, #DFA4A6, transparent);
+    // background-blend-mode: screen;
+    // filter: brightness(0.85) saturate(4);
+  }
+}
+
+.ViewSelf, .ViewJoin, .ViewLibrary{ padding-bottom: 2cm; }

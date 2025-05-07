@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { getSelfFromLocalStorage } from "../functions.mjs";
 import { WSPlayAPI } from "../WS_communication.mjs";
+import "./ViewQuestion.scss"
 
 let self = getSelfFromLocalStorage()
 

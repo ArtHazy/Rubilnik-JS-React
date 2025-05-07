@@ -1,0 +1,38 @@
+@import "../main/mixin.scss";
+
+
+.App{
+  @include scrollbar-hidden();
+  box-sizing: border-box;
+  
+  color: var(--color-light);
+
+  header{
+    text-align: center;
+  }
+  .Navigation{
+    display: flex;
+    justify-content: safe center;
+    position: fixed;
+    bottom: 3svh;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    button{
+      @include outline-hover();
+      width: 2.09cm;
+      height: 1.3cm;
+      border: 0;
+      margin: 0 .1cm;
+      box-sizing: border-box;
+      &.active{
+        //background: var(--color-dark);
+        color: var(--color-split1) !important;
+        outline-color: var(--color-split1);
+        img.icon{ filter: invert(1); }
+        scale: 1.05;
+        transition: .3s;
+      }
+    }
+  }
+}

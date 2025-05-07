@@ -1,0 +1,65 @@
+@import "../main/mixin.scss";
+
+.ViewSelf, .ViewJoin{ input{text-align: center; }}
+
+.ViewJoin{
+    ::before {
+    content: "";
+    position: absolute;
+    inset: 0; /* Занимает всю область родителя */
+    background: 
+        linear-gradient(to bottom right, #D7CCAD, transparent),
+        radial-gradient(#709B95, transparent),
+        linear-gradient(to bottom left, #0FD4CD, transparent),
+        linear-gradient(to left, #B0ABD6, transparent),
+        linear-gradient(to top right, #DFA4A6, transparent);
+    background-blend-mode: screen;
+    filter: brightness(0.85) saturate(4); /* Насыщенность ТОЛЬКО для фона */
+    pointer-events: none;
+    z-index: -1; /* Помещаем фон под основной контент */
+    }
+    &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    
+    background-image:
+        linear-gradient(to right, rgba(0,0,0,0.05) 10px, transparent 10px),
+        linear-gradient(to bottom, rgba(0,0,0,0.05) 10px, transparent 10px);
+    background-size: 20px 20px; // Размер ячеек сетки
+    background-blend-mode: multiply;
+    mix-blend-mode: overlay;
+    pointer-events: none; // Чтобы сетка не перехватывала клики
+    }
+    
+    
+    @include view();
+    height: 100svh;
+    .form{ 
+    position: relative;
+    margin: auto;
+    z-index: 2;
+    }
+    .RoomKeyInput{
+    @include hstack();
+    padding: 0;
+
+    input[type='text']{ 
+        font-size: 1.2em; 
+        width: 1.2em; 
+        // height: 1.5em;
+        text-align: safe center; 
+        text-transform: capitalize;
+    }
+
+    width: 100%;
+    justify-content: safe center;
+    grid-template-columns: repeat(4, 1.5em);
+    }
+}
+
+.ViewSelf, .ViewJoin, .ViewLibrary{ padding-bottom: 2cm; }

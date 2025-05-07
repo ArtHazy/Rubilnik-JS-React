@@ -1,0 +1,100 @@
+@mixin vstack {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--def-gap)/2);
+    height: fit-content;
+    justify-content: start;
+}
+@mixin hstack {
+    display: flex;
+    gap: calc(var(--def-gap)/2);
+    flex-direction: row;
+    justify-content: safe center;
+    align-items: center;
+}
+@mixin vstack {
+    @include grid();
+    width: fit-content;
+    gap: calc(var(--def-gap)/2);
+    padding: 0;
+    grid-template-columns: 1fr;
+    *{width: 100%; box-sizing: border-box;}
+    justify-items: start;
+}
+@mixin hstack {
+    @include grid();
+    gap: calc(var(--def-gap)/2);
+    *{width: 100%;}
+}
+@mixin view {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    min-width: 333px;
+    // max-width: 30cm;
+    font-family: inherit;
+    padding: var(--def-gap);
+    padding-bottom: 2cm;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    align-items: center;
+    position: relative
+}
+
+@mixin grid {
+    display: grid;
+    width: 100%;
+    padding: var(--def-gap);
+    gap: var(--def-gap);
+    justify-items: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+@mixin scrollbar-hidden{
+    ::-webkit-scrollbar {display: none;} /* Hide scrollbar for Chrome, Safari and Opera */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+@mixin scrollbar-visible{
+    ::-webkit-scrollbar{display: block;} /*Chrome, Safari and Opera*/
+    -ms-overflow-style: auto;  /* IE and Edge */
+    scrollbar-width: thin;  /* Firefox */
+}
+@mixin dynamic-font{
+    font-size: clamp( 1.5em, 2.5vw, 2em);
+}
+
+//
+
+@mixin outline{
+    outline: 2px var(--color-split2) solid;
+    outline-offset: -2px;
+}
+@mixin outline-hover{
+    @include outline();
+    outline: 2px var(--color-split2) solid;
+    outline-offset: -2px;
+    transition: 
+    outline-width var(--def-transition),
+    outline-offset var(--def-transition);
+
+    @media (pointer: fine){ 
+    &:hover{ 
+        outline-width: -3px; 
+        outline-offset: -4px; 
+    } 
+    }
+}
+@mixin button-style{
+    border: 0;
+    color: var(--color-split2);
+    background: var(--color-dark);
+    *{ color: var(--color-split2); }
+    box-sizing: border-box;
+}
+
+@mixin input-style{
+    background: var(--color-grey-inp);
+}

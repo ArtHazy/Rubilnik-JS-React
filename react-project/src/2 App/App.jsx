@@ -3,6 +3,8 @@ import { ViewJoin } from "./ViewJoin";
 import { ViewLibrary } from "./ViewLibrary";
 import { ViewSelf } from "./ViewSelf";
 import { getSelfFromLocalStorage } from "../functions.mjs"
+import "./App.scss"
+
 
 export const App = () => {
   const [view, setView] = useState(<ViewLibrary/>)

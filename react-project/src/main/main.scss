@@ -1,0 +1,319 @@
+@import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
+@import "./mixin.scss";
+
+:root{
+  --def-gap: .3cm;
+  --def-transition: .3s;
+  --def-border-radius: 8px;
+
+  --color-dark:#242424;
+  --color-light:#D9D9D9;
+
+  --color-split1: #0FD4CD;
+  --color-split2: rgb(214, 191, 129);
+  --color-grey-inp: rgba(176, 176, 176, 1);
+  
+  --choice-1-color: #709B95;
+  --choice-2-color: #F08A5D;
+  --choice-3-color: #B83B5E;
+  --choice-4-color: #D9D9D9;
+  
+  --choice-wrong-1-color: #4A605D;
+  --choice-wrong-1-color: #8A5741;
+  --choice-wrong-1-color: #6E3041;
+  --choice-wrong-1-color: #7F7F7F;
+
+  --color-gold: rgba(197, 176, 120, 1);
+
+  --color-rose: #D6768E;
+}
+
+hstack, .hstack {
+  @include hstack();
+}
+vstack, .vstack {
+  @include vstack();
+}
+html {
+  @include scrollbar-hidden();
+  @media (scrollbar-width:thin){ @include scrollbar-visible() }
+}
+body,#root {
+  @include scrollbar-hidden();
+  width: 100%;
+  font-family: 'Russo One', sans-serif;
+  margin: 0;
+  box-sizing: border-box;
+  background-color: var(--color-dark);
+  & > div,p,h1,h2,h3,h4,h5,h6 { color: var(--color-light); }
+  a { color: var(--color-split2); }
+}
+
+
+
+button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  
+  padding: .1cm;
+  overflow-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: inherit;
+  // fill: var(--color-light);
+  // color: var(--color-dark);
+  border-radius: .15cm;
+  cursor: pointer;
+  @include button-style();
+  &.big{ @include outline-hover(); min-width: 2cm; padding: 8px; }
+}
+input, button{
+  font-family: "Russo One", sans-serif;
+}
+input{@include input-style();}
+input[type='text'],input[type='password'],input[type='email']{
+  height: 1.5em;
+  border: transparent;
+  border-radius: 4px;
+  &:focus{outline: var(--choice-1-color) solid 2px  ; outline-offset: 2px}
+}
+
+
+
+
+.Actions{
+  border-radius: var(--def-border-radius);
+  button{ border: 0; }
+  @media (orientation: landscape) {
+    @include hstack();
+    align-content: safe center;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 3svh;
+    button{
+      width: 2cm;
+      @include button-style();
+      @include outline-hover();
+    }
+  }
+  @media (orientation: portrait) {
+    @include vstack();
+    @include outline-hover();
+    gap: 0;
+    position: fixed;
+    right: 3svh;
+    bottom: 3svh;
+    button{
+      outline: 0;
+      padding: var(--def-gap);
+      border-radius: 0;
+    }
+    @include button-style();
+    overflow: hidden;
+  }
+}
+
+.quiz-tile-container {
+  position: relative;
+  width: 95%;
+  height: 135px;
+  margin: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: transparent;
+  border-radius: 8px;
+  outline: #D6BF81 solid 3px; 
+  outline-offset: 4px;
+
+  transition: 
+    outline-width var(--def-transition),
+    outline-offset var(--def-transition);
+  @media (pointer: fine){ 
+    &:hover{ 
+      outline-offset: 0px; 
+      outline-color: var(--color-light);
+    } 
+  }
+
+  &:hover .edit-btn::after,
+  .delete-btn:hover ~ .edit-btn::after,
+  .run-btn:hover ~ .edit-btn::after {
+    opacity: 0.6;
+    transition: var(--def-transition);
+  }
+  
+  &:hover {
+    box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.2); //edit
+
+    .delete-btn,
+    .run-btn {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto; // Разрешаем взаимодействие с кнопками
+    }
+    
+  }
+
+  .icon-container {
+    //@include material-symbols-outlined();
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    pointer-events: none;
+    
+    // Ваша иконка
+    .icon {
+      width: 40px;
+      height: 40px;
+      // background: url('your-icon.svg') no-repeat center;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+  }
+
+  .edit-btn {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    padding: 1.5rem;  
+    text-align: left;
+    background: transparent;  
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;    
+    overflow: hidden;
+    border-radius: 8px;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      width: calc(100% * 20);
+      height: 100%;
+      background-image: linear-gradient(
+        to right,
+        #D6B7AB,
+        #D6BFAB,
+        #D6D0AB,
+        #ABD6CA,
+        #D6ABD0,
+        #D7CCAD,
+        #ABD6CA,
+        #D6C1AB,
+        #D6ABB6,
+        #91D4CD,
+        #ABB5D6,
+        #B9ABD6,
+        #D6D5AB,
+        #CCABD6,
+      );
+      background-size: 100% 100%;
+      left: calc(-100% * var(--index));
+      transition: filter 0.3s ease;
+      z-index: 0;
+    }
+  
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      
+      background-image:
+        linear-gradient(to right, rgba(0,0,0,0.05) 10px, transparent 10px),
+        linear-gradient(to bottom, rgba(0,0,0,0.05) 10px, transparent 10px);
+      background-size: 20px 20px; // Размер ячеек сетки
+      background-blend-mode: multiply;
+      mix-blend-mode: overlay;
+      pointer-events: none; // Чтобы сетка не перехватывала клики
+    }
+  
+    // // Для темных тем можно добавить альтернативный вариант
+    // @media (prefers-color-scheme: dark) {
+    //   &::before {
+    //     background:
+    //       linear-gradient(to right, rgba(0,0,0,0.15) 1px, transparent 1px),
+    //       linear-gradient(to bottom, rgba(0,0,0,0.15) 1px, transparent 1px);
+    //   }
+    // }
+
+    span {
+      color: var(--color-dark);
+      position: relative;
+      z-index: 2;
+    }
+    
+    // Для поддержки градиентов в старых браузерах
+    // @supports not (background: linear-gradient(0deg, #000, #fff)) {
+    //   background-color: hsl(var(--hue-1), 70%, #{$base-lightness});
+    // }
+  }
+
+  .delete-btn,
+  .run-btn {
+    position: absolute; // Добавляем для позиционирования псевдоэлемента
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    z-index: 2;
+    width: 20%;
+    top: 0;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.2) !important;
+      width: 25%;
+    }
+
+    .material-symbols-outlined {
+      font-size: 24px;
+      color: var(--color-dark);
+    }
+  }
+
+  .delete-btn {
+    left: 0;
+    border-radius: 8px 0 0 8px;
+    mask-image: linear-gradient(
+      to right, 
+      #000 50%,
+      transparent 100%
+    );    
+  }
+
+  .run-btn {
+    right: 0;
+    border-radius: 0 8px 8px 0;
+    mask-image: linear-gradient(
+      to left, 
+      #000 50%,
+      transparent 100%
+    );
+  }
+}
+
+.form{
+  background: var(--color-dark);
+  @include grid();
+  
+  border-radius: 8px;
+  z-index: 1;
+  width: 100%;
+  max-width: 8cm ;
+  vstack{
+    width: 100%;
+  }
+}

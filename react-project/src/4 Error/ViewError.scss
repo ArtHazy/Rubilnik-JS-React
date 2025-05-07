@@ -1,0 +1,7 @@
+@import "../main/mixin.scss";
+
+.ViewError{
+    @include view();
+    height: 100svh;
+    justify-content: safe center;
+}

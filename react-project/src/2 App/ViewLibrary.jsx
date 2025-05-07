@@ -5,6 +5,7 @@ import { http_delete_quiz, http_post_quiz } from "../HTTP_requests.mjs";
 import { WSPlayAPI } from "../WS_communication.mjs";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "./LanguageSwitcher";
+import "./ViewLibrary.scss"
 
 export const ViewLibrary = () => {
     let self = getSelfFromLocalStorage();

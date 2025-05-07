@@ -20,6 +20,7 @@ import ReactFlowComponent from "./QuizEditNodes/ReactFlowComponent"
 //new imports
 import 'reactflow/dist/style.css';
 import './index.css';
+import "./ViewQuizEdit.scss"
 
 import Editor from "./QuizEditNodes/test"
 

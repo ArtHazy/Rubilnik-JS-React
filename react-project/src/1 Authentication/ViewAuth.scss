@@ -1,0 +1,14 @@
+@import "../main/mixin.scss";
+
+.ViewLogin,
+.ViewRegister {
+  @include view();
+  height: 100vh;
+  align-items: safe center;
+  justify-content: safe center;
+  padding-bottom: 0.2cm;
+  box-sizing: border-box;
+  .accent{ font-size: 2em; }
+  .log,.reg{ color: var(--color-split1); }
+  .in, .ister{ color: var(--color-split2); }
+}

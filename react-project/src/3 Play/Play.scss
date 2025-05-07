@@ -1,0 +1,8 @@
+@import "../main/mixin.scss";
+
+.Play{
+    width: 100svw; 
+    height: 100svh; 
+    @include grid();
+    grid-template-rows: 2fr 8fr 1fr, // - for socket status ;  grid-template-rows: 1fr
+}

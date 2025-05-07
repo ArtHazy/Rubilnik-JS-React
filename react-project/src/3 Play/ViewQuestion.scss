@@ -1,0 +1,95 @@
+@import "../main/mixin.scss";
+
+.ViewQuestion{
+    @include view();
+    @include dynamic-font();
+    padding: 0;
+    .head{
+    height: 20%;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    margin-bottom: 1cm;
+    width: 100%;
+    max-width: 20cm;
+    .progress{
+        @include grid();
+        grid-template-columns: 1fr 1cm;
+        progress{
+        width: 100%;
+        height: 1cm;
+        }
+    }
+    }
+    .body{
+    width: 100%;
+    height: 80%;
+    @media (orientation:portrait){
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .choices{
+        @include grid();
+        padding: 0;
+        @media (orientation: landscape){
+        grid-template-columns: 1fr 1fr;
+        height: 100%;
+        }
+        @media (orientation: portrait){}
+
+        .choice{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: start;
+        position: relative;
+        padding: var(--def-gap);
+        width: 100%;
+        @media (orientation: landscape){ height: 100%; }
+        @media (orientation: portrait){ min-height: 1.5cm;}
+        border-radius: var(--def-border-radius);
+        box-sizing: border-box;
+        .letter{
+            position: absolute;
+            right: var(--def-gap);
+            top: var(--def-gap);
+        }
+
+        color: var(--color-dark);
+        &._0{
+            background: var(--choice-1-color);
+            &.revealed { 
+            background: var(--choice-wrong-1-color);
+            &.correct { background: var(--choice-1-color); }
+            }
+        }
+        &._1{
+            background: var(--choice-2-color);
+            &.revealed { 
+            background: var(--choice-wrong-2-color);
+            &.correct { background: var(--choice-2-color); }
+            }
+        }
+        &._2{
+            background: var(--choice-3-color);
+            &.revealed { 
+            background: var(--choice-wrong-3-color);
+            &.correct { background: var(--choice-3-color); }
+            }
+        }
+        &._3{
+            background: var(--choice-4-color);
+            &.revealed { 
+            background: var(--choice-wrong-4-color);
+            &.correct { background: var(--choice-4-color); }
+            }
+        }
+        }
+    }
+    }
+    .controls{
+    margin: var(--def-gap)
+    }
+}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { limits } from "../values.mjs";
 import { getSelfFromLocalStorage, putSelfInLocalStorage, removeSelfFromLocalStorage } from "../functions.mjs"
 import { http_put_user } from "../HTTP_requests.mjs";
+import "./ViewSelf.scss"
 
 export const ViewSelf = () => {
     const [flag,setFlag] = useState(false);

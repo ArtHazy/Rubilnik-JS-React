@@ -1,0 +1,11 @@
+@import "../main/mixin.scss";
+
+.ViewSelf, .ViewJoin{ input{text-align: center; }}
+
+.ViewSelf{
+    @include view();
+    height: 100svh;
+    .form{ margin: auto; box-sizing: border-box}
+}
+
+.ViewSelf, .ViewJoin, .ViewLibrary{ padding-bottom: 2cm; }
