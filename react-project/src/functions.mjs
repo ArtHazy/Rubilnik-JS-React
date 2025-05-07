@@ -1,5 +1,10 @@
 import { CORE_SERVER_URL, limits } from "./values.mjs";
 
+/**
+ * @param {{}} json 
+ * @param {string} filename 
+ * @returns {void} 
+ */
 export function downloadJson(json, filename){
     let file = new File([JSON.stringify(json)],'load.json');
     let fileURL = window.URL.createObjectURL(file);
@@ -9,12 +14,20 @@ export function downloadJson(json, filename){
     fileLink.download = filename+'.json';
     fileLink.click();
 }
-
+/** @param {User} self */
 export const putSelfInLocalStorage = (self)=>{localStorage.setItem('self', JSON.stringify(self))}
+/** @param {User} self */
 export const removeSelfFromLocalStorage = (self)=>{localStorage.removeItem('self')}
+/** @returns {User} */
 export const getSelfFromLocalStorage = ()=>JSON.parse(localStorage.getItem('self'));
 
+/**
+ * 
+ * @param {User} self 
+ * @returns {void} 
+ */
 export function putSelfInDB(self){
+    // self.quizzes[0].name
     let isOk
     let req = new XMLHttpRequest();
     req.open('PUT', CORE_SERVER_URL+'/user', false);
@@ -26,12 +39,22 @@ export function putSelfInDB(self){
 }
 
 
-
+/**
+ * @param {{}} objReceiver 
+ * @param {{}} objGiver 
+ * @returns {void} 
+ */
 export function replaceValues(objReceiver, objGiver){
     Object.keys(objReceiver).forEach((key)=>{ delete objReceiver[key]; })
     Object.keys(objGiver).forEach((key)=>{ objReceiver[key] = objGiver[key]; })
 }
 
+/**
+ * @param {File} file 
+ * @param {Quiz} quiz 
+ * @param {()=>void} upd 
+ * @returns {void} 
+ */
 export function loadQuizFromFile(file, quiz, upd){
     console.log("upd", upd);
     console.log(file);

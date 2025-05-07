@@ -1,12 +1,16 @@
 import { Handle, Position } from 'reactflow';
 import Terminal from './Terminal';
 import { useState } from 'react';
+import { putSelfInDB, putSelfInLocalStorage } from '../../functions.mjs';
 
+
+/** @param {{data:{choice:Choice,upd:()=>{},self:User}}} */
 const ChoiceNode = ({ data }) => {
-  const {choice,upd} = data
+  const {choice,upd,self} = data
 
   const [title, setTitle] = useState(choice.title)
-  choice.title = title
+  const [value, setValue] = useState(choice.value)
+  // choice.title = title
 
   return (
     <div style={{
@@ -20,15 +24,40 @@ const ChoiceNode = ({ data }) => {
       <div style={{ display: 'flex', alignItems: 'center' }}>
         💡
         <input
-            value={choice.title}
-            placeholder="Enter your choice"
-            className="nodrag" 
-            // onBlur={upd()}
-            onChange={(e) => {
-              choice.title = e.target.value
-              setTitle(e.target.value)
-            }}
+          value={choice.title}
+          placeholder="Enter your choice"
+          className="nodrag" 
+          onKeyDown={(e)=>{if (e.key=='Enter') e.target.blur()}}
+          onBlur={()=>{
+            console.log('blur!')
+            putSelfInLocalStorage(self)
+          }}
+          onChange={(e) => {
+            console.log('change!');
+            choice.title = e.target.value
+            setTitle(e.target.value)
+          }}
         />
+        <input 
+          style={{width:"3rem"}}
+          type='number'
+          min={0} 
+          max={1}
+          step={0.01} 
+          value={choice.value}
+          onKeyDown={(e)=>{if (e.key=='Enter') e.target.blur()}}
+          onBlur={()=>{
+            console.log('blur!')
+            putSelfInLocalStorage(self)
+          }}
+          onChange={(e)=>{
+            if (value>=0 && value<=1) {
+              console.log("valuechange");
+              choice.value = e.target.valueAsNumber
+            }
+            // setValue(e.target.valueAsNumber)
+          }}
+        ></input>
       </div>
     </div>
   );

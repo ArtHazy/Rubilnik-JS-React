@@ -1,8 +1,17 @@
 import { Panel } from 'reactflow';
 import { http_put_quiz } from '../../HTTP_requests.mjs';
-import { getSelfFromLocalStorage, putSelfInLocalStorage, loadQuizFromFile } from '../../functions.mjs';
+import { getSelfFromLocalStorage, putSelfInLocalStorage, loadQuizFromFile, downloadJson } from '../../functions.mjs';
+import { startRoomAsHost } from '../ViewLibrary';
+import { useNavigate } from 'react-router-dom';
 
+
+/**
+ * 
+ * @param {{quiz:Quiz, ind:number,upd:()=>void}} param0 
+ * @returns 
+ */
 export const PanelControls = ({ quiz, ind, upd }) => {
+    const navigate = useNavigate()
     return (
         <Panel 
             position='top-left' 

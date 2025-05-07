@@ -1,13 +1,21 @@
 import { useCallback, useState } from 'react';
 import { Handle, Position } from 'reactflow';
 import Terminal from './Terminal';
+import { putSelfInLocalStorage } from '../../functions.mjs';
 
+/**
+ * 
+ * @param {{id:string, type:string, data:{question:Question, upd:()=>void, self:User} }} param0 
+ * @returns 
+ */
 const QuestionNode = ({ id, type, data }) => {
   
-  let { question, upd} = data
+  let { question, upd, self} = data
+  console.log("!",self);
+  
 
   const [title, setTitle] = useState(question.title)
-  question.title = title
+  // question.title = title
 
   // const onChange = useCallback((evt) => {
   //   console.log(evt.target.value);
@@ -44,7 +52,11 @@ const QuestionNode = ({ id, type, data }) => {
         placeholder="Enter your question"
         // value={data.title}
         value={question.title}
-        onBlur={() => upd()}
+        onKeyDown={(e)=>{if (e.key=='Enter') e.target.blur()}}
+        onBlur={()=>{
+          console.log('blur!')
+          putSelfInLocalStorage(self)
+        }}
         // onChange={(e) => data.updateTitle(e.target.value)}
         onChange={(e) => {
           question.title = e.target.value // из "self"

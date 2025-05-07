@@ -51,7 +51,7 @@ export function http_post_user_get({email, password}, onload){
 
 /**
  * 
- * @param { {id,password} } validation 
+ * @param { {id:{name:string},password:string} } validation 
  * @param { {name,email,password} } user 
  * @param {*} onload 
  * @returns 

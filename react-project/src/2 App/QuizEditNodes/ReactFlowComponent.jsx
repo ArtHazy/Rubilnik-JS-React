@@ -73,7 +73,11 @@ const convertToQuizFormat = (nodes, edges) => {
   };
 };
 
-
+/** 
+ * @param {User} self  
+ * @param {Quiz} quiz  
+ * @param {()=>void} upd  
+*/
 const convertToFlowElements = (self, quiz, upd) => {
   const nodes = [];
   const edges = [];
@@ -82,7 +86,7 @@ const convertToFlowElements = (self, quiz, upd) => {
     nodes.push({
       id: String(question.id),
       type: 'question',
-      data: { question, upd },
+      data: { question, upd, self },
       //
       position: {
         x: Number(question.position?.x) || 0,
@@ -95,7 +99,7 @@ const convertToFlowElements = (self, quiz, upd) => {
       nodes.push({
         id: String(choice.id),
         type: 'choice',
-        data: { choice, upd },
+        data: { choice, upd, self },
         //
         position: {
           x: Number(choice.position?.x) || 0,
@@ -130,7 +134,9 @@ const convertToFlowElements = (self, quiz, upd) => {
 };
 
 
-
+/** 
+ * @param {{self:User,quiz:Quiz,upd:()=>{}}} param0  
+*/
 const ReactFlowComponent = ({ self, quiz, upd }) => {
   // if (quiz.graphEdges === "") {
   //   quiz.graphEdges = null;
@@ -166,6 +172,8 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
 
   //InitialNodes
   useEffect(() => {
+    console.log("!S!",self);
+    
     const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(self, quiz, upd);
     setNodes(initialNodes);
     setEdges(initialEdges);
@@ -204,16 +212,32 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
               const wasMoved = finishedPositionChanges.some(c => c.id === node.id);
               
               if (!wasMoved) return node;
+              if (node.type=="question") {
+                node.data.question.position=node.position
+                return node
+                // {
+                //     ...node,
+                //     data: {
+                //       question: {
+                //         ...node.data.question,
+                //         position: node.position,
+                //       }
+                //     }
+                // };
+              } else {
+                node.data.choice.position=node.position
+                return node
+                // {
+                //   ...node,
+                //   data: {
+                //     choice: {
+                //       ...node.data.choice,
+                //       position: node.position,
+                //     }
+                //   }
+                // };
+              }
 
-              return {
-                  ...node,
-                  data: {
-                    question: {
-                      ...node.data.question,
-                      position: node.position,
-                    }
-                  }
-              };
           });
       }
       return updatedNodes;
@@ -248,6 +272,8 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
 
 
   const onDrop = useCallback((event) => {
+    
+    
     event.preventDefault();
     const type = event.dataTransfer.getData('application/reactflow');
     const position = screenToFlowPosition({ 
@@ -256,19 +282,24 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
     });
     const id = `${Date.now()}`
     let newNode
+
+    console.log("ondrop",self);
+
     if (type=="question"){
+      console.log("qestion type",self);
+      
       newNode = {
         id:id,
         type,
         position,
-        data: { question:{id,title:"new",position,choices:[]} }
+        data: { question:{id,title:"new",position,choices:[]}, self }
       };
     } else if (type=="choice") {
       newNode = {
         id:id,
         type,
         position,
-        data: { choice:{id,title:"new",position,value:0} }
+        data: { choice:{id,title:"new",position,value:0}, self }
       };
     }
       putSelfInLocalStorage(self)
