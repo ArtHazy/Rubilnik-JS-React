@@ -2,7 +2,6 @@
 @import "../main/mixin.scss";
 
 .Play{
-
     .status{
         @include grid();
         grid-template-columns: auto 1fr;
@@ -19,13 +18,33 @@
         border-radius:  0 0 var(--def-border-radius) var(--def-border-radius);
         //position: absolute;
         //top: 0;
-        progress{
+        //progress{
+        //    flood-color: var(--color-light);
+        //    grid-row:  2 / span 1;
+        //    grid-column:  1 / span 2;
+        //    width: 100%;
+        //    height: .3cm;
+        //    background-color: var(--color-light);
+        //    border-radius: var(--def-border-radius);
+        //}
+
+        .progress-bg, .progress-value{
             grid-row:  2 / span 1;
             grid-column:  1 / span 2;
             width: 100%;
-            height: .3cm;
-            accent-color: var(--choice-3-color);
+            height: .2cm;
+            border-radius: var(--def-border-radius);
+
         }
+        .progress-bg{
+            background-color: var(--color-light);
+            overflow: hidden;
+            .progress-value {
+                background-color: var(--choice-3-color);
+                transition: width 0.3s ease-in-out;
+            }
+        }
+
         .id{ font-size: 4em; color: var(--choice-1-color) };
     }
     position: relative;
@@ -34,11 +53,23 @@
     background-color: rgb(153, 160, 157);
     @include grid();
     padding-top: 0;
-    overflow: hidden;
-    grid-template-rows: auto 8fr 1fr; // - for socket status ;  grid-template-rows: 1fr
+    //overflow: scroll;
+    grid-template-rows: auto 8fr auto; // - for socket status ;  grid-template-rows: 1fr
+    .line{
+        justify-content: left;
+    }
     .roommates{
         box-sizing: border-box;
         overflow: scroll;
+        transition: .5s ease-in-out;
+        width: 100%;
+        &.hidden{
+            width: 0;
+        }
+    }
+    .roommates-counter{
+        min-width: 2em;
+        min-height: 2em;
     }
     .hscroll{
         width: 100%;
