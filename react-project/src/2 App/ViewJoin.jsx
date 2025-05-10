@@ -31,6 +31,8 @@ export const ViewJoin = () => {
 }
 
 const RoomKeyInput = () => {
+    const params = new URLSearchParams(window.location.search);
+    var roomKey = params.get("roomkey") || '';
     function switchTarget(e){
         e.target.value.length==1? e.target.nextElementSibling?.focus() : null
         // e.target.value.length==0? e.target.previousElementSibling?.focus() : null
@@ -39,8 +41,13 @@ const RoomKeyInput = () => {
         // alert(e.key);
         e.target.value.length==0 && e.key=='Backspace'? e.target.previousElementSibling?.focus():null
     }
+
+    var arr = new Array(4).fill(0)
+    console.log("roomKey", roomKey)
+    arr = arr.map((val,ind)=><input key={ind} type="text" value={roomKey[ind]} maxLength={1} onChange={(e)=>switchTarget(e)} onKeyDown={(e)=>switchTarget_(e)} />)
+
     return <div className="RoomKeyInput">
-        {new Array(4).fill(<input type="text" maxLength={1} onChange={(e)=>switchTarget(e)} onKeyDown={(e)=>switchTarget_(e)} />)}
+        {arr}
     </div>
 }
 
