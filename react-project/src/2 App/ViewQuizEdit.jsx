@@ -37,17 +37,11 @@ export const ViewQuizEdit = () => {
     const self = useMemo(() => getSelfFromLocalStorage(), [localStorage.getItem('self')]);
     let quiz = self.quizzes[ind]
     Array.isArray(quiz.questions)? null : quiz.questions = []
-    const questions = quiz.questions
-    const [focus, set_focus] = useState(-1) // question focus
-    const [flag,setFlag] = useState(false)
-    const navigate = useNavigate()
-
-    function upd(isInDB){ quiz.isInDB=isInDB?true:false, putSelfInLocalStorage(self), setFlag(!flag)}
 
     return (
         <div style={{ height: '100vh', width: '100vw' }}>
             <ReactFlowProvider>
-                <ReactFlowComponent self={self} quiz={quiz} upd={upd} />
+                <ReactFlowComponent self={self} quiz={quiz} />
                 {/* <Editor quiz={quiz} upd={upd} /> */}
             </ReactFlowProvider>
         </div>

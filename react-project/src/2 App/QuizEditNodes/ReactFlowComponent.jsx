@@ -61,91 +61,155 @@ const edgeTypes = {
 };
 
 const panOnDrag = [1, 2];
+const SAFE_ZONE_RADIUS = 100; 
+
+const generateNodeId = () => 
+  `${Date.now() * 1000000 + Math.floor(Math.random() * 10000)}`;
 
 const convertToQuizFormat = (nodes, edges) => {
   const restoreQuestions = nodes
-    .filter(n => n.type === 'question')
-    .map(n => n.data.question);
+    .filter(node => node.type === 'question')
+    .map(questionNode => ({
+      ...questionNode.data.question,
+      position: questionNode.position,
+      tempId: questionNode.id, //!!
+      choices: nodes
+        .filter(choiceNode => 
+          choiceNode.type === 'choice' && 
+          choiceNode.parentId === questionNode.id
+        )
+        .map(choiceNode => ({
+          ...choiceNode.data.choice,
+          tempId: choiceNode.id, //!!
+          position: choiceNode.position,
+        }))
+    }));
+    
 
+  const graphEdges = edges
+    .filter((e) => {
+      const sourceNode = nodes.find((n) => n.id === e.source);
+      const targetNode = nodes.find((n) => n.id === e.target);
+      return (
+        sourceNode?.type === 'choice' &&
+        targetNode?.type === 'question' &&
+        e.data?.condition !== -1
+      );
+    })
+    .map((e) => ({
+      source: e.source,
+      target: e.target,
+      conditional: e.data?.condition || 0,
+    }));
+
+    const graphEdgesJSON = JSON.stringify(graphEdges);
+  
   return {
+    // title: "quiz",
     restoreQuestions,
-    restoreGraphEdges: "" // placeholder // TODO
+    graphEdgesJSON
   };
 };
 
 /** 
  * @param {User} self  
  * @param {Quiz} quiz  
- * @param {()=>void} upd  
 */
-const convertToFlowElements = (self, quiz, upd) => {
+const convertToFlowElements = (self, quiz) => {
   const nodes = [];
   const edges = [];
+  const tempIdMap = new Map();
+
   // QuestionNode component params
   quiz.questions?.forEach((question) => {
+    const questionNodeId = question.tempId ?? generateNodeId();
+
+    if(question.tempId) {
+      tempIdMap.set(question.tempId, questionNodeId);
+    }
+
     nodes.push({
-      id: String(question.id),
+      id: questionNodeId, //String(question.id)
       type: 'question',
-      data: { question, upd, self },
-      //
-      position: {
-        x: Number(question.position?.x) || 0,
-        y: Number(question.position?.y) || 0
+      data: { 
+        question: {
+          ...question,
+          tempId: questionNodeId
+        }, 
+        self 
       },
-      // question
+      position: question.position || { x: 0, y: 0 },
     });
+
     // ChoiceNode component params
     question.choices?.forEach((choice, index) => {
-      nodes.push({
-        id: String(choice.id),
-        type: 'choice',
-        data: { choice, upd, self },
-        //
-        position: {
-          x: Number(choice.position?.x) || 0,
-          y: Number(choice.position?.y) || (index + 1) * 100
-        },
-        extent: 'parent',
-        parentId: String(question.id),
+      const choiceNodeId = choice.tempId ?? generateNodeId();
 
-        //ссылка на quiz.question.choice
-        choice: choice,
+      if(choice.tempId) {
+        tempIdMap.set(choice.tempId, choiceNodeId);
+      }
+
+      console.log("ID", choice.tempId);
+      nodes.push({
+        id: choiceNodeId, //String(choice.id)
+        type: 'choice',
+        data: { 
+          choice: {
+            ...choice,
+            tempId: choiceNodeId
+          }, 
+          self 
+        },
+        position: choice.position || {x: 0, y: (index + 1) * 100},
+        parentId: questionNodeId,
       });
 
-      // Связь вопрос -> вариант
-      // edges.push({
-      //   id: `${question.id}-${choice.id}`,
-      //   source: question.id,
-      //   target: choice.id
-      // });
-
-      // Связь вариант -> следующий вопрос (если есть)
-      // if(choice.targetQuestionId) {
-      //   edges.push({
-      //     id: `${choice.id}-${choice.targetQuestionId}`,
-      //     source: choice.id,
-      //     target: choice.targetQuestionId
-      //   });
-      // }
+      edges.push({
+        id: `auto-${questionNodeId}-${choiceNodeId}`,
+        source: questionNodeId,
+        target: choiceNodeId,
+        data: { condition: -1 },
+        type: 'customEdge',
+        animated: false,
+      });
     });
   });
 
-  return { nodes, edges: [] }; // edges are not reconstructed in this version
+  try {
+    console.log("ZZZZZZ", quiz.graphEdges);
+    const parsedEdges = JSON.parse(quiz.graphEdges || '[]');
+    console.log("???", parsedEdges);
+    parsedEdges.forEach(edge => {
+      console.log("EDGE", edge);
+      if (edge.conditional !== -1) {
+        const sourceId = tempIdMap.get(edge.source);
+        const targetId = tempIdMap.get(edge.target);
+
+        edges.push({
+          id: `conn-${sourceId}-${targetId}`,
+          source: sourceId,
+          target: targetId,
+          data: { condition: edge.conditional },
+          type: 'customEdge',
+          animated: true
+        });
+      }
+    });
+  } catch (e) {
+    console.error('Error parsing graph edges:', e);
+  }
+
+  console.log("WWWW", edges)
+
+  return { nodes, edges };
 };
 
 
 /** 
- * @param {{self:User,quiz:Quiz,upd:()=>{}}} param0  
+ * @param {{self:User,quiz:Quiz}} param0  
 */
-const ReactFlowComponent = ({ self, quiz, upd }) => {
-  // if (quiz.graphEdges === "") {
-  //   quiz.graphEdges = null;
-  // } 
-  // const str = JSON.parse(quiz.graphEdges);
-  // console.log("JSON", str);
-  // console.log("initialNodes", initialNodes);
-  // console.log("quiz", quiz.questions);
-
+const ReactFlowComponent = ({ self, quiz }) => {
+  const { project, getNodes } = useReactFlow();
   const {ind} = useParams();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -153,54 +217,45 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
   const contextMenuRef = useRef(null);
   const { screenToFlowPosition } = useReactFlow();
+  const [hoveredQuestionId, setHoveredQuestionId] = useState(null);
+  // const [activeConnection, setActiveConnection] = useState(null);
 
-  const handleAddQuestion = () => {
-    quiz.isInDB = false;
-    const newNode = {
-      id: Date.now(), // Используем уникальный ID
-      title: "Question " + (nodes.length + 1),
-      position: { 
-        x: 50, 
-        y: nodes.length * 100 // Вертикальный отступ для новых нод
-      },
-      choices: [{ title: "", value: 0 }],
-    };
-    
-    setNodes((nds) => nds.concat(newNode));
-  };
 
   /** @param {number} id */
   const deleteQuestion = (id)=>{
-    // console.log("!01!!",nodes);
-    // quiz.questions.forEach((question)=>{
-    //   console.log("!!!",question.id!=Number(id));
-    // })
-    quiz.questions = quiz.questions.filter( (question)=>question.id!=Number(id) ) 
+    quiz.questions = quiz.questions.filter( (question)=>question.tempId != id ) 
     putSelfInLocalStorage(self)
   }
   /** @param {number} id */
   const deleteChoice = (id)=>{
     quiz.questions.forEach( (question)=>{
-      question.choices.filter( (choice)=>(choice.id != id) )
+      question.choices.filter( (choice)=>(choice.tempId != id) )
     })
   }
 
+  // // Эффект для синхронизации с localStorage
+  // useEffect(() => {
+  //   const storedSelf = getSelfFromLocalStorage();
+  //   if (storedSelf) {
+  //     setSelf(storedSelf);
+  //     setQuiz(storedSelf.quizzes[ind]);
+  //   }
+  // }, [ind]);
+
   //InitialNodes
   useEffect(() => {
-    const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(self, quiz, upd);
+    const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(self, quiz);
     setNodes(initialNodes);
     setEdges(initialEdges);
   }, [quiz.questions]);
 
   useEffect(() => {
     const selfOld = getSelfFromLocalStorage();
-    const { restoreQuestions, restoreGraphEdges } = convertToQuizFormat(nodes, edges);
-    // console.log("!!", restoreQuestions);
-    
+    const { restoreQuestions, graphEdgesJSON } = convertToQuizFormat(nodes, edges);
     const updatedQuiz = {
       ...quiz,
       questions: restoreQuestions,
-      graphEdges: restoreGraphEdges,
+      graphEdges: graphEdgesJSON,
       startEndNodesPositions: "{}",
       dateSaved: Date.now()
     };
@@ -208,9 +263,7 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
     putSelfInLocalStorage(selfOld);
   }, [nodes, edges]);
 
-  const handleNodesChange = (changes) => {
-    // console.log("change");
-    
+  const handleNodesChange = (changes) => {   
     // Фильтруем изменения позиции
     const finishedPositionChanges = changes.filter(
       change => change.type === 'position' && !change.dragging // Обновляем только когда закончили перетаскивание
@@ -223,32 +276,14 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
           quiz.isInDB = false;
           updatedNodes = updatedNodes.map(node => {
               const wasMoved = finishedPositionChanges.some(c => c.id === node.id);
-              
               if (!wasMoved) return node;
+
               if (node.type=="question") {
-                node.data.question.position=node.position
-                return node
-                // {
-                //     ...node,
-                //     data: {
-                //       question: {
-                //         ...node.data.question,
-                //         position: node.position,
-                //       }
-                //     }
-                // };
+                node.data.question.position = node.position;
+                return node;
               } else {
-                node.data.choice.position=node.position
-                return node
-                // {
-                //   ...node,
-                //   data: {
-                //     choice: {
-                //       ...node.data.choice,
-                //       position: node.position,
-                //     }
-                //   }
-                // };
+                node.data.choice.position = node.position;
+                return node;
               }
 
           });
@@ -257,15 +292,114 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
     });
   };
 
+  const onNodeMouseEnter = useCallback((e, node) => {
+    // console.log("Enter");
+    // добавить выделение/обводку/тень ноды
+    // мб реализовать selected
+  }, []);
+
+  const handleNodeMouseLeave = useCallback(() => {
+  }, []);
+
+  const onNodeDragStart = useCallback((e, node) => {
+  }, []);
+
+  const onNodeDrag = useCallback((event, node) => {
+    if (node.type !== 'choice') return;
+
+    const dropPosition = screenToFlowPosition({
+      x: event.clientX,
+      y: event.clientY
+    });
+  }, [screenToFlowPosition]);
+
+  const onNodeDragStop = useCallback((event, draggedNode) => {
+    if (draggedNode.type !== 'choice') return;
+    
+    const dropPosition = screenToFlowPosition({ 
+      x: event.clientX, 
+      y: event.clientY 
+    });
+
+    // Находим ноду под курсором
+    const targetNode = getNodes().find(node => {
+      const nodeRect = {
+        x: node.position.x,
+        y: node.position.y,
+        width: node.width || 0,
+        height: node.height || 0
+      };
+
+      return (
+        node.id !== draggedNode.id &&
+        dropPosition.x >= nodeRect.x &&
+        dropPosition.x <= nodeRect.x + nodeRect.width &&
+        dropPosition.y >= nodeRect.y &&
+        dropPosition.y <= nodeRect.y + nodeRect.height
+      );
+    });
+
+    if (targetNode?.type === 'question') {
+      const choicesInTarget = nodes.filter(n => 
+        n.parentId === targetNode.id && 
+        n.type === 'choice'
+      );
+
+      console.log("check", targetNode);
+      
+      if (choicesInTarget.length >= 4) {
+        alert('Максимальное количество ответов в одном вопросе — 4');
+        return;
+      }
+
+      const oldEdge = edges.filter(edge => 
+        edge.source === draggedNode.parentId && 
+        edge.target === draggedNode.id
+      );
+
+      if (oldEdge) {
+        setEdges(eds => eds.filter(edge => edge.id !== oldEdge.id));
+      }  
+
+      setNodes(nds => nds.map(node => {
+        if (node.id !== draggedNode.id) return node;
+        
+        // Обновляем позицию относительно родителя
+        const newPosition = {
+          x: dropPosition.x - targetNode.position.x,
+          y: dropPosition.y - targetNode.position.y
+        };
+
+        return {
+          ...node,
+          position: newPosition,
+          parentId: targetNode.id,
+        };
+      }));
+
+      const newEdge = {
+        id: `${targetNode}-${draggedNode.id}`,
+        source: targetNode.id,
+        target: draggedNode.id,
+        type: "customEdge",
+        condition: -1,
+      };
+
+      console.log("DROP", newEdge);
+
+      setEdges((eds) => addEdge(newEdge, eds));
+    } 
+  }, [getNodes, project, setNodes, setEdges]);
+
   const handleAutoSave = useCallback(
     throttle(() => {
       try {
         const selfOld = getSelfFromLocalStorage();
         const { isOk } = http_put_quiz(selfOld, self.quizzes[ind], ()=>{})
-        console.log(self.quizzes[ind]);
+        // console.log(self.quizzes[ind]);
         if(isOk){
           //self.quizzes[ind] = responceQuiz;
-          upd(true);
+          //putSelfInLocalStorage(self)
         }
       } catch (error) {
         console.error('Ошибка сохранения:', error);
@@ -283,48 +417,63 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
   //   handleAutoSave();
   // }, [nodes, edges, handleAutoSave]);
 
+  const onDragOver = useCallback((event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
 
   const onDrop = useCallback((event) => {
     event.preventDefault();
     const type = event.dataTransfer.getData('application/reactflow');
+
+    if (!type) { return; }
+
     const position = screenToFlowPosition({ 
       x: event.clientX, 
       y: event.clientY 
     });
-    const id = Date.now().toString()
-    let newNode
+    const id = generateNodeId();
+    let newNode;
 
-    if (type=="question"){
+    if (type == "question"){
       /** @type {Question} */
-      let newQuestion = {id,title:"new",position,choices:[]}
+      let newQuestion = {id: null, tempId: id, title:"new", position, choices:[]}
       quiz.questions.push(newQuestion)
-      newNode = { id, type, position, data: { question:newQuestion, self } };
-    } else if (type=="choice") {
+      newNode = { id, type, position, data: { question: newQuestion, self } };
+    } else if (type == "choice") {
       /** @type {Choice} */
-      let newChoice = {id,title:"new",position,value:0}
-      newNode = { id, type, position, data: { choice:newChoice, self } };
+      let newChoice = {id: null, tempId: id, title:"new", position, value:0}
+      newNode = { id, type, position, data: { choice: newChoice, self } };
     }
     putSelfInLocalStorage(self)
     setNodes((nds) => nds.concat(newNode));
-  },[screenToFlowPosition] );    //setNodes
-
+  }, [screenToFlowPosition] );    //setNodes
 
   const onConnect = useCallback(
     (connection) => {
-        const newEdge = 
-        {
-          ...connection,
-          type: 'customEdge',
-          animated: true,
-          id: Date.now(), //!!!!!!!!!!!!
-          //   markerEnd: {
-          //     type:MarkerType.ArrowClosed,
-          //     width:20,
-          //     height:20,
-          //     // color
-          //   }
-        };
-        setEdges((eds) => addEdge({ ...newEdge, animated: true }, eds));
+      // const nodes = getNodes();
+      // const sourceNode = nodes.find((n) => n.id === connection.source);
+      // const targetNode = nodes.find((n) => n.id === connection.target);
+
+      // let condition = -1;
+      // if (sourceNode?.type === 'question' && targetNode?.type === 'question') {
+      //   const userInput = prompt('Введите условие перехода (число):', '0');
+      //   condition = parseInt(userInput) || 0;
+      // }
+
+      const newEdge = {
+        ...connection,
+        type: 'customEdge',
+        animated: true,
+        // id: `edge-${connection.source}-${connection.target}-${Date.now()}`, //!!!!!!!!!!!!
+        //   markerEnd: {
+        //     type:MarkerType.ArrowClosed,
+        //     width:20,
+        //     height:20,
+        //     // color
+        //   }
+      };
+      setEdges((eds) => addEdge(newEdge, eds));
     },
     [setEdges]
   );
@@ -362,7 +511,14 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onDrop={onDrop}
-          onDragOver={(e) => e.preventDefault()}
+          onDragOver={onDragOver}
+          
+          onNodeMouseEnter={onNodeMouseEnter}
+          onNodeMouseLeave={handleNodeMouseLeave}
+          onNodeDrag={onNodeDrag}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDragStop={onNodeDragStop}
+
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           onNodeContextMenu={onNodeContextMenu}
@@ -373,7 +529,7 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
           panOnDrag={panOnDrag}
           selectionMode={SelectionMode.Partial}
         >
-          <PanelControls quiz={quiz} ind={ind} upd={upd} />
+          <PanelControls quiz={quiz} ind={ind} />
           <Background />
           <Controls 
             showInteractive={false} 
@@ -424,6 +580,26 @@ const ReactFlowComponent = ({ self, quiz, upd }) => {
             </div>
           </div>
         )}
+        {/* {activeConnection && (
+          <svg style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none'
+          }}>
+            <line
+              x1={activeConnection.x}
+              y1={activeConnection.y}
+              x2={activeConnection.targetX}
+              y2={activeConnection.targetY}
+              stroke="#ff0000"
+              strokeWidth={2}
+              strokeDasharray="5 5"
+            />
+          </svg>
+        )} */}
       </div>
     </div>
   );

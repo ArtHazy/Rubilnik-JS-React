@@ -8,4 +8,26 @@
     //.form{ margin: auto; box-sizing: border-box}; color: var(--color-split2);
 }
 
+.password-container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+  
+    .toggle-password {
+      position: absolute;
+      right: 1%;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2em;
+      color: #666;
+      
+      &:hover {
+        color: #333;
+      }
+    }
+  }
+
 .ViewSelf, .ViewJoin, .ViewLibrary{ padding-bottom: 2cm; }

@@ -52,11 +52,9 @@ export function replaceValues(objReceiver, objGiver){
 /**
  * @param {File} file 
  * @param {Quiz} quiz 
- * @param {()=>void} upd 
  * @returns {void} 
  */
-export function loadQuizFromFile(file, quiz, upd){
-    console.log("upd", upd);
+export function loadQuizFromFile(file, quiz, ind){
     console.log(file);
     if (file instanceof File) {
         if (file.size>limits.maxQuizFileSise) { alert('file size is too big') }
@@ -71,8 +69,51 @@ export function loadQuizFromFile(file, quiz, upd){
                 loadedQuiz.id = quiz.id;
 
                 replaceValues(quiz, loadedQuiz)
-                upd()
+
+                let self = getSelfFromLocalStorage();
+                self.quizzes[ind] = quiz;
+
+                putSelfInLocalStorage(self);
+                window.location.reload();
             }
+            // return true;
         }
     }
 }
+
+export const handleEnterKey = (event, formSelector, submitButtonId = null, cycleMode = false) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+
+    const form = event.currentTarget.closest(formSelector);
+    if (!form) return;
+
+    const inputs = Array.from(form.querySelectorAll('input:not([readonly])'));
+    const currentIndex = inputs.indexOf(event.currentTarget);
+    
+    if (currentIndex === -1) return;
+
+    // Режим циклического переключения
+    if (cycleMode) {
+        const nextIndex = (currentIndex + 1) % inputs.length;
+        inputs[nextIndex].focus();
+        return;
+    }
+
+    // Оригинальная логика для других случаев
+    let checked = 0;
+    let nextIndex = (currentIndex + 1) % inputs.length;
+    
+    while (checked < inputs.length) {
+        if (inputs[nextIndex].value.trim() === '') {
+            inputs[nextIndex].focus();
+            return;
+        }
+        nextIndex = (nextIndex + 1) % inputs.length;
+        checked++;
+    }
+
+    if (submitButtonId) {
+        document.getElementById(submitButtonId)?.click();
+    }
+};

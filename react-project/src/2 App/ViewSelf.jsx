@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { limits } from "../values.mjs";
-import { getSelfFromLocalStorage, putSelfInLocalStorage, removeSelfFromLocalStorage } from "../functions.mjs"
+import { getSelfFromLocalStorage, putSelfInLocalStorage, removeSelfFromLocalStorage, handleEnterKey } from "../functions.mjs"
 import { http_put_user } from "../HTTP_requests.mjs";
 import "./ViewSelf.scss"
 
 export const ViewSelf = () => {
     const [flag,setFlag] = useState(false);
+    const [showPassword, setShowPassword] = useState(false); 
     const self = getSelfFromLocalStorage();
-    function upd(isInDB){ self.isInDB = isInDB? true:false, putSelfInLocalStorage(self), setFlag(!flag) }
 
+    function upd(isInDB){ self.isInDB = isInDB? true:false, putSelfInLocalStorage(self), setFlag(!flag) }
 
     return <div className="ViewSelf">
         <header>Profile</header>
@@ -20,16 +21,34 @@ export const ViewSelf = () => {
             }}>save</button> : null}
 
             <vstack>
-                id:<input id='id' type="text" value={self.id} onChange={(e)=>{e.target.value=self.id}}/>
+                id:<input id='id' type="text" value={self.id} readonly="true" onChange={(e)=>{e.target.value=self.id}}/>
             </vstack>
             <vstack>
-                name:<input id='name' type="text" value={self?.name} maxLength={limits.maxNameLength} onChange={(e)=>{self.name = e.target.value, upd()}}/>
+                name:<input id='name' type="text" value={self?.name} maxLength={limits.maxNameLength} onChange={(e)=>{self.name = e.target.value, upd()}} onKeyDown={(e) => handleEnterKey(e, '.form', null, true)}/>
             </vstack>
             <vstack>
-                email:<input id='email' type="text" value={self?.email} maxLength={limits.maxEmailLength} onChange={(e)=>{self.email = e.target.value, upd()}}/>
+                email:<input id='email' type="text" value={self?.email} maxLength={limits.maxEmailLength} onChange={(e)=>{self.email = e.target.value, upd()}} onKeyDown={(e) => handleEnterKey(e, '.form', null, true)}/>
             </vstack>
             <vstack>
-                password:<input id='password' type="password" value={self?.password} maxLength={limits.maxPassLength} onChange={(e)=>{self.password = e.target.value, upd()}}/>
+                password:
+                <div className="password-container">
+                    <input 
+                        id='password' 
+                        type={showPassword ? "text" : "password"} 
+                        value={self?.password} 
+                        maxLength={limits.maxPassLength} 
+                        onChange={(e)=>handleInputChange(passwordRef, 'password', e.target.value)}
+                        onKeyDown={(e) => handleEnterKey(e, '.form', null, true)}
+                    />
+                    <button
+                        type="button"
+                        className="toggle-password"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                        {showPassword ? '👁️' : '🗨️'}
+                    </button>
+                </div>
             </vstack>
             <vstack>
                 <button className="big" onClick={()=>{

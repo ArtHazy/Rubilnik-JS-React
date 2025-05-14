@@ -2,16 +2,19 @@ import { CORE_SERVER_URL, limits } from '../values.mjs';
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
 import { http_post_user_get, http_user_verify } from '../HTTP_requests.mjs';
 import "./ViewAuth.scss"
+import { handleEnterKey } from '../functions.mjs';
 
 export const ViewLogin = () => {
-
     if ( getSelfFromLocalStorage()?.id ) window.location.href='/'
     else return <div className='ViewLogin'>
         <div className='form'>
-            <hstack><div className='log accent'>LOG</div><div className='in accent'>IN</div></hstack>
+            <hstack>
+                <div className='log accent'>LOG</div>
+                <div className='in accent'>IN</div>
+            </hstack>
             <div className='form'>
-                <input id="email-input" type="email" placeholder='email' maxLength={limits.maxEmailLength} />
-                <input id="password-input" type="password" placeholder='password' maxLength={limits.maxPassLength} />
+                <input id="email-input" type="email" placeholder='email' maxLength={limits.maxEmailLength} onKeyDown={(e) => handleEnterKey(e, '.form', 'submit')} />
+                <input id="password-input" type="password" placeholder='password' maxLength={limits.maxPassLength} onKeyDown={(e) => handleEnterKey(e, '.form', 'submit')} />
                 <button id='submit' className='big' onClick={() => {
                     let submit = document.getElementById('submit');
                     submit.hidden = true;

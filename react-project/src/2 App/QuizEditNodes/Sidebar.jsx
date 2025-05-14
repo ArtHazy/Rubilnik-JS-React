@@ -49,7 +49,7 @@ const Sidebar = () => {
       {/* Кнопка ответа */}
       <div
         draggable
-        onDragStart={(e) => onDragStart(e, 'answer')}
+        onDragStart={(e) => onDragStart(e, 'choice')}
         style={{
           ...buttonStyle,
           background: '#E3F2FD',

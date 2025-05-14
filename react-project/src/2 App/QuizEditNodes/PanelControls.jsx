@@ -4,36 +4,26 @@ import { getSelfFromLocalStorage, putSelfInLocalStorage, loadQuizFromFile, downl
 import { startRoomAsHost } from '../ViewLibrary';
 import { useNavigate } from 'react-router-dom';
 
-
 /**
  * 
- * @param {{quiz:Quiz, ind:number,upd:()=>void}} param0 
+ * @param {{quiz:Quiz, ind:number}} param0 
  * @returns 
  */
-export const PanelControls = ({ quiz, ind, upd }) => {
+export const PanelControls = ({ quiz, ind }) => {
     const navigate = useNavigate()
     return (
         <Panel 
             position='top-left' 
             className='panel'
         >
-        {/* {quiz.isInDB? null: */}<button id="save" onClick={()=>{ 
-            console.log("QUIIIIZ",quiz);
-            // quiz.graphEdges = JSON.stringify(quiz.graphEdges);\
-            quiz.graphEdges = "";
-            // let self = getSelfFromLocalStorage();
-            // const {isOk} = http_put_quiz(self,quiz,()=>{})
-            
-            // if(isOk){
-            //     // self.quizzes[ind] = responceQuiz;
-            //     // console.log("!!!!!!!!!!!!!",ind, " ", self.quizzes);
-            //     // putSelfInLocalStorage(self);
-            //     upd(true);
-            // }
+        <button id="save" onClick={()=>{ 
             let self = getSelfFromLocalStorage();
-            console.log(self);
-            //putSelfInLocalStorage(self);
-            http_put_quiz(self, quiz, ()=>{});
+            const { isOk, quiz: quizNew } = http_put_quiz(self, quiz, ()=>{});
+            if (isOk) {
+                self.quizzes[ind] = quizNew;
+                console.log("SRLF", self.quizzes[ind]);
+                putSelfInLocalStorage(self);
+            }
 
         }}> save </button>
 
@@ -49,9 +39,14 @@ export const PanelControls = ({ quiz, ind, upd }) => {
                 </button>
             </label>
 
-            <input style={{display:"none"}} id="file-input" type="file" onChange={(e)=>loadQuizFromFile(e.target.files[0], quiz, upd)}/>
+            <input style={{display:"none"}} id="file-input" type="file" 
+                onChange={(e) => {
+                    loadQuizFromFile(e.target.files[0], quiz, ind); 
+                    // putSelfInLocalStorage(getSelfFromLocalStorage().quizzes[ind] = quiz)
+                }
+            }/>
 
-            <button onClick={()=>{console.log("test",quiz); startRoomAsHost(navigate, quiz)}}>
+            <button onClick={()=>{console.log("test", quiz); startRoomAsHost(navigate, quiz)}}>
                 <span className="material-symbols-outlined">
                     play_arrow
                 </span>

@@ -5,19 +5,28 @@ import { putSelfInLocalStorage } from '../../functions.mjs';
 
 /**
  * 
- * @param {{id:string, type:string, data:{question:Question, upd:()=>void, self:User} }} param0 
+ * @param {{id:string, type:string, data:{question:Question, self:User} }} param0 
  * @returns 
  */
 const QuestionNode = ({ id, type, data }) => {
   
-  let { question, upd, self} = data
+  let { question, self} = data;
 
-  const [title, setTitle] = useState(question.title)
-  // question.title = title
+  // const [title, setTitle] = useState(question.title);
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputValue, setInputValue] = useState(question.title);
 
-  // const onChange = useCallback((evt) => {
-  //   console.log(evt.target.value);
-  // }, []);
+  const handleDoubleClick = (e) => {
+    e.stopPropagation();
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    question.title = inputValue;
+    putSelfInLocalStorage(self);
+    setIsEditing(false);
+  };
+
 
   // const groupArea = {
   //   x: Position.x - 200,  // Расширяем область на 200px в каждую сторону
@@ -27,42 +36,50 @@ const QuestionNode = ({ id, type, data }) => {
   // };
 
   return (
-    <div style={{
-      // position: 'absolute',
-      //   left: groupArea.x,
-      //   top: groupArea.y,
-      //   width: groupArea.width,
-      //   height: groupArea.height,
-      background: '#FFF5CC',
-      padding: '20px',
-      borderRadius: '10px',
-      border: '2px solid #FFD700',
-      minWidth: '200px',
-      minHeight: '300px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-    }}>
+    <div 
+      style={{
+        // position: 'absolute',
+        //   left: groupArea.x,
+        //   top: groupArea.y,
+        //   width: groupArea.width,
+        //   height: groupArea.height,
+        background: '#FFF5CC',
+        padding: '20px',
+        borderRadius: '10px',
+        border: '2px solid #FFD700',
+        minWidth: '200px',
+        minHeight: '300px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+      }}
+      onDoubleClick={handleDoubleClick}
+    >
+      <Terminal type="source" position={ Position.Bottom } />
       <Terminal type="target" position={ Position.Top } />
-      ❓
-      <input 
-        id="text" 
-        name="text" 
-        className="nodrag" 
-        placeholder="Enter your question"
-        // value={data.title}
-        value={question.title}
-        onKeyDown={(e)=>{if (e.key=='Enter') e.target.blur()}}
-        onBlur={()=>{
-          console.log('blur!')
-          putSelfInLocalStorage(self)
-        }}
-        // onChange={(e) => data.updateTitle(e.target.value)}
-        onChange={(e) => {
-          question.title = e.target.value // из "self"
-          setTitle(e.target.value) // локальное
-          // question.title=e.target.value 
-          // upd()
-        }} //question.title = e.target.value; upd();
-      />
+
+      {isEditing ? (
+        <input 
+          autoFocus
+          id="text" 
+          name="text" 
+          className="nodrag"
+          placeholder="Enter your question"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onBlur={handleSave}
+          onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+          style={{ width: '100%' }}
+        />
+      ) : (
+        <div style={{ 
+          minHeight: '1.5em',
+          padding: '2px 4px',
+          whiteSpace: 'pre-wrap',
+          cursor: 'pointer'
+        }}>
+          {question.title || 'Дважды кликните для редактирования'}
+        </div>
+      )}
+
       <div style={{ fontSize: '0.8em', color: '#666' }}>
         {data.choices?.map((choice, i) => (
           <div key={i} style={{ margin: '5px 0' }}>➥ {choice.text}</div>
