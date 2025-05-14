@@ -4,7 +4,9 @@ import { limits } from "../values.mjs"
 import "./ViewJoin.scss"
 
 export const ViewJoin = () => {
-    const [roomkey, setRoomkey] = useState("")
+    const params = new URLSearchParams(window.location.search);
+    var roomKeyParam = params.get("roomkey") || '';
+    const [roomkey, setRoomkey] = useState(roomKeyParam)
     let self = getSelfFromLocalStorage() || {};
 
     const handleEnterPress = () => {
@@ -31,19 +33,6 @@ export const ViewJoin = () => {
         putSelfInLocalStorage(self);
         window.location = '/play/' + roomkey.toUpperCase().padEnd(4, " ").substring(0, 4);
     }
-
-    // function navigatePlay(){
-    //     putSelfInLocalStorage(self)
-    //     let inputs = document.querySelector('.RoomKeyInput')
-    //     let roomkey = ''
-    //     inputs.childNodes.forEach((child)=>{
-    //         roomkey += child.value
-    //     })
-    //     roomkey=roomkey.toUpperCase()
-    //     // alert(roomkey)
-    //     window.location = '/play/'+roomkey
-    // }
-
 }
 
 const RoomKeyInput = ({ roomkey, onRoomkeyChange, onEnterPress }) => {
