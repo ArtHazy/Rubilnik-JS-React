@@ -1,4 +1,4 @@
-import { CORE_SERVER_URL, limits } from "./values.mjs";
+import {AUTH_SERVICE_URL, limits} from "./values.mjs";
 
 /**
  * @param {{}} json 
@@ -30,7 +30,7 @@ export function putSelfInDB(self){
     // self.quizzes[0].name
     let isOk
     let req = new XMLHttpRequest();
-    req.open('PUT', CORE_SERVER_URL+'/user', false);
+    req.open('PUT', AUTH_SERVICE_URL+'/user', false);
     req.setRequestHeader('Content-Type', 'application/json');
     req.onload = ()=>{ isOk=req.status==200 }
     req.send(JSON.stringify(self))

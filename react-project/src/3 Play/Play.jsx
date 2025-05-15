@@ -8,6 +8,7 @@ import { WSPlayAPI } from "../WS_communication.mjs";
 import { useLocation, useParams } from "react-router-dom";
 import "./Play.scss"
 import {QR} from "./QR.jsx";
+import {AUTH_SERVICE_URL, SERVER, UI_SERVICE_URL} from "../values.mjs";
 export const Play = () => {
 
     const [socket, setSocket] = useState(null)
@@ -86,13 +87,24 @@ export const Play = () => {
       setSocket(socket)
     }, []);
 
+    var join_lan_str = SERVER.lan_connection_string
+    //
+    if (SERVER.label==SERVER.LABELS.debug){
+        join_lan_str = UI_SERVICE_URL
+    }
+    //
+    const join_room_url = UI_SERVICE_URL+"/join?roomkey="+roomId
 
     return <div className="Play">
       {/* <div>socket: {socketStatus}</div> */}
         {gameState==gameStates.lobby? <div></div> :
             <div className={"status"}>
-                <QR isSmall={true} roomId={roomId}/>
-                <div className={"id"}>{roomId}</div>
+                {join_lan_str? <QR isSmall={true} data={join_lan_str} label={"join lan"}/> : <div></div>}
+                <div className={"vstack"}>
+                    <div className={"id"}>{roomId}</div>
+                    <span>server : {SERVER.label}</span>
+                </div>
+                <QR isSmall={true} data={join_room_url} label={"join room"}/>
                 <div className={"progress-bg"}>
                     <div className={"progress-value"} style={{width: (gameState==gameStates.finished? 1 : currentQuestionInd / quizLength)*100+"%" }} />
                 </div>
@@ -105,7 +117,7 @@ export const Play = () => {
       {socketStatus == socketStates.open? <ViewLoading text={'cant join room'}/> : null}
 
 
-      {socketStatus == socketStates.inRoom && gameState === gameStates.lobby ? <ViewLobby isHost={isHost} socket={socket} roomId={roomId} /> : null}
+      {socketStatus == socketStates.inRoom && gameState === gameStates.lobby ? <ViewLobby joinLanStr={join_lan_str} joinRoomUrl={join_room_url} roomId={roomId} isHost={isHost} socket={socket} /> : null}
       {socketStatus == socketStates.inRoom && gameState === gameStates.live ? <ViewQuestion isHost={isHost} socket={socket} roomId={roomId} setGameState={setGameState} quizLength={quizLength} setQuizLength={setQuizLength} currentQuestionInd={currentQuestionInd} setCurrentQuestionInd={setCurrentQuestionInd} currentQuestion={currentQuestion} setCurrentQuestion={setCurrentQuestion}/> : null}
       {socketStatus == socketStates.inRoom && gameState === gameStates.finished ? <ViewResult isHost={isHost} socket={socket} roomId={roomId} results={results} roommates={roommates} /> : null}
 

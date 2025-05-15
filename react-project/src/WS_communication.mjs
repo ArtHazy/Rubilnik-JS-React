@@ -1,5 +1,5 @@
 import { onerror } from "./HTTP_requests.mjs";
-import { CORE_SERVER_URL_WS } from "./values.mjs";
+import {ROOM_SERVICE_URL} from "./values.mjs";
 
 
 export class WSPlayAPI{
@@ -38,7 +38,7 @@ export class WSPlayAPI{
     }
 
     constructor(){
-        this.ws = new WebSocket(CORE_SERVER_URL_WS+"");
+        this.ws = new WebSocket(ROOM_SERVICE_URL+"");
         this.ws.onopen = (ev)=>{
             this._log_event("open",ev)
             this.eventActions.open()

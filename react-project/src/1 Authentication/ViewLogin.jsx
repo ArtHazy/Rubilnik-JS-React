@@ -1,6 +1,6 @@
-import { CORE_SERVER_URL, limits } from '../values.mjs';
+import { limits } from '../values.mjs';
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
-import { http_post_user_get, http_user_verify } from '../HTTP_requests.mjs';
+import { http_post_user_get } from '../HTTP_requests.mjs';
 import "./ViewAuth.scss"
 import { handleEnterKey } from '../functions.mjs';
 

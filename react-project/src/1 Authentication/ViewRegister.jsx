@@ -1,4 +1,4 @@
-import { CORE_SERVER_URL, limits } from '../values.mjs';
+import { limits } from '../values.mjs';
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
 import { http_post_user } from '../HTTP_requests.mjs';
 import "./ViewAuth.scss"

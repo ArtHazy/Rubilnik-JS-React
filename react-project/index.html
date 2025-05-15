@@ -6,9 +6,18 @@
     <title>Rubilnik</title>
   </head>
   <body>
+    <!-- thymeleaf specific (ignored otherwise) -->
     <script th:inline="javascript">
-      window.localIP = [[${localIP}]];
-      window.serverPort = [[${serverPort}]];
+      window.server = {
+        profiles: [[${serverProfiles}]],
+        LABELS: {desktop:"desktop",local:"local",debug:"debug"},
+        label: [[${serverProfiles}]].includes("desktop")? "local":"central",
+        ip: [[${localIP}]],
+        auth_port: [[${authPort}]],
+        room_port: [[${roomPort}]],
+        lan_connection_string: [[${lanQrString}]]
+      }
+      // window.server.label = window.server.profiles.contains("desktop")? "local":"central"
     </script>
     <div id="root"></div>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
