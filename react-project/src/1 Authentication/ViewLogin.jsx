@@ -3,8 +3,11 @@ import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs
 import { http_post_user_get } from '../HTTP_requests.mjs';
 import "./ViewAuth.scss"
 import { handleEnterKey } from '../functions.mjs';
+import { useNotification } from '../2 App/ContextNotification';
 
 export const ViewLogin = () => {
+    const { showNotification } = useNotification();
+
     if ( getSelfFromLocalStorage()?.id ) window.location.href='/'
     else return <div className='ViewLogin'>
         <div className='form'>
@@ -33,7 +36,7 @@ export const ViewLogin = () => {
                         quizzes.forEach((quiz)=>{quiz.isInDB=true;})
                         user.isInDB=true;
                         console.log('user', user), putSelfInLocalStorage(user), window.location.href='/'
-                    } else alert('failed to login')
+                    } else showNotification('failed to login', 'error')
                 }}>login</button>
             </div>
 

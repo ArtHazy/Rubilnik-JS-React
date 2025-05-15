@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import ReactFlow, { Background, Controls, MiniMap, applyNodeChanges } from 'reactflow';
+import { ReactFlow, Background, Controls, MiniMap, applyNodeChanges } from '@xyflow/react';
 
 import { PanelControls } from './PanelControls';
 

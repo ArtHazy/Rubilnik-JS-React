@@ -49,38 +49,6 @@ export function replaceValues(objReceiver, objGiver){
     Object.keys(objGiver).forEach((key)=>{ objReceiver[key] = objGiver[key]; })
 }
 
-/**
- * @param {File} file 
- * @param {Quiz} quiz 
- * @returns {void} 
- */
-export function loadQuizFromFile(file, quiz, ind){
-    console.log(file);
-    if (file instanceof File) {
-        if (file.size>limits.maxQuizFileSise) { alert('file size is too big') }
-        else {
-            let fr = new FileReader();
-            fr.readAsText(file)
-            fr.onload = (e)=>{
-                let ft = e.target.result
-                console.log(file.size, ft.byteLength);
-                let loadedQuiz = JSON.parse(ft)
-
-                loadedQuiz.id = quiz.id;
-
-                replaceValues(quiz, loadedQuiz)
-
-                let self = getSelfFromLocalStorage();
-                self.quizzes[ind] = quiz;
-
-                putSelfInLocalStorage(self);
-                window.location.reload();
-            }
-            // return true;
-        }
-    }
-}
-
 export const handleEnterKey = (event, formSelector, submitButtonId = null, cycleMode = false) => {
     if (event.key !== 'Enter') return;
     event.preventDefault();

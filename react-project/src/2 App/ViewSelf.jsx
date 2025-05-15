@@ -5,7 +5,7 @@ import { http_put_user } from "../HTTP_requests.mjs";
 import "./ViewSelf.scss"
 
 export const ViewSelf = () => {
-    const [flag,setFlag] = useState(false);
+    const [flag, setFlag] = useState(false);
     const [showPassword, setShowPassword] = useState(false); 
     const self = getSelfFromLocalStorage();
 
@@ -21,10 +21,7 @@ export const ViewSelf = () => {
             }}>save</button> : null}
 
             <vstack>
-                id:<input id='id' type="text" value={self.id} readonly="true" onChange={(e)=>{e.target.value=self.id}}/>
-            </vstack>
-            <vstack>
-                name:<input id='name' type="text" value={self?.name} maxLength={limits.maxNameLength} onChange={(e)=>{self.name = e.target.value, upd()}} onKeyDown={(e) => handleEnterKey(e, '.form', null, true)}/>
+                id:<input id='id' type="text" value={self?.id} readonly="true" onChange={(e)=>{e.target.value=self.id}}/>
             </vstack>
             <vstack>
                 email:<input id='email' type="text" value={self?.email} maxLength={limits.maxEmailLength} onChange={(e)=>{self.email = e.target.value, upd()}} onKeyDown={(e) => handleEnterKey(e, '.form', null, true)}/>
@@ -52,7 +49,7 @@ export const ViewSelf = () => {
             </vstack>
             <vstack>
                 <button className="big" onClick={()=>{
-                    let name = document.querySelector("#name").value;
+                    // let name = document.querySelector("#name").value;
                     let email = document.querySelector("#email").value;
                     let password = document.querySelector("#password").value;
 

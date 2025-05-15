@@ -2,18 +2,11 @@ import { useEffect, useState, useCallback, useMemo } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { limits } from "../values.mjs"
 import { Actions } from "./App"
-import { downloadJson, getSelfFromLocalStorage, loadQuizFromFile, putSelfInLocalStorage} from "../functions.mjs"
+import { downloadJson, getSelfFromLocalStorage, putSelfInLocalStorage} from "../functions.mjs"
 import { startRoomAsHost } from "./ViewLibrary"
 import { http_post_quiz, http_put_quiz } from "../HTTP_requests.mjs"
 
-import ReactFlow, {
-  useNodesState, Handle, Position,
-  useEdgesState,
-  addEdge,
-  Controls,
-  Background,
-  MiniMap, ControlButton, SelectionMode, applyEdgeChanges, applyNodeChanges, ReactFlowProvider, BaseEdge, Panel
-} from 'reactflow';
+import { ReactFlowProvider } from '@xyflow/react';
 
 import ReactFlowComponent from "./QuizEditNodes/ReactFlowComponent"
 

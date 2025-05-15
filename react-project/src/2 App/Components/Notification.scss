@@ -1,0 +1,73 @@
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    animation: 
+      slideIn 0.3s ease-out,
+      slideOut 0.3s ease-out forwards;
+  }
+
+  .notification-wrapper {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+  }
+  
+  @keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  @keyframes slideOut {
+    from { transform: translateX(0); }
+    to { transform: translateX(150%); }
+  }
+
+  .notification.closing {
+    animation: slideOut 0.3s ease-out forwards;
+  }
+
+  .notification.closing {
+    animation: slideOut 0.3s ease-out forwards;
+  }
+  
+  .info {
+    background: #2196F3;
+    color: white;
+  }
+  
+  .success {
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .error {
+    background: #f44336;
+    color: white;
+  }
+  
+  .warning {
+    background: #ff9800;
+    color: white;
+  }
+  
+  .close-btn {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 0;
+    margin-left: 10px;
+  }

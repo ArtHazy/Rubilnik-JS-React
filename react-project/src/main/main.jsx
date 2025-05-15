@@ -10,6 +10,7 @@ import { ViewQuizEdit } from '../2 App/ViewQuizEdit.jsx';
 import { Play } from '../3 Play/Play.jsx';
 import { ViewJoin } from '../2 App/ViewJoin.jsx';
 import { ViewError } from '../4 Error/ViewError.jsx';
+import { NotificationProvider } from '../2 App/ContextNotification.jsx';
 
 
 const router = createBrowserRouter([
@@ -24,5 +25,7 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <RouterProvider router={router} />
+  <NotificationProvider>
+    <RouterProvider router={router} />
+  </NotificationProvider>
 )

@@ -1,0 +1,47 @@
+.edge-label {
+    position: absolute;
+    background: transparent;
+    padding: 5px;
+    border-radius: 5px;
+  }
+  
+  .percentage-input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
+    transition: all 0.2s;
+  }
+  
+  .percentage-input:hover {
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  }
+  
+  .input {
+    width: 50px;
+    border: none;
+    text-align: center;
+    font-size: 14px;
+    padding: 2px;
+    border-radius: 3px;
+    transition: all 0.2s;
+  }
+  
+  .input:focus {
+    outline: none;
+    background: #f8f9fa;
+  }
+  
+  .input::-webkit-inner-spin-button,
+  .input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  .input[type=number] {
+    -moz-appearance: textfield;
+  }

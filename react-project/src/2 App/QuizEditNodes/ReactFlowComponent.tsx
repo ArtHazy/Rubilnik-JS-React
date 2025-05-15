@@ -28,7 +28,7 @@ import ReactFlow, {
   ReactFlowInstance,
   GetMiniMapNodeAttribute,
   OnNodesChange
-} from 'reactflow';
+} from '@xyflow/react';
 import { useParams } from 'react-router-dom';
 import throttle from 'lodash/throttle';
 

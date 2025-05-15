@@ -1,6 +1,7 @@
 import { AUTH_SERVICE_URL } from "./values.mjs";
+import { useNotification } from "./2 App/ContextNotification";
 
-export const onerror = (e) => {alert(e.message);}
+export const onerror = (e) => {const { showNotification } = useNotification(); showNotification(e.message, error);}
 
 export function http_user_verify({email, password}, onload){
     let isOk, id;

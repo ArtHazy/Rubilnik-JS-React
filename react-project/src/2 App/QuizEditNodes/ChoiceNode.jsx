@@ -1,4 +1,4 @@
-import { Handle, Position } from 'reactflow';
+import { Handle, Position } from '@xyflow/react';
 import Terminal from './Terminal';
 import { useState } from 'react';
 import { putSelfInDB, putSelfInLocalStorage } from '../../functions.mjs';
@@ -6,9 +6,9 @@ import { putSelfInDB, putSelfInLocalStorage } from '../../functions.mjs';
 
 /** @param {{data:{choice:Choice,self:User}}} */
 const ChoiceNode = ({ data }) => {
-  const {choice,self} = data
+  const { choice, self, isHighlighted } = data
 
-  const [isEditing, setIsEditing] = useState(false);
+
   const [title, setTitle] = useState(choice.title)
   const [value, setValue] = useState(choice.value)
   const [isImage, setIsImage] = useState(false);
@@ -63,10 +63,10 @@ const ChoiceNode = ({ data }) => {
 
   return (
     <div style={{
-      background: '#E3F2FD',
+      background: isHighlighted ? '#E3F2FD' : '#FFFFFF',
       padding: '15px',
       borderRadius: '8px',
-      border: '2px solid #64B5F6',
+      border: `2px solid ${isHighlighted ? '#64B5F6' : '#E0E0E0'}`,
       boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
     }}>
       <Terminal type="source" position={ Position.Bottom } />

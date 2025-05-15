@@ -1,13 +1,14 @@
 import React, { useCallback, useState, useRef, useMemo, useEffect  } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   useNodesState,
   useEdgesState,
   addEdge,
   Controls,
   Background,
   useReactFlow,
-  MiniMap, ControlButton, SelectionMode, applyEdgeChanges, applyNodeChanges, ReactFlowProvider, BaseEdge, Panel
-} from 'reactflow';
+  MiniMap, ControlButton, SelectionMode, applyEdgeChanges, applyNodeChanges, ReactFlowProvider, BaseEdge, Panel, reconnectEdge
+} from '@xyflow/react';
 import { useParams } from 'react-router-dom';
 import throttle from 'lodash/throttle';
 
@@ -27,7 +28,7 @@ import { MarkerType } from '@xyflow/react';
 
 import { limits } from '../../values.mjs';
 import { Actions } from '../App';
-import { downloadJson, getSelfFromLocalStorage, loadQuizFromFile, putSelfInLocalStorage} from "../../functions.mjs"
+import { downloadJson, getSelfFromLocalStorage, putSelfInLocalStorage} from "../../functions.mjs"
 import { startRoomAsHost } from "../ViewLibrary"
 import { http_post_quiz, http_put_quiz } from "../../HTTP_requests.mjs"
 
@@ -115,7 +116,7 @@ const convertToQuizFormat = (nodes, edges) => {
  * @param {User} self  
  * @param {Quiz} quiz  
 */
-const convertToFlowElements = (self, quiz) => {
+export const convertToFlowElements = (self, quiz) => {
   const nodes = [];
   const edges = [];
   const tempIdMap = new Map();
@@ -149,7 +150,6 @@ const convertToFlowElements = (self, quiz) => {
         tempIdMap.set(choice.tempId, choiceNodeId);
       }
 
-      console.log("ID", choice.tempId);
       nodes.push({
         id: choiceNodeId, //String(choice.id)
         type: 'choice',
@@ -176,11 +176,8 @@ const convertToFlowElements = (self, quiz) => {
   });
 
   try {
-    console.log("ZZZZZZ", quiz.graphEdges);
     const parsedEdges = JSON.parse(quiz.graphEdges || '[]');
-    console.log("???", parsedEdges);
     parsedEdges.forEach(edge => {
-      console.log("EDGE", edge);
       if (edge.conditional !== -1) {
         const sourceId = tempIdMap.get(edge.source);
         const targetId = tempIdMap.get(edge.target);
@@ -199,8 +196,6 @@ const convertToFlowElements = (self, quiz) => {
     console.error('Error parsing graph edges:', e);
   }
 
-  console.log("WWWW", edges)
-
   return { nodes, edges };
 };
 
@@ -209,14 +204,15 @@ const convertToFlowElements = (self, quiz) => {
  * @param {{self:User,quiz:Quiz}} param0  
 */
 const ReactFlowComponent = ({ self, quiz }) => {
-  const { project, getNodes } = useReactFlow();
+  const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(self, quiz);
+
   const {ind} = useParams();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [contextMenuNode, setContextMenuNode] = useState(null);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
   const contextMenuRef = useRef(null);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, getNodes, getEdges, addNodes, addEdges } = useReactFlow();
   const [hoveredQuestionId, setHoveredQuestionId] = useState(null);
   // const [activeConnection, setActiveConnection] = useState(null);
 
@@ -228,10 +224,39 @@ const ReactFlowComponent = ({ self, quiz }) => {
   }
   /** @param {number} id */
   const deleteChoice = (id)=>{
+    console.log("!",quiz);
     quiz.questions.forEach( (question)=>{
-      question.choices.filter( (choice)=>(choice.tempId != id) )
+      question.choices = question.choices.filter( (choice)=>{ choice.tempId != id; } )
     })
+    console.log(quiz.questions);
+    putSelfInLocalStorage(self)
   }
+
+  // Мемоизированные ноды с подсветкой
+  const highlightedNodes = useMemo(() => {
+    return nodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        isHighlighted: hoveredQuestionId 
+          ? (node.id === hoveredQuestionId || node.parentId === hoveredQuestionId)
+          : false
+      }
+    }));
+  }, [nodes, hoveredQuestionId]);
+
+  // Мемоизированные edges с подсветкой
+  const highlightedEdges = useMemo(() => {
+    return edges.map(edge => ({
+      ...edge,
+      data: {
+        ...edge.data,
+        isHighlighted: hoveredQuestionId 
+          ? (edge.source === hoveredQuestionId || edge.target === hoveredQuestionId)
+          : false
+      }
+    }));
+  }, [edges, hoveredQuestionId]);
 
   // // Эффект для синхронизации с localStorage
   // useEffect(() => {
@@ -244,14 +269,15 @@ const ReactFlowComponent = ({ self, quiz }) => {
 
   //InitialNodes
   useEffect(() => {
-    const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(self, quiz);
-    setNodes(initialNodes);
-    setEdges(initialEdges);
+    const { nodes: newNodes, edges: newEdges  } = convertToFlowElements(self, quiz);
+    setNodes(newNodes);
+    setEdges(newEdges);
   }, [quiz.questions]);
 
   useEffect(() => {
     const selfOld = getSelfFromLocalStorage();
-    const { restoreQuestions, graphEdgesJSON } = convertToQuizFormat(nodes, edges);
+    // console.log("AAAAAAAAAAAAAAAAAAAA");
+    const { restoreQuestions, graphEdgesJSON } = convertToQuizFormat(getNodes(), getEdges());
     const updatedQuiz = {
       ...quiz,
       questions: restoreQuestions,
@@ -261,9 +287,9 @@ const ReactFlowComponent = ({ self, quiz }) => {
     };
     selfOld.quizzes[ind] = updatedQuiz;
     putSelfInLocalStorage(selfOld);
-  }, [nodes, edges]);
+  }, [getNodes(), getEdges()]);
 
-  const handleNodesChange = (changes) => {   
+  const handleNodesChange = useCallback((changes) => {
     // Фильтруем изменения позиции
     const finishedPositionChanges = changes.filter(
       change => change.type === 'position' && !change.dragging // Обновляем только когда закончили перетаскивание
@@ -290,15 +316,16 @@ const ReactFlowComponent = ({ self, quiz }) => {
       }
       return updatedNodes;
     });
-  };
+  }, [quiz.isInDB, screenToFlowPosition]);
 
   const onNodeMouseEnter = useCallback((e, node) => {
-    // console.log("Enter");
-    // добавить выделение/обводку/тень ноды
-    // мб реализовать selected
+    // if (node.type === "question")
+      setHoveredQuestionId(node.id);
   }, []);
 
-  const handleNodeMouseLeave = useCallback(() => {
+  const handleNodeMouseLeave = useCallback((e, node) => {
+    // if (node.type === "question")
+      setHoveredQuestionId(null);
   }, []);
 
   const onNodeDragStart = useCallback((e, node) => {
@@ -326,12 +353,11 @@ const ReactFlowComponent = ({ self, quiz }) => {
       const nodeRect = {
         x: node.position.x,
         y: node.position.y,
-        width: node.width || 0,
-        height: node.height || 0
+        width: node.measured?.width,
+        height: node.measured?.height
       };
 
       return (
-        node.id !== draggedNode.id &&
         dropPosition.x >= nodeRect.x &&
         dropPosition.x <= nodeRect.x + nodeRect.width &&
         dropPosition.y >= nodeRect.y &&
@@ -340,17 +366,18 @@ const ReactFlowComponent = ({ self, quiz }) => {
     });
 
     if (targetNode?.type === 'question') {
-      const choicesInTarget = nodes.filter(n => 
+      const choicesInTarget = getNodes().filter(n => 
         n.parentId === targetNode.id && 
         n.type === 'choice'
       );
-
-      console.log("check", targetNode);
       
       if (choicesInTarget.length >= 4) {
         alert('Максимальное количество ответов в одном вопросе — 4');
         return;
       }
+
+      // targetNode.data.question.choices.push(...choicesInTarget.data.choice);
+      // quiz.questions[].choices.push(...choicesInTarget.data.choice) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       const oldEdge = edges.filter(edge => 
         edge.source === draggedNode.parentId && 
@@ -389,7 +416,7 @@ const ReactFlowComponent = ({ self, quiz }) => {
 
       setEdges((eds) => addEdge(newEdge, eds));
     } 
-  }, [getNodes, project, setNodes, setEdges]);
+  }, []);
 
   const handleAutoSave = useCallback(
     throttle(() => {
@@ -451,7 +478,6 @@ const ReactFlowComponent = ({ self, quiz }) => {
 
   const onConnect = useCallback(
     (connection) => {
-      // const nodes = getNodes();
       // const sourceNode = nodes.find((n) => n.id === connection.source);
       // const targetNode = nodes.find((n) => n.id === connection.target);
 
@@ -477,6 +503,28 @@ const ReactFlowComponent = ({ self, quiz }) => {
     },
     [setEdges]
   );
+
+  const onReconnect = useCallback(
+    (oldEdge, newConnection) =>
+      setEdges((els) => reconnectEdge(oldEdge, newConnection, els)),
+    [],
+  );
+  
+
+  const reconnectEdge = (oldEdge, newConnection, edges) => {
+    // Фильтруем старый edge из списка
+    const updatedEdges = edges.filter(edge => edge.id !== oldEdge.id);
+    
+    // Создаем новое соединение с обновленными source/target
+    const newEdge = {
+      ...oldEdge,
+      source: newConnection.source,
+      target: newConnection.target,
+      id: `conn-${newConnection.source}-${newConnection.target}-${Date.now()}`
+    };
+  
+    return [...updatedEdges, newEdge];
+  };
 
   const onNodeContextMenu = useCallback((e, node) => {
     e.preventDefault();
@@ -504,52 +552,55 @@ const ReactFlowComponent = ({ self, quiz }) => {
           setContextMenuNode(null);
         }, [])}
       >
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          
-          onNodeMouseEnter={onNodeMouseEnter}
-          onNodeMouseLeave={handleNodeMouseLeave}
-          onNodeDrag={onNodeDrag}
-          onNodeDragStart={onNodeDragStart}
-          onNodeDragStop={onNodeDragStop}
-
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          onNodeContextMenu={onNodeContextMenu}
-          style={rfStyle}
-          fitView
-          panOnScroll
-          selectionOnDrag
-          panOnDrag={panOnDrag}
-          selectionMode={SelectionMode.Partial}
-        >
-          <PanelControls quiz={quiz} ind={ind} />
-          <Background />
-          <Controls 
-            showInteractive={false} 
-            position="top-right"
+        {/* <ReactFlowProvider> */}
+          <ReactFlow
+            nodes={highlightedNodes}
+            edges={highlightedEdges}
+            onNodesChange={handleNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onReconnect={onReconnect}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
             
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              padding: '6px',
-              background: '#ffffff',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              borderRadius: '8px',
+            onNodeMouseEnter={onNodeMouseEnter}
+            onNodeMouseLeave={handleNodeMouseLeave}
+            onNodeDrag={onNodeDrag}
+            // onNodeDragStart={onNodeDragStart}
+            onNodeDragStop={onNodeDragStop}
 
-              top: '50%',
-              transform: 'translateY(-50%)',
-            }}>
-          </Controls>
-          <MiniMap nodeColor={nodeColor} nodeStrokeWidth={3} zoomable pannable/>
-        </ReactFlow>
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            onNodeContextMenu={onNodeContextMenu}
+            style={rfStyle}
+            fitView
+            panOnScroll
+            selectionOnDrag
+            panOnDrag={panOnDrag}
+            selectionMode={SelectionMode.Partial}
+          >
+            <PanelControls quiz={quiz} ind={ind} />
+            <Background />
+            <Controls 
+              showInteractive={false} 
+              position="top-right"
+              
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                padding: '6px',
+                background: '#ffffff',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                borderRadius: '8px',
+
+                top: '50%',
+                transform: 'translateY(-50%)',
+              }}>
+            </Controls>
+            <MiniMap nodeColor={nodeColor} nodeStrokeWidth={3} zoomable pannable/>
+          </ReactFlow>
+        {/* </ReactFlowProvider> */}
 
         {contextMenuNode && (
           <div

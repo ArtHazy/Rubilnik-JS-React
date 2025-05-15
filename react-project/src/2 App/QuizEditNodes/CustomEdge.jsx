@@ -1,52 +1,71 @@
 // CustomEdge.jsx
 import { 
-    BaseEdge, 
-    getStraightPath, 
-    EdgeLabelRenderer, 
-    useReactFlow 
-  } from '@xyflow/react';
-  import { memo } from 'react';
-  
-  const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY }) => {
-    // const { setEdges } = useReactFlow();
-    const [edgePath, labelX, labelY] = getStraightPath({
-      sourceX,
-      sourceY,
-      targetX,
-      targetY,
-    });
-  
-    return (
-      <>
-        <BaseEdge 
-          id={id} 
-          path={edgePath}
-          //markerEnd={markerEnd} 
-        />
-        {/* <EdgeLabelRenderer>
-          <div
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-            }}
-          >
-            <button
-              onClick={() => setEdges(es => es.filter(e => e.id !== id))}
-              style={{ 
-                padding: '2px 8px',
-                background: '#ff4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Удалить
-            </button>
-          </div>
-        </EdgeLabelRenderer> */}
-      </>
-    );
+  BaseEdge, 
+  getBezierPath, 
+  EdgeLabelRenderer,
+  useReactFlow 
+} from '@xyflow/react';
+import { memo } from 'react';
+
+const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected }) => {
+  const isHighlighted = data.isHighlighted;
+
+  const { setEdges } = useReactFlow(); 
+  const [path, labelX, labelY] = getBezierPath  ({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+  });
+
+  const handleChange = (e) => {
+    const value = Math.min(100, Math.max(0, e.target.value)); // Ограничение 0-100
+    setEdges(es => es.map(edge => 
+      edge.id === id ? { ...edge, data: { ...edge.data, value } } : edge
+    ));
   };
+
+  return (
+    <>
+      <BaseEdge 
+        id={id} 
+        path={path}
+        style={{
+          stroke: 
+            selected ? '#6366f1' : 
+            isHighlighted ? '#b1b1b7':
+            '#888',
+          strokeWidth: 2,
+          // strokeDasharray: data?.value > 50 ? '5 5' : 'none',
+        }}
+      />
+      <EdgeLabelRenderer>
+        <div
+          className="edge-label"
+          style={{
+            transform: `translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+          }}
+        >
+          <div className="percentage-input">
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={data?.value || 0}
+              onChange={handleChange}
+              className="input"
+              style={{ 
+                borderColor: selected ? '#6366f1' : '#ddd',
+                boxShadow: selected ? '0 0 0 1px #6366f1' : 'none'
+              }}
+            />
+            <span>%</span>
+          </div>
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+};
   
-  export default memo(CustomEdge);
+export default memo(CustomEdge);

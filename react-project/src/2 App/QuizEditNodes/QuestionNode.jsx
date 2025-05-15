@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { Handle, Position } from 'reactflow';
+import {useCallback, useState } from 'react';
+import { Handle, Position } from '@xyflow/react';
 import Terminal from './Terminal';
 import { putSelfInLocalStorage } from '../../functions.mjs';
 
@@ -8,11 +8,9 @@ import { putSelfInLocalStorage } from '../../functions.mjs';
  * @param {{id:string, type:string, data:{question:Question, self:User} }} param0 
  * @returns 
  */
-const QuestionNode = ({ id, type, data }) => {
-  
-  let { question, self} = data;
+const QuestionNode = ({ id, type, data, selected }) => {
+  let { question, self, isHighlighted } = data;
 
-  // const [title, setTitle] = useState(question.title);
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(question.title);
 
@@ -22,8 +20,10 @@ const QuestionNode = ({ id, type, data }) => {
   };
 
   const handleSave = () => {
+    console.log("TEST", inputValue);
     question.title = inputValue;
     putSelfInLocalStorage(self);
+    console.log("self", self);
     setIsEditing(false);
   };
 
@@ -46,10 +46,18 @@ const QuestionNode = ({ id, type, data }) => {
         background: '#FFF5CC',
         padding: '20px',
         borderRadius: '10px',
-        border: '2px solid #FFD700',
+        border: selected 
+          ? '2px solid #2196F3' 
+          : isHighlighted  
+            ? '2px solid #FFA000' 
+            : '2px solid #FFD700',
         minWidth: '200px',
         minHeight: '300px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+        boxShadow: selected 
+          ? '0 0 10px rgba(33,150,243,0.5)' 
+          : isHighlighted  
+            ? '0 0 8px rgba(255,160,0,0.3)'
+            : '0 4px 6px rgba(0,0,0,0.1)',
       }}
       onDoubleClick={handleDoubleClick}
     >

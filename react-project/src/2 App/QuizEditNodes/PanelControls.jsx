@@ -1,8 +1,9 @@
-import { Panel } from 'reactflow';
+import { Panel } from '@xyflow/react';
 import { http_put_quiz } from '../../HTTP_requests.mjs';
-import { getSelfFromLocalStorage, putSelfInLocalStorage, loadQuizFromFile, downloadJson } from '../../functions.mjs';
+import { getSelfFromLocalStorage, putSelfInLocalStorage, downloadJson, replaceValues } from '../../functions.mjs';
 import { startRoomAsHost } from '../ViewLibrary';
 import { useNavigate } from 'react-router-dom';
+import { limits } from '../../values.mjs';
 
 /**
  * 
@@ -10,7 +11,8 @@ import { useNavigate } from 'react-router-dom';
  * @returns 
  */
 export const PanelControls = ({ quiz, ind }) => {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+
     return (
         <Panel 
             position='top-left' 
@@ -41,7 +43,7 @@ export const PanelControls = ({ quiz, ind }) => {
 
             <input style={{display:"none"}} id="file-input" type="file" 
                 onChange={(e) => {
-                    loadQuizFromFile(e.target.files[0], quiz, ind); 
+                    loadQuizFromFile(e.target.files[0]); 
                     // putSelfInLocalStorage(getSelfFromLocalStorage().quizzes[ind] = quiz)
                 }
             }/>
