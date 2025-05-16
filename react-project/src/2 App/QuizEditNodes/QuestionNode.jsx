@@ -1,15 +1,14 @@
 import {useCallback, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import Terminal from './Terminal';
-import { putSelfInLocalStorage } from '../../functions.mjs';
 
 /**
  * 
- * @param {{id:string, type:string, data:{question:Question, self:User} }} param0 
+ * @param {{id:string, type:string, data:{question:Question} }} param0 
  * @returns 
  */
 const QuestionNode = ({ id, type, data, selected }) => {
-  let { question, self, isHighlighted } = data;
+  let { question, isHighlighted } = data;
 
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(question.title);
@@ -22,8 +21,6 @@ const QuestionNode = ({ id, type, data, selected }) => {
   const handleSave = () => {
     console.log("TEST", inputValue);
     question.title = inputValue;
-    putSelfInLocalStorage(self);
-    console.log("self", self);
     setIsEditing(false);
   };
 

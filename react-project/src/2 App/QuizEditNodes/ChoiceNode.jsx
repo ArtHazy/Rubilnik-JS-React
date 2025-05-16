@@ -6,7 +6,7 @@ import { putSelfInDB, putSelfInLocalStorage } from '../../functions.mjs';
 
 /** @param {{data:{choice:Choice,self:User}}} */
 const ChoiceNode = ({ data }) => {
-  const { choice, self, isHighlighted } = data
+  const { choice, isHighlighted } = data
 
 
   const [title, setTitle] = useState(choice.title)
@@ -22,7 +22,6 @@ const ChoiceNode = ({ data }) => {
   const handlePaste = async (e) => {
     const items = e.clipboardData.items;
     
-    // Проверка на вставку изображения
     for (const item of items) {
       if (item.type.indexOf('image') !== -1) {
         const blob = item.getAsFile();
@@ -30,10 +29,8 @@ const ChoiceNode = ({ data }) => {
         
         reader.onload = (event) => {
           const dataUrl = event.target.result;
-          setTitle(dataUrl);
-          choice.title = dataUrl;
+          updateChoice({ title: dataUrl });
           setIsImage(true);
-          putSelfInLocalStorage(self);
         };
         
         reader.readAsDataURL(blob);
@@ -42,14 +39,19 @@ const ChoiceNode = ({ data }) => {
       }
     }
 
-    // Проверка на текстовый URL
     const text = e.clipboardData.getData('text');
     if (isImageUrl(text)) {
-      setTitle(text);
-      choice.title = text;
+      updateChoice({ title: text });
       setIsImage(true);
-      putSelfInLocalStorage(self);
       e.preventDefault();
+    }
+  };
+
+  const updateChoice = (changes) => {
+    const updatedChoice = { ...choice, ...changes };
+    setTitle(updatedChoice.title);
+    if (typeof onUpdate === 'function') {
+      onUpdate(updatedChoice);
     }
   };
 
@@ -59,6 +61,13 @@ const ChoiceNode = ({ data }) => {
     choice.title = newTitle;
     setTitle(newTitle);
     setIsImage(isImageUrl(newTitle));
+  };
+
+  const handleValueChange = (newValue) => {
+    if (newValue >= 0 && newValue <= 1) {
+      setValue(newValue);
+      updateChoice({ value: newValue });
+    }
   };
 
   return (
@@ -82,7 +91,7 @@ const ChoiceNode = ({ data }) => {
             onKeyDown={(e) => { 
               if (e.key === 'Enter') e.target.blur();
             }}
-            onBlur={() => putSelfInLocalStorage(self)}
+            // onBlur={() => putSelfInLocalStorage(self)}
             style={{
               width: '100%',
               padding: '4px',

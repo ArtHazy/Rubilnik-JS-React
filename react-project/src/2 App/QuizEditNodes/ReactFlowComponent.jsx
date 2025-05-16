@@ -65,6 +65,7 @@ const panOnDrag = [1, 2];
 const SAFE_ZONE_RADIUS = 100; 
 
 const generateNodeId = () => 
+  // crypto.randomUUID();
   `${Date.now() * 1000000 + Math.floor(Math.random() * 10000)}`;
 
 const convertToQuizFormat = (nodes, edges) => {
@@ -116,7 +117,7 @@ const convertToQuizFormat = (nodes, edges) => {
  * @param {User} self  
  * @param {Quiz} quiz  
 */
-export const convertToFlowElements = (self, quiz) => {
+export const convertToFlowElements = (quiz) => {
   const nodes = [];
   const edges = [];
   const tempIdMap = new Map();
@@ -136,8 +137,8 @@ export const convertToFlowElements = (self, quiz) => {
         question: {
           ...question,
           tempId: questionNodeId
-        }, 
-        self 
+        },
+        isHighlighted: false
       },
       position: question.position || { x: 0, y: 0 },
     });
@@ -158,7 +159,7 @@ export const convertToFlowElements = (self, quiz) => {
             ...choice,
             tempId: choiceNodeId
           }, 
-          self 
+          isHighlighted: false,
         },
         position: choice.position || {x: 0, y: (index + 1) * 100},
         parentId: questionNodeId,
@@ -204,7 +205,7 @@ export const convertToFlowElements = (self, quiz) => {
  * @param {{self:User,quiz:Quiz}} param0  
 */
 const ReactFlowComponent = ({ self, quiz }) => {
-  const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(self, quiz);
+  const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(quiz);
 
   const {ind} = useParams();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -215,22 +216,6 @@ const ReactFlowComponent = ({ self, quiz }) => {
   const { screenToFlowPosition, getNodes, getEdges, addNodes, addEdges } = useReactFlow();
   const [hoveredQuestionId, setHoveredQuestionId] = useState(null);
   // const [activeConnection, setActiveConnection] = useState(null);
-
-
-  /** @param {number} id */
-  const deleteQuestion = (id)=>{
-    quiz.questions = quiz.questions.filter( (question)=>question.tempId != id ) 
-    putSelfInLocalStorage(self)
-  }
-  /** @param {number} id */
-  const deleteChoice = (id)=>{
-    console.log("!",quiz);
-    quiz.questions.forEach( (question)=>{
-      question.choices = question.choices.filter( (choice)=>{ choice.tempId != id; } )
-    })
-    console.log(quiz.questions);
-    putSelfInLocalStorage(self)
-  }
 
   // Мемоизированные ноды с подсветкой
   const highlightedNodes = useMemo(() => {
@@ -269,7 +254,7 @@ const ReactFlowComponent = ({ self, quiz }) => {
 
   //InitialNodes
   useEffect(() => {
-    const { nodes: newNodes, edges: newEdges  } = convertToFlowElements(self, quiz);
+    const { nodes: newNodes, edges: newEdges  } = convertToFlowElements(quiz);
     setNodes(newNodes);
     setEdges(newEdges);
   }, [quiz.questions]);
@@ -341,6 +326,7 @@ const ReactFlowComponent = ({ self, quiz }) => {
   }, [screenToFlowPosition]);
 
   const onNodeDragStop = useCallback((event, draggedNode) => {
+    console.log("!", draggedNode);
     if (draggedNode.type !== 'choice') return;
     
     const dropPosition = screenToFlowPosition({ 
@@ -375,9 +361,8 @@ const ReactFlowComponent = ({ self, quiz }) => {
         alert('Максимальное количество ответов в одном вопросе — 4');
         return;
       }
-
-      // targetNode.data.question.choices.push(...choicesInTarget.data.choice);
-      // quiz.questions[].choices.push(...choicesInTarget.data.choice) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      
+      targetNode.data.question.choices.push(draggedNode.data.choice); //add choice to quiz
 
       const oldEdge = edges.filter(edge => 
         edge.source === draggedNode.parentId && 
@@ -466,13 +451,12 @@ const ReactFlowComponent = ({ self, quiz }) => {
       /** @type {Question} */
       let newQuestion = {id: null, tempId: id, title:"new", position, choices:[]}
       quiz.questions.push(newQuestion)
-      newNode = { id, type, position, data: { question: newQuestion, self } };
+      newNode = { id, type, position, data: { question: newQuestion } };
     } else if (type == "choice") {
       /** @type {Choice} */
-      let newChoice = {id: null, tempId: id, title:"new", position, value:0}
-      newNode = { id, type, position, data: { choice: newChoice, self } };
+      let newChoice = {id: null, tempId: id, title:"new temp", position, value:0}
+      newNode = { id, type, position, data: { choice: newChoice } };
     }
-    putSelfInLocalStorage(self)
     setNodes((nds) => nds.concat(newNode));
   }, [screenToFlowPosition] );    //setNodes
 
@@ -531,6 +515,23 @@ const ReactFlowComponent = ({ self, quiz }) => {
     setContextMenuNode(node);
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
   }, []);
+
+   /** @param {string} id */
+   const deleteQuestion = (id)=>{
+    console.log("333",quiz.questions);
+    quiz.questions = quiz.questions.filter( (question)=>question.tempId !== id ) 
+  }
+  /** @param {string} id */
+  const deleteChoice = (id)=>{
+    console.log("!!!",id);
+    quiz.questions.forEach( (question)=>{
+      console.log("asdasd", question);
+      question.choices = question.choices.filter( (choice)=>{ choice.tempId !== id; } )
+      console.log("dfdfd", question.choices);
+    })
+    console.log("222",quiz.questions);
+    // putSelfInLocalStorage(self);
+  }
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
