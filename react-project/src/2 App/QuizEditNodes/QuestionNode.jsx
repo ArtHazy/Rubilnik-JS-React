@@ -11,7 +11,7 @@ const QuestionNode = ({ id, type, data, selected }) => {
   let { question, isHighlighted } = data;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [inputValue, setInputValue] = useState(question.title);
+  const [inputTitle, setInputTitle] = useState(question.title);
 
   const handleDoubleClick = (e) => {
     e.stopPropagation();
@@ -19,8 +19,8 @@ const QuestionNode = ({ id, type, data, selected }) => {
   };
 
   const handleSave = () => {
-    console.log("TEST", inputValue);
-    question.title = inputValue;
+    console.log("TEST", inputTitle);
+    question.title = inputTitle;
     setIsEditing(false);
   };
 
@@ -68,8 +68,8 @@ const QuestionNode = ({ id, type, data, selected }) => {
           name="text" 
           className="nodrag"
           placeholder="Enter your question"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          value={inputTitle}
+          onChange={(e) => setInputTitle(e.target.value)}
           onBlur={handleSave}
           onKeyDown={(e) => e.key === 'Enter' && handleSave()}
           style={{ width: '100%' }}

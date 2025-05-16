@@ -1,73 +1,53 @@
 import { Handle, Position } from '@xyflow/react';
 import Terminal from './Terminal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { putSelfInDB, putSelfInLocalStorage } from '../../functions.mjs';
 
+const isImageUrl = (url) => {
+  return /^(https?:\/\/|data:image\/).+\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i.test(url);
+};
 
-/** @param {{data:{choice:Choice,self:User}}} */
+/** @param {{data:{choice:Choice}}} */
 const ChoiceNode = ({ data }) => {
   const { choice, isHighlighted } = data
 
 
-  const [title, setTitle] = useState(choice.title)
-  const [value, setValue] = useState(choice.value)
-  const [isImage, setIsImage] = useState(false);
+  const [inputTitle, setInputTitle] = useState(choice.title)
+  const [inputValue, setInputValue] = useState(choice.value)
+  const [isImage, setIsImage] = useState(() => isImageUrl(choice.title)); 
+  
+  useEffect(() => {
+    // Синхронизация состояния при внешних изменениях
+    setInputTitle(choice.title);
+    setIsImage(isImageUrl(choice.title));
+  }, [choice.title]);
 
-  // Проверка на URL изображения
-  const isImageUrl = (url) => {
-    return /^(https?:\/\/|data:image\/).+\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i.test(url);
-  };
-
-  // Обработчик вставки из буфера
-  const handlePaste = async (e) => {
-    const items = e.clipboardData.items;
+  const updateChoice = () => {
+    choice.title = inputTitle;
+    if (inputValue >= 0 && inputValue <= 1)
+      choice.value = inputValue;
+    setIsImage(isImageUrl(inputTitle));
     
-    for (const item of items) {
-      if (item.type.indexOf('image') !== -1) {
-        const blob = item.getAsFile();
-        const reader = new FileReader();
-        
-        reader.onload = (event) => {
-          const dataUrl = event.target.result;
-          updateChoice({ title: dataUrl });
-          setIsImage(true);
-        };
-        
-        reader.readAsDataURL(blob);
-        e.preventDefault();
-        return;
-      }
-    }
-
-    const text = e.clipboardData.getData('text');
-    if (isImageUrl(text)) {
-      updateChoice({ title: text });
-      setIsImage(true);
-      e.preventDefault();
-    }
-  };
-
-  const updateChoice = (changes) => {
-    const updatedChoice = { ...choice, ...changes };
-    setTitle(updatedChoice.title);
     if (typeof onUpdate === 'function') {
-      onUpdate(updatedChoice);
+      onUpdate(choice);
     }
   };
 
-  // Обработчик изменений
-  const handleTitleChange = (e) => {
+  const handleInputChange = (e) => {
     const newTitle = e.target.value;
-    choice.title = newTitle;
-    setTitle(newTitle);
+    setInputTitle(newTitle);
     setIsImage(isImageUrl(newTitle));
   };
 
-  const handleValueChange = (newValue) => {
-    if (newValue >= 0 && newValue <= 1) {
-      setValue(newValue);
-      updateChoice({ value: newValue });
-    }
+  const handleSaveTitle = () => {
+    updateChoice();
+    // choice.title = inputTitle;
+  };
+
+  const handleSaveValue = () => {
+    updateChoice();
+    // if (inputValue >= 0 && inputValue <= 1)
+    //   choice.value = inputValue;
   };
 
   return (
@@ -83,15 +63,12 @@ const ChoiceNode = ({ data }) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div style={{ flex: 1, position: 'relative' }}>
           <input
-            value={title}
+            value={inputTitle}
             placeholder="Введите текст или вставьте изображение (Ctrl+V)"
             className="nodrag"
-            onChange={handleTitleChange}
-            // onPaste={handlePaste}
-            onKeyDown={(e) => { 
-              if (e.key === 'Enter') e.target.blur();
-            }}
-            // onBlur={() => putSelfInLocalStorage(self)}
+            onChange={handleInputChange}
+            onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
+            onBlur={handleSaveTitle}
             style={{
               width: '100%',
               padding: '4px',
@@ -114,7 +91,7 @@ const ChoiceNode = ({ data }) => {
               marginTop: '4px'
             }}>
               <img
-                src={title}
+                src={inputTitle}
                 alt="Вставленное изображение"
                 style={{
                   maxWidth: '100%',
@@ -124,8 +101,6 @@ const ChoiceNode = ({ data }) => {
                 }}
                 onError={() => {
                   setIsImage(false);
-                  setTitle('');
-                  choice.title = '';
                 }}
               />
             </div>
@@ -138,15 +113,10 @@ const ChoiceNode = ({ data }) => {
           min={0} 
           max={1}
           step={0.01} 
-          value={value}
-          onChange={(e) => {
-            const newValue = e.target.valueAsNumber;
-            if (newValue >= 0 && newValue <= 1) {
-              setValue(newValue);
-              choice.value = newValue;
-            }
-          }}
-          onBlur={() => putSelfInLocalStorage(self)}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onBlur={handleSaveValue}
+          onKeyDown={(e) => e.key === 'Enter' && handleSaveValue()}
         />
       </div>
     </div>

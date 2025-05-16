@@ -243,15 +243,6 @@ const ReactFlowComponent = ({ self, quiz }) => {
     }));
   }, [edges, hoveredQuestionId]);
 
-  // // Эффект для синхронизации с localStorage
-  // useEffect(() => {
-  //   const storedSelf = getSelfFromLocalStorage();
-  //   if (storedSelf) {
-  //     setSelf(storedSelf);
-  //     setQuiz(storedSelf.quizzes[ind]);
-  //   }
-  // }, [ind]);
-
   //InitialNodes
   useEffect(() => {
     const { nodes: newNodes, edges: newEdges  } = convertToFlowElements(quiz);
@@ -259,10 +250,12 @@ const ReactFlowComponent = ({ self, quiz }) => {
     setEdges(newEdges);
   }, [quiz.questions]);
 
+  //changeNodes
   useEffect(() => {
     const selfOld = getSelfFromLocalStorage();
-    // console.log("AAAAAAAAAAAAAAAAAAAA");
-    const { restoreQuestions, graphEdgesJSON } = convertToQuizFormat(getNodes(), getEdges());
+    console.log("AAAAAAAAAAAAAAAAAAAA", nodes);
+    const { restoreQuestions, graphEdgesJSON } = convertToQuizFormat(nodes, getEdges());
+    console.log("sdf", quiz.questions);
     const updatedQuiz = {
       ...quiz,
       questions: restoreQuestions,
@@ -519,18 +512,13 @@ const ReactFlowComponent = ({ self, quiz }) => {
    /** @param {string} id */
    const deleteQuestion = (id)=>{
     console.log("333",quiz.questions);
-    quiz.questions = quiz.questions.filter( (question)=>question.tempId !== id ) 
+    quiz.questions = quiz.questions.filter( (question) => question.tempId !== id ) 
   }
   /** @param {string} id */
   const deleteChoice = (id)=>{
-    console.log("!!!",id);
     quiz.questions.forEach( (question)=>{
-      console.log("asdasd", question);
-      question.choices = question.choices.filter( (choice)=>{ choice.tempId !== id; } )
-      console.log("dfdfd", question.choices);
+      question.choices = question.choices.filter( (choice) => choice.tempId !== id )
     })
-    console.log("222",quiz.questions);
-    // putSelfInLocalStorage(self);
   }
 
   return (
