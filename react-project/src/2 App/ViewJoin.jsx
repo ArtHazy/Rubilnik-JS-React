@@ -9,7 +9,7 @@ export const ViewJoin = () => {
     const [roomkey, setRoomkey] = useState(roomKeyParam)
     
     const [flag,setFlag] = useState(false);
-    const self = getSelfFromLocalStorage();
+    const self = getSelfFromLocalStorage() || {}
 
     const handleEnterPress = () => {
         console.log("enter");

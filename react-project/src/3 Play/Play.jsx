@@ -59,7 +59,10 @@ export const Play = () => {
         setSocketStatus(socketStates.inRoom)
         setGameState(gameStates.lobby)
       }
-      socket.eventActions.join = ({roommates})=>{
+        // TODO
+      socket.eventActions.join = ({/*user,*/roommates})=>{
+        // const self = getSelfFromLocalStorage()
+        //  if ( !self.id ) {self.id = user.id}
         setRoommates(roommates);
         setSocketStatus(socketStates.inRoom)
         setGameState(gameStates.lobby)
