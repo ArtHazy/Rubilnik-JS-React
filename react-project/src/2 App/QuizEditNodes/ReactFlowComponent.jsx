@@ -63,31 +63,13 @@ const edgeTypes = {
 
 const panOnDrag = [1, 2];
 const SAFE_ZONE_RADIUS = 100; 
+const MAX_CHOICES_PER_QUESTION = 4; // Выносим в константу
 
 const generateNodeId = () => 
   // crypto.randomUUID();
   `${Date.now() * 1000000 + Math.floor(Math.random() * 10000)}`;
 
-const convertToQuizFormat = (nodes, edges) => {
-  const restoreQuestions = nodes
-    .filter(node => node.type === 'question')
-    .map(questionNode => ({
-      ...questionNode.data.question,
-      position: questionNode.position,
-      tempId: questionNode.id, //!!
-      choices: nodes
-        .filter(choiceNode => 
-          choiceNode.type === 'choice' && 
-          choiceNode.parentId === questionNode.id
-        )
-        .map(choiceNode => ({
-          ...choiceNode.data.choice,
-          tempId: choiceNode.id, //!!
-          position: choiceNode.position,
-        }))
-    }));
-    
-
+const convertToQuizFormat = (nodes, edges) => { 
   const graphEdges = edges
     .filter((e) => {
       const sourceNode = nodes.find((n) => n.id === e.source);
@@ -108,7 +90,6 @@ const convertToQuizFormat = (nodes, edges) => {
   
   return {
     // title: "quiz",
-    restoreQuestions,
     graphEdgesJSON
   };
 };
@@ -204,7 +185,7 @@ export const convertToFlowElements = (quiz) => {
 /** 
  * @param {{self:User,quiz:Quiz}} param0  
 */
-const ReactFlowComponent = ({ self, quiz }) => {
+const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(quiz);
 
   const {ind} = useParams();
@@ -215,6 +196,8 @@ const ReactFlowComponent = ({ self, quiz }) => {
   const contextMenuRef = useRef(null);
   const { screenToFlowPosition, getNodes, getEdges, addNodes, addEdges } = useReactFlow();
   const [hoveredQuestionId, setHoveredQuestionId] = useState(null);
+
+  const dragOffset = useRef({ x: 0, y: 0 });
   // const [activeConnection, setActiveConnection] = useState(null);
 
   // Мемоизированные ноды с подсветкой
@@ -248,17 +231,15 @@ const ReactFlowComponent = ({ self, quiz }) => {
     const { nodes: newNodes, edges: newEdges  } = convertToFlowElements(quiz);
     setNodes(newNodes);
     setEdges(newEdges);
-  }, [quiz.questions]);
+  }, [quiz]);
 
   //changeNodes
   useEffect(() => {
     const selfOld = getSelfFromLocalStorage();
-    console.log("AAAAAAAAAAAAAAAAAAAA", nodes);
-    const { restoreQuestions, graphEdgesJSON } = convertToQuizFormat(nodes, getEdges());
-    console.log("sdf", quiz.questions);
+    const { graphEdgesJSON } = convertToQuizFormat(nodes, getEdges());
     const updatedQuiz = {
       ...quiz,
-      questions: restoreQuestions,
+      // questions: restoreQuestions,
       graphEdges: graphEdgesJSON,
       startEndNodesPositions: "{}",
       dateSaved: Date.now()
@@ -273,28 +254,48 @@ const ReactFlowComponent = ({ self, quiz }) => {
       change => change.type === 'position' && !change.dragging // Обновляем только когда закончили перетаскивание
     );
     
-    setNodes(nds => {
-      let updatedNodes = applyNodeChanges(changes, nds);
+    if (finishedPositionChanges.length > 0) {
+      onQuizChange(prev => {
+        const updatedQuestions = prev.questions.map(question => {
+          // Обновляем позицию вопроса
+          const questionChange = finishedPositionChanges.find(
+            c => c.id === question.tempId
+          );
+          
+          if (questionChange) {
+            return {
+              ...question,
+              position: questionChange.position
+            };
+          }
 
-      if (finishedPositionChanges.length > 0) {
-          quiz.isInDB = false;
-          updatedNodes = updatedNodes.map(node => {
-              const wasMoved = finishedPositionChanges.some(c => c.id === node.id);
-              if (!wasMoved) return node;
-
-              if (node.type=="question") {
-                node.data.question.position = node.position;
-                return node;
-              } else {
-                node.data.choice.position = node.position;
-                return node;
-              }
-
+          // Обновляем позиции ответов внутри вопроса
+          const updatedChoices = question.choices.map(choice => {
+            const choiceChange = finishedPositionChanges.find(
+              c => c.id === choice.tempId
+            );
+            
+            return choiceChange 
+              ? { ...choice, position: choiceChange.position }
+              : choice;
           });
-      }
-      return updatedNodes;
-    });
-  }, [quiz.isInDB, screenToFlowPosition]);
+
+          return updatedChoices !== question.choices 
+            ? { ...question, choices: updatedChoices } 
+            : question;
+        });
+
+        return {
+          ...prev,
+          questions: updatedQuestions,
+          isInDB: false
+        };
+      });
+    }
+
+    // Обновляем React Flow ноды
+    setNodes(nds => applyNodeChanges(changes, nds));
+  }, [onQuizChange]);
 
   const onNodeMouseEnter = useCallback((e, node) => {
     // if (node.type === "question")
@@ -306,7 +307,17 @@ const ReactFlowComponent = ({ self, quiz }) => {
       setHoveredQuestionId(null);
   }, []);
 
-  const onNodeDragStart = useCallback((e, node) => {
+  const onNodeDragStart = useCallback((event) => {
+    // Получаем позицию ноды на экране
+    const nodeRect = event.target.getBoundingClientRect();
+  
+    // Смещение курсора относительно верхнего левого угла ноды
+    
+    dragOffset.current = {
+      x: event.clientX - nodeRect.left,
+      y: event.clientY - nodeRect.top,
+    };
+    console.log("pos", dragOffset);
   }, []);
 
   const onNodeDrag = useCallback((event, node) => {
@@ -319,8 +330,7 @@ const ReactFlowComponent = ({ self, quiz }) => {
   }, [screenToFlowPosition]);
 
   const onNodeDragStop = useCallback((event, draggedNode) => {
-    console.log("!", draggedNode);
-    if (draggedNode.type !== 'choice') return;
+    if (draggedNode.type !== 'choice' || !screenToFlowPosition || !onQuizChange) return;
     
     const dropPosition = screenToFlowPosition({ 
       x: event.clientX, 
@@ -328,73 +338,69 @@ const ReactFlowComponent = ({ self, quiz }) => {
     });
 
     // Находим ноду под курсором
-    const targetNode = getNodes().find(node => {
-      const nodeRect = {
-        x: node.position.x,
-        y: node.position.y,
-        width: node.measured?.width,
-        height: node.measured?.height
-      };
+    const nodes = getNodes();
+    let targetNode = null;
+    let choicesCount = 0;
 
-      return (
-        dropPosition.x >= nodeRect.x &&
-        dropPosition.x <= nodeRect.x + nodeRect.width &&
-        dropPosition.y >= nodeRect.y &&
-        dropPosition.y <= nodeRect.y + nodeRect.height
-      );
-    });
+    // Ищем целевую ноду и сразу считаем ответы
+    for (const node of nodes) {
+        // Проверяем только вопросы
+        if (node.type === 'question') {
+            // Проверка попадания курсора в ноду
+            const nodeRect = {
+                x: node.position.x,
+                y: node.position.y,
+                width: node.measured?.width,
+                height: node.measured?.height
+            };
+            
+            const isCursorInside = 
+                dropPosition.x >= nodeRect.x &&
+                dropPosition.x <= nodeRect.x + nodeRect.width &&
+                dropPosition.y >= nodeRect.y &&
+                dropPosition.y <= nodeRect.y + nodeRect.height;
 
-    if (targetNode?.type === 'question') {
-      const choicesInTarget = getNodes().filter(n => 
-        n.parentId === targetNode.id && 
-        n.type === 'choice'
-      );
-      
-      if (choicesInTarget.length >= 4) {
-        alert('Максимальное количество ответов в одном вопросе — 4');
-        return;
-      }
-      
-      targetNode.data.question.choices.push(draggedNode.data.choice); //add choice to quiz
+            if (isCursorInside) {
+                targetNode = node;
+                // Сразу начинаем подсчёт ответов для найденной ноды
+                choicesCount = nodes.filter(n => 
+                    n.parentId === node.id && 
+                    n.type === 'choice'
+                ).length;
+                break; // Прерываем цикл после нахождения цели
+            }
+        }
+    }
 
-      const oldEdge = edges.filter(edge => 
-        edge.source === draggedNode.parentId && 
-        edge.target === draggedNode.id
-      );
+    if (!targetNode) return;
+    
+    if (choicesCount >= MAX_CHOICES_PER_QUESTION) {
+      alert(`Максимальное количество ответов в одном вопросе — ${MAX_CHOICES_PER_QUESTION}`);
+      return;
+    }   
 
-      if (oldEdge) {
-        setEdges(eds => eds.filter(edge => edge.id !== oldEdge.id));
-      }  
+    const newPosition = {
+      x: dropPosition.x - targetNode.position.x,
+      y: dropPosition.y - targetNode.position.y
+    };
 
-      setNodes(nds => nds.map(node => {
-        if (node.id !== draggedNode.id) return node;
-        
-        // Обновляем позицию относительно родителя
-        const newPosition = {
-          x: dropPosition.x - targetNode.position.x,
-          y: dropPosition.y - targetNode.position.y
-        };
-
-        return {
-          ...node,
-          position: newPosition,
-          parentId: targetNode.id,
-        };
-      }));
-
-      const newEdge = {
-        id: `${targetNode}-${draggedNode.id}`,
-        source: targetNode.id,
-        target: draggedNode.id,
-        type: "customEdge",
-        condition: -1,
-      };
-
-      console.log("DROP", newEdge);
-
-      setEdges((eds) => addEdge(newEdge, eds));
-    } 
-  }, []);
+    onQuizChange(prev => ({
+      ...prev,
+      questions: prev.questions.map(q => {
+          const isTargetQuestion = q.tempId === targetNode.data?.question?.tempId;
+          const filteredChoices = q.choices.filter(c => c.tempId !== draggedNode.id);
+          
+          return isTargetQuestion ? {
+              ...q,
+              choices: [...filteredChoices, {
+                  ...draggedNode.data.choice,
+                  tempId: draggedNode.id,
+                  position: newPosition
+              }]
+          } : {...q, choices: filteredChoices};
+      })
+    })); 
+  }, [onQuizChange, screenToFlowPosition]);
 
   const handleAutoSave = useCallback(
     throttle(() => {
@@ -443,15 +449,18 @@ const ReactFlowComponent = ({ self, quiz }) => {
     if (type == "question"){
       /** @type {Question} */
       let newQuestion = {id: null, tempId: id, title:"new", position, choices:[]}
-      quiz.questions.push(newQuestion)
       newNode = { id, type, position, data: { question: newQuestion } };
+      onQuizChange(prev => ({
+        ...prev,
+        questions: [...prev.questions, newQuestion]
+      }));  
     } else if (type == "choice") {
       /** @type {Choice} */
       let newChoice = {id: null, tempId: id, title:"new temp", position, value:0}
       newNode = { id, type, position, data: { choice: newChoice } };
+      setNodes((nds) => nds.concat(newNode));
     }
-    setNodes((nds) => nds.concat(newNode));
-  }, [screenToFlowPosition] );    //setNodes
+  }, [screenToFlowPosition] );
 
   const onConnect = useCallback(
     (connection) => {
@@ -509,16 +518,22 @@ const ReactFlowComponent = ({ self, quiz }) => {
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
   }, []);
 
-   /** @param {string} id */
-   const deleteQuestion = (id)=>{
-    console.log("333",quiz.questions);
-    quiz.questions = quiz.questions.filter( (question) => question.tempId !== id ) 
+  /** @param {string} id */
+  const deleteQuestion = (id)=>{
+    onQuizChange(prev => ({
+      ...prev,
+      questions: prev.questions.filter(q => q.tempId !== id)
+    }));
   }
   /** @param {string} id */
   const deleteChoice = (id)=>{
-    quiz.questions.forEach( (question)=>{
-      question.choices = question.choices.filter( (choice) => choice.tempId !== id )
-    })
+    onQuizChange(prev => ({
+      ...prev,
+      questions: prev.questions.map(q => ({
+        ...q,
+        choices: q.choices.filter(c => c.tempId !== id)
+      }))
+    }));
   }
 
   return (
@@ -555,8 +570,10 @@ const ReactFlowComponent = ({ self, quiz }) => {
             onNodeMouseEnter={onNodeMouseEnter}
             onNodeMouseLeave={handleNodeMouseLeave}
             onNodeDrag={onNodeDrag}
-            // onNodeDragStart={onNodeDragStart}
+            onNodeDragStart={onNodeDragStart}
             onNodeDragStop={onNodeDragStop}
+
+            onMove={() => setContextMenuNode(null)}
 
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}

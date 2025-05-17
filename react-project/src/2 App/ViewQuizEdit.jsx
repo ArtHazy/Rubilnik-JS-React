@@ -28,13 +28,14 @@ export const ViewQuizEdit = () => {
 
     // const self = getSelfFromLocalStorage()
     const self = useMemo(() => getSelfFromLocalStorage(), [localStorage.getItem('self')]);
-    let quiz = self.quizzes[ind]
-    Array.isArray(quiz.questions)? null : quiz.questions = []
+    let initialQuiz = self.quizzes[ind]
+    Array.isArray(initialQuiz.questions)? null : initialQuiz.questions = []
+    const [quiz, setQuiz] = useState(initialQuiz);
 
     return (
         <div style={{ height: '100vh', width: '100vw' }}>
             <ReactFlowProvider>
-                <ReactFlowComponent self={self} quiz={quiz} />
+                <ReactFlowComponent self={self} quiz={quiz} onQuizChange={setQuiz} />
                 {/* <Editor quiz={quiz} upd={upd} /> */}
             </ReactFlowProvider>
         </div>
