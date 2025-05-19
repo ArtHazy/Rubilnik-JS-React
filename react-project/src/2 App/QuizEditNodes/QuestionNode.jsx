@@ -7,7 +7,7 @@ import Terminal from './Terminal';
  * @param {{id:string, type:string, data:{question:Question} }} param0 
  * @returns 
  */
-const QuestionNode = ({ id, type, data, selected }) => {
+const QuestionNode = ({ id, data, selected }) => {
   let { question, isHighlighted } = data;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -87,7 +87,7 @@ const QuestionNode = ({ id, type, data, selected }) => {
 
       <div style={{ fontSize: '0.8em', color: '#666' }}>
         {data.choices?.map((choice, i) => (
-          <div key={i} style={{ margin: '5px 0' }}>➥ {choice.text}</div>
+          <div key={i} style={{ margin: '5px 0' }}> {choice.text}</div>
         ))}
       </div>
     </div>

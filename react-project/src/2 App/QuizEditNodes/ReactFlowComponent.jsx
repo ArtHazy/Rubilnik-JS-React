@@ -73,11 +73,32 @@ const checkMaxChoices = (count) => {
   return false;
 };
 
+const getRelativePosition = (childNode, parentNode) => ({
+  x: childNode.position.x - parentNode.position.x,
+  y: childNode.position.y - parentNode.position.y
+});
+
 const generateNodeId = () => 
   // crypto.randomUUID();
   `${Date.now() * 1000000 + Math.floor(Math.random() * 10000)}`;
 
 const convertToQuizFormat = (nodes, edges) => {
+  const startNode = nodes.find(n => n.type === 'start');
+  const endNodes = nodes.filter(n => n.type === 'end');
+
+  const startEndData = {
+    start: startNode ? {
+      id: startNode.id,
+      position: startNode.position,
+      data: startNode.data
+    } : null,
+    ends: endNodes.map(endNode => ({
+      id: endNode.id,
+      position: endNode.position,
+      data: endNode.data
+    }))
+  };
+
   const restoreQuestions = nodes
     .filter(node => node.type === 'question')
     .map(questionNode => ({
@@ -117,7 +138,8 @@ const convertToQuizFormat = (nodes, edges) => {
   return {
     // title: "quiz",
     restoreQuestions,
-    graphEdgesJSON
+    graphEdgesJSON,
+    startEndNodesPositions: JSON.stringify(startEndData)
   };
 };
 
@@ -129,6 +151,33 @@ export const convertToFlowElements = (quiz, ind) => {
   const initialNodes = [];
   const edges = [];
   const tempIdMap = new Map();
+
+  let startEndData = { start: null, ends: [] };
+  try {
+    startEndData = JSON.parse(quiz.startEndNodesPositions || '{}');
+  } catch (e) {
+    console.error('Error parsing startEndNodesPositions:', e);
+  }
+
+  // console.log("SSS", startEndData);
+
+  // Добавляем стартовую ноду
+  initialNodes.push({
+    id: startEndData.start?.id ?? generateNodeId(),
+    type: 'start',
+    position: startEndData.start?.position || { x: 0, y: 0},
+    data: startEndData.start?.data
+  }); 
+
+  // Добавляем конечные ноды
+  startEndData.ends?.forEach(end => {
+    initialNodes.push({
+      id: end.id ?? generateNodeId(),
+      type: 'end',
+      position: end.position || { x: 0, y: 100},
+      data: end.data
+    });
+  });
 
   // QuestionNode component params
   quiz.questions?.forEach((question) => {
@@ -232,6 +281,8 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const contextMenuRef = useRef(null);
   const { screenToFlowPosition, getNodes, getEdges, addNodes, addEdges } = useReactFlow();
   const [hoveredQuestionId, setHoveredQuestionId] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   const orphans = useMemo(() => 
     nodes.filter(node => 
       node.type === 'choice' && !node.parentId
@@ -266,12 +317,13 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, [edges, hoveredQuestionId]);
 
   const saveChanges = useCallback(() => {
-    const { restoreQuestions, graphEdgesJSON } = convertToQuizFormat(getNodes(), getEdges());
+    const { restoreQuestions, graphEdgesJSON, startEndNodesPositions } = convertToQuizFormat(getNodes(), getEdges());
 
     const newQuiz = {
       ...quiz,
       questions: restoreQuestions,
       graphEdges: graphEdgesJSON,
+      startEndNodesPositions,
       dateSaved: Date.now()
     };
 
@@ -281,11 +333,14 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(`quiz_orphans_${ind}`, JSON.stringify(orphans));  
-  }, [orphans]);
+    if (!isDragging) {
+      // console.log("orphans"); //дважды сохраняет
+      localStorage.setItem(`quiz_orphans_${ind}`, JSON.stringify(orphans)); 
+    } 
+  }, [orphans, isDragging]);
 
   useEffect(() => {
-    console.log("Local");
+    // console.log("Local");
     const selfOld = getSelfFromLocalStorage();
     selfOld.quizzes[ind] = quiz;
     putSelfInLocalStorage(selfOld);
@@ -317,13 +372,16 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, []);
 
   const onNodeDragStart = useCallback((event) => {
+    setIsDragging(true);
   }, []);
 
   const onNodeDrag = useCallback((event, node) => {
   }, []);
 
-  const onNodeDragStop = useCallback((event, draggedNode) => {
-    saveChanges();  
+  const onNodeDragStop = useCallback((event, draggedNode) => { 
+    setIsDragging(false);
+
+    if (draggedNode.tempId !== null && draggedNode.type !== 'choice') saveChanges(); 
 
     if (draggedNode.type !== 'choice' || !screenToFlowPosition || !onQuizChange) return;
     
@@ -454,6 +512,19 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
       let newChoice = {id: null, tempId: id, title:"new temp", position, value:0}
       newNode = { id, type, position, parentId: null, data: { choice: newChoice } };
       setNodes((nds) => nds.concat(newNode));
+    } else if (type === "end") {
+    // Создаем конечную ноду
+      newNode = { id, type, position, data: {} };
+      onQuizChange(prev => {
+        const currentData = JSON.parse(prev.startEndNodesPositions || '{}');
+        return {
+          ...prev,
+          startEndNodesPositions: JSON.stringify({
+            ...currentData,
+            ends: [...(currentData.ends || []), newNode]
+          })
+        };
+      });
     }
   }, [screenToFlowPosition] );
 
@@ -653,7 +724,15 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
                 transform: 'translateY(-50%)',
               }}>
             </Controls>
-            <MiniMap nodeColor={nodeColor} nodeStrokeWidth={3} zoomable pannable/>
+            <MiniMap 
+              nodeColor={nodeColor} 
+              nodeStrokeWidth={3} 
+              nodeBorderRadius="16"
+              // bgColor=""
+              // maskColor=""
+              zoomable 
+              pannable
+            />
           </ReactFlow>
         {/* </ReactFlowProvider> */}
 
