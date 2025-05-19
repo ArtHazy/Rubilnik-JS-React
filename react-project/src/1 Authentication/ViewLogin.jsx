@@ -1,6 +1,6 @@
 import { limits } from '../values.mjs';
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
-import { http_post_user_get } from '../HTTP_requests.mjs';
+import { http_user_login } from '../HTTP_requests.mjs';
 import "./ViewAuth.scss"
 import { handleEnterKey } from '../functions.mjs';
 import { useNotification } from '../2 App/ContextNotification';
@@ -11,10 +11,10 @@ export const ViewLogin = () => {
     if ( getSelfFromLocalStorage()?.id ) window.location.href='/'
     else return <div className='ViewLogin'>
         <div className='form'>
-            <hstack>
+            <div className={"hstack"}>
                 <div className='log accent'>LOG</div>
                 <div className='in accent'>IN</div>
-            </hstack>
+            </div>
             <div className='form'>
                 <input id="email-input" type="email" placeholder='email' maxLength={limits.maxEmailLength} onKeyDown={(e) => handleEnterKey(e, '.form', 'submit')} />
                 <input id="password-input" type="password" placeholder='password' maxLength={limits.maxPassLength} onKeyDown={(e) => handleEnterKey(e, '.form', 'submit')} />
@@ -28,15 +28,19 @@ export const ViewLogin = () => {
                     let email = document.getElementById('email-input').value;
                     let password = document.getElementById('password-input').value;
 
-                    let onLoad = () => {load.remove(), submit.hidden = false}
-
-                    let {isOk, user} = http_post_user_get({email,password}, onLoad);
-                    let quizzes = user?.quizzes
-                    if (isOk && Array.isArray(quizzes)) {
-                        quizzes.forEach((quiz)=>{quiz.isInDB=true;})
-                        user.isInDB=true;
-                        console.log('user', user), putSelfInLocalStorage(user), window.location.href='/'
-                    } else showNotification('failed to login', 'error')
+                    http_user_login({email,password}, (isOk,user)=>{
+                        load.remove()
+                        submit.hidden = false
+                        let quizzes = user?.quizzes
+                        if (isOk && Array.isArray(quizzes)) {
+                            quizzes.forEach((quiz)=>{quiz.isInDB=true;})
+                            user.password=password;
+                            user.isInDB=true;
+                            putSelfInLocalStorage(user)
+                            console.log('user', user)
+                            window.location.href='/'
+                        } else showNotification('failed to login', 'error')
+                    });
                 }}>login</button>
             </div>
 
