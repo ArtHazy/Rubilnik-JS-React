@@ -20,6 +20,8 @@ import './styles.scss';
 import { PanelControls } from './PanelControls';
 import QuestionNode from './QuestionNode';
 import ChoiceNode from './ChoiceNode';
+import StartNode from './StartNode';
+import EndNode from './EndNode';
 import Sidebar from './Sidebar';
 import CustomEdge from './CustomEdge';
 
@@ -31,15 +33,17 @@ const rfStyle = {
 };
 
 // Компонент конечной ноды
-const EndNode = () => (
-  <div className="end">
-    <div className="content">🏁 Конец викторины</div>
-    <Handle type="target" position={Position.Top} />
-  </div>
-);
+// const EndNode = () => (
+//   <div className="end">
+//     <div className="content">🏁 Конец викторины</div>
+//     <Handle type="target" position={Position.Top} />
+//   </div>
+// );
 
 const nodeColor = (node) => {
   switch (node.type) {
+    case 'start': return '#ff9900';
+    case 'end': return '#ff0000';
     case 'question': return '#6ede87';
     case 'choice': return '#6865A5';
     default: return '#ff0072';
@@ -49,6 +53,8 @@ const nodeColor = (node) => {
 const nodeTypes = {
   question: QuestionNode,
   choice: ChoiceNode,
+  start: StartNode,
+  end: EndNode,
 };
 
 const edgeTypes = {
@@ -58,6 +64,14 @@ const edgeTypes = {
 const panOnDrag = [1, 2];
 const SAFE_ZONE_RADIUS = 100; 
 const MAX_CHOICES_PER_QUESTION = 4; // Выносим в константу
+
+const checkMaxChoices = (count) => {
+  if (count >= MAX_CHOICES_PER_QUESTION) {
+    alert(`Максимальное количество ответов в одном вопросе — ${MAX_CHOICES_PER_QUESTION}`);
+    return true;
+  }
+  return false;
+};
 
 const generateNodeId = () => 
   // crypto.randomUUID();
@@ -189,14 +203,19 @@ export const convertToFlowElements = (quiz, ind) => {
     console.error('Error parsing graph edges:', e);
   }
 
-  const orphans = JSON.parse(
-    localStorage.getItem(`quiz_orphans_${ind}`) || '[]'
-  );
-
-  const nodes = initialNodes.concat( orphans );
+  const initialNodeIds = new Set(initialNodes.map(n => n.id));
+  const orphans = JSON.parse(localStorage.getItem(`quiz_orphans_${ind}`) || '[]');
+  const filteredOrphans = orphans.filter(node => !initialNodeIds.has(node.id));
+  const nodes = initialNodes.concat( filteredOrphans );
 
   return { nodes, edges };
 };
+
+// const getFlowLocalStorage = () => {
+//   const savedData = localStorage.getItem(`reactFlowData`);
+//   const { nodes, edges } = JSON.parse(savedData);
+//   return { nodes, edges };
+// }
 
 
 /** 
@@ -213,7 +232,11 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const contextMenuRef = useRef(null);
   const { screenToFlowPosition, getNodes, getEdges, addNodes, addEdges } = useReactFlow();
   const [hoveredQuestionId, setHoveredQuestionId] = useState(null);
-  const [finishedPositionChanges, setFinishedPositionChanges] = useState([]);
+  const orphans = useMemo(() => 
+    nodes.filter(node => 
+      node.type === 'choice' && !node.parentId
+    ), 
+  [nodes]);
   // const [activeConnection, setActiveConnection] = useState(null);
 
   // Мемоизированные ноды с подсветкой
@@ -243,31 +266,42 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, [edges, hoveredQuestionId]);
 
   const saveChanges = useCallback(() => {
-      const { restoreQuestions, graphEdgesJSON } = convertToQuizFormat(getNodes(), getEdges());
+    const { restoreQuestions, graphEdgesJSON } = convertToQuizFormat(getNodes(), getEdges());
 
-      const newQuiz = {
-        ...quiz,
-        questions: restoreQuestions,
-        graphEdges: graphEdgesJSON,
-        dateSaved: Date.now()
-      };
+    const newQuiz = {
+      ...quiz,
+      questions: restoreQuestions,
+      graphEdges: graphEdgesJSON,
+      dateSaved: Date.now()
+    };
 
-      onQuizChange(newQuiz);
+    console.log("save");
+
+    onQuizChange(newQuiz);
   }, []);
 
   useEffect(() => {
+    localStorage.setItem(`quiz_orphans_${ind}`, JSON.stringify(orphans));  
+  }, [orphans]);
+
+  useEffect(() => {
+    console.log("Local");
     const selfOld = getSelfFromLocalStorage();
     selfOld.quizzes[ind] = quiz;
     putSelfInLocalStorage(selfOld);
 
-    const orphanChoices = nodes.filter(node => 
-      node.type === 'choice' && !node.parentId
-    );
+    // const flowData = {
+    //   nodes: getNodes(),
+    //   edges: getEdges(),
+    // };
     
-    localStorage.setItem(
-      `quiz_orphans_${ind}`, 
-      JSON.stringify(orphanChoices)
-    );  
+    // localStorage.setItem(`reactFlowData`, JSON.stringify(flowData));
+  }, [quiz]);
+
+  useEffect(() => {
+    const { nodes: newNodes, edges: newEdges } = convertToFlowElements(quiz, ind);
+    setNodes(newNodes);
+    setEdges(newEdges);
   }, [quiz]);
 
   const handleNodesChange = useCallback((changes) => {
@@ -286,10 +320,10 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, []);
 
   const onNodeDrag = useCallback((event, node) => {
-  }, [screenToFlowPosition]);
+  }, []);
 
   const onNodeDragStop = useCallback((event, draggedNode) => {
-    saveChanges();
+    saveChanges();  
 
     if (draggedNode.type !== 'choice' || !screenToFlowPosition || !onQuizChange) return;
     
@@ -331,12 +365,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
     const choicesCount = targetNode.data?.question?.choices?.length;
     
-    if (choicesCount >= MAX_CHOICES_PER_QUESTION) {
-      alert(`Максимальное количество ответов в одном вопросе — ${MAX_CHOICES_PER_QUESTION}`);
-      return;
-    }
-
-    console.log("aaa");
+    if (checkMaxChoices(choicesCount)) return;
 
     onQuizChange(prev => ({
       ...prev,
@@ -361,15 +390,16 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     })); 
   }, [onQuizChange, screenToFlowPosition]);
 
+  ////////////////////////
+
   const handleAutoSave = useCallback(
     throttle(() => {
       try {
         const selfOld = getSelfFromLocalStorage();
-        const { isOk } = http_put_quiz(selfOld, self.quizzes[ind], ()=>{})
-        // console.log(self.quizzes[ind]);
+        const { quiz: responceQuiz, isOk } = http_put_quiz(selfOld, self.quizzes[ind], ()=>{})
         if(isOk){
-          //self.quizzes[ind] = responceQuiz;
-          //putSelfInLocalStorage(self)
+          self.quizzes[ind] = responceQuiz;
+          putSelfInLocalStorage(self)
         }
       } catch (error) {
         console.error('Ошибка сохранения:', error);
@@ -378,14 +408,20 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     [ind, self, quiz.id]
   );
 
-  // useEffect(() => {
-  //   // Сохраняем при размонтировании компонента
-  //   return () => handleAutoSave();
-  // }, [handleAutoSave]);
+  useEffect(() => {
+    const handleSave = () => {
+      console.log("qweertyBD");
+      // saveChanges();
+      handleAutoSave();
+    };
+    
+    const debouncedSave = debounce(handleSave, 5000);
+    debouncedSave();
+    
+    return () => debouncedSave.cancel();
+  }, [nodes, edges, handleAutoSave, saveChanges]);
 
-  // useEffect(() => {
-  //   handleAutoSave();
-  // }, [nodes, edges, handleAutoSave]);
+  ///////////////////////////
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
@@ -413,11 +449,10 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         ...prev,
         questions: [...prev.questions, newQuestion]
       }));  
-      // console.log("aaa", quiz.questions[0].position);
     } else if (type == "choice") {
       /** @type {Choice} */
       let newChoice = {id: null, tempId: id, title:"new temp", position, value:0}
-      newNode = { id, type, position, data: { choice: newChoice } };
+      newNode = { id, type, position, parentId: null, data: { choice: newChoice } };
       setNodes((nds) => nds.concat(newNode));
     }
   }, [screenToFlowPosition] );
@@ -430,10 +465,19 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         return acc;
       }, { sourceNode: null, targetNode: null });
 
-      if (sourceNode?.type === targetNode?.type) {
-        alert('Нельзя соединять ноды одного типа');
+      const forbiddenConnections = [
+        ['start', 'end'],
+        ['start', 'choice'],
+        ['question', 'question'],
+        ['choice', 'choice']
+      ];
+
+      const checkConnect = forbiddenConnections.some(([a, b]) => sourceNode.type === a && targetNode.type === b);
+    
+      if (checkConnect) {
+        alert('Недопустимое соединение');
         return;
-      }  
+      }    
 
       let conn = true;
 
@@ -450,10 +494,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
         const choicesCount = sourceNode.data.question.choices.length;
         
-        if (choicesCount >= MAX_CHOICES_PER_QUESTION) {
-          alert(`Максимальное количество ответов в одном вопросе — ${MAX_CHOICES_PER_QUESTION}`);
-          return;
-        }   
+        if (checkMaxChoices(choicesCount)) return;  
       }
 
       if (sourceNode?.type === 'question' && targetNode?.type === 'choice') {
@@ -533,6 +574,8 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }
   /** @param {string} id */
   const deleteChoice = (id)=>{
+    setNodes(prev => prev.filter(node => node.id !== id));
+
     onQuizChange(prev => ({
       ...prev,
       questions: prev.questions.map(q => ({

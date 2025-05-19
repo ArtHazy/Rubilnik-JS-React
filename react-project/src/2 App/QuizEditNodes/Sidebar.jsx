@@ -63,6 +63,19 @@ const Sidebar = () => {
         {/* <FaComment size={24} color="#2196F3" /> */}
         <span style={{ fontSize: '16px' }}>Ответ</span>
       </div>
+      {/* Кнопка финиша */}
+      <div
+        draggable
+        onDragStart={(e) => onDragStart(e, 'end')}
+        style={{
+          ...buttonStyle,
+          background: '#FFEBEE',
+          borderColor: '#EF5350',
+        }}
+        role="button"
+      >
+        <span style={{ fontSize: '16px' }}>Конец</span>
+      </div>
     </div>
   );
 };
