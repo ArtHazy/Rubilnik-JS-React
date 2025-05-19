@@ -24,6 +24,7 @@ import StartNode from './StartNode';
 import EndNode from './EndNode';
 import Sidebar from './Sidebar';
 import CustomEdge from './CustomEdge';
+// import { convertToFlowElements } from './functionsEditor';
 
 import { downloadJson, getSelfFromLocalStorage, putSelfInLocalStorage} from "../../functions.mjs"
 import { http_post_quiz, http_put_quiz } from "../../HTTP_requests.mjs"
@@ -82,72 +83,7 @@ const generateNodeId = () =>
   // crypto.randomUUID();
   `${Date.now() * 1000000 + Math.floor(Math.random() * 10000)}`;
 
-const convertToQuizFormat = (nodes, edges) => {
-  const startNode = nodes.find(n => n.type === 'start');
-  const endNodes = nodes.filter(n => n.type === 'end');
-
-  const startEndData = {
-    start: startNode ? {
-      id: startNode.id,
-      position: startNode.position,
-      data: startNode.data
-    } : null,
-    ends: endNodes.map(endNode => ({
-      id: endNode.id,
-      position: endNode.position,
-      data: endNode.data
-    }))
-  };
-
-  const restoreQuestions = nodes
-    .filter(node => node.type === 'question')
-    .map(questionNode => ({
-      ...questionNode.data.question,
-      position: questionNode.position,
-      tempId: questionNode.id, //!!
-      choices: nodes
-        .filter(choiceNode => 
-          choiceNode.type === 'choice' && 
-          choiceNode.parentId === questionNode.id
-        )
-        .map(choiceNode => ({
-          ...choiceNode.data.choice,
-          tempId: choiceNode.id, //!!
-          position: choiceNode.position,
-        }))
-    }));
-
-  const graphEdges = edges
-    .filter((e) => {
-      const sourceNode = nodes.find((n) => n.id === e.source);
-      const targetNode = nodes.find((n) => n.id === e.target);
-      return (
-        sourceNode?.type === 'choice' &&
-        targetNode?.type === 'question' &&
-        e.data?.condition !== -1
-      );
-    })
-    .map((e) => ({
-      source: e.source,
-      target: e.target,
-      conditional: e.data?.condition || 0,
-    }));
-
-    const graphEdgesJSON = JSON.stringify(graphEdges);
-  
-  return {
-    // title: "quiz",
-    restoreQuestions,
-    graphEdgesJSON,
-    startEndNodesPositions: JSON.stringify(startEndData)
-  };
-};
-
-/** 
- * @param {User} self  
- * @param {Quiz} quiz  
-*/
-export const convertToFlowElements = (quiz, ind) => {
+const convertToFlowElements = (quiz, ind) => {
   const initialNodes = [];
   const edges = [];
   const tempIdMap = new Map();
@@ -166,7 +102,7 @@ export const convertToFlowElements = (quiz, ind) => {
     id: startEndData.start?.id ?? generateNodeId(),
     type: 'start',
     position: startEndData.start?.position || { x: 0, y: 0},
-    data: startEndData.start?.data
+    // data: startEndData.start?.data
   }); 
 
   // Добавляем конечные ноды
@@ -175,7 +111,7 @@ export const convertToFlowElements = (quiz, ind) => {
       id: end.id ?? generateNodeId(),
       type: 'end',
       position: end.position || { x: 0, y: 100},
-      data: end.data
+      // data: end.data
     });
   });
 
@@ -258,6 +194,67 @@ export const convertToFlowElements = (quiz, ind) => {
   const nodes = initialNodes.concat( filteredOrphans );
 
   return { nodes, edges };
+};
+
+const convertToQuizFormat = (nodes, edges) => {
+  const startNode = nodes.find(n => n.type === 'start');
+  const endNodes = nodes.filter(n => n.type === 'end');
+
+  const startEndData = {
+    start: startNode ? {
+      id: startNode.id,
+      position: startNode.position,
+      // data: startNode.data
+    } : null,
+    ends: endNodes.map(endNode => ({
+      id: endNode.id,
+      position: endNode.position,
+      // data: endNode.data
+    }))
+  };
+
+  const restoreQuestions = nodes
+    .filter(node => node.type === 'question')
+    .map(questionNode => ({
+      ...questionNode.data.question,
+      position: questionNode.position,
+      tempId: questionNode.id, //!!
+      choices: nodes
+        .filter(choiceNode => 
+          choiceNode.type === 'choice' && 
+          choiceNode.parentId === questionNode.id
+        )
+        .map(choiceNode => ({
+          ...choiceNode.data.choice,
+          tempId: choiceNode.id, //!!
+          position: choiceNode.position,
+        }))
+    }));
+
+  const graphEdges = edges
+    .filter((e) => {
+      const sourceNode = nodes.find((n) => n.id === e.source);
+      const targetNode = nodes.find((n) => n.id === e.target);
+      return (
+        sourceNode?.type === 'choice' &&
+        targetNode?.type === 'question' &&
+        e.data?.condition !== -1
+      );
+    })
+    .map((e) => ({
+      source: e.source,
+      target: e.target,
+      conditional: e.data?.condition || 0,
+    }));
+
+    const graphEdgesJSON = JSON.stringify(graphEdges);
+  
+  return {
+    // title: "quiz",
+    restoreQuestions,
+    graphEdgesJSON,
+    startEndNodesPositions: JSON.stringify(startEndData)
+  };
 };
 
 // const getFlowLocalStorage = () => {
@@ -381,7 +378,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const onNodeDragStop = useCallback((event, draggedNode) => { 
     setIsDragging(false);
 
-    if (draggedNode.tempId !== null && draggedNode.type !== 'choice') saveChanges(); 
+    if (draggedNode.parentId !== null) saveChanges(); 
 
     if (draggedNode.type !== 'choice' || !screenToFlowPosition || !onQuizChange) return;
     
@@ -425,11 +422,37 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     
     if (checkMaxChoices(choicesCount)) return;
 
+    const originalParent = draggedNode.parentId 
+      ? nodes.find(n => n.id === draggedNode.parentId) 
+      : null;
+
+    const absolutePosition = {
+      x: originalParent 
+        ? draggedNode.position.x + originalParent.position.x 
+        : draggedNode.position.x,
+      y: originalParent 
+        ? draggedNode.position.y + originalParent.position.y 
+        : draggedNode.position.y
+    };
+
+    // Calculate new relative position for target parent
+    const newRelativePosition = {
+      x: absolutePosition.x - targetNode.position.x,
+      y: absolutePosition.y - targetNode.position.y
+    };
+
     onQuizChange(prev => ({
       ...prev,
       questions: prev.questions.map(q => {
           const isTargetQuestion = q.tempId === targetNode.data?.question?.tempId;
           const filteredChoices = q.choices.filter(c => c.tempId !== draggedNode.id);
+
+          if (q.tempId === originalParent?.data?.question?.tempId) {
+            return {
+                ...q,
+                choices: q.choices.filter(c => c.tempId !== draggedNode.id)
+            };
+          }
           
           return isTargetQuestion ? {
               ...q,
@@ -438,10 +461,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
                 {
                   ...draggedNode.data.choice,
                   tempId: draggedNode.id,
-                  position: {
-                    x: draggedNode.position.x - targetNode.position.x,
-                    y: draggedNode.position.y - targetNode.position.y
-                  }
+                  position: newRelativePosition
               }]
           } : q;
       })
@@ -454,6 +474,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     throttle(() => {
       try {
         const selfOld = getSelfFromLocalStorage();
+
         const { quiz: responceQuiz, isOk } = http_put_quiz(selfOld, self.quizzes[ind], ()=>{})
         if(isOk){
           self.quizzes[ind] = responceQuiz;
