@@ -8,7 +8,7 @@ import {
 import { memo } from 'react';
 
 const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected }) => {
-  const isHighlighted = data.isHighlighted;
+  const { isHighlighted, condition } = data;
 
   const { setEdges } = useReactFlow(); 
   const [path, labelX, labelY] = getBezierPath  ({
@@ -21,7 +21,7 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected }) 
   const handleChange = (e) => {
     const value = Math.min(100, Math.max(0, e.target.value)); // Ограничение 0-100
     setEdges(es => es.map(edge => 
-      edge.id === id ? { ...edge, data: { ...edge.data, value } } : edge
+      edge.id === id ? { ...edge, data: { ...edge.data, condition: value } } : edge
     ));
   };
 
@@ -34,9 +34,11 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected }) 
           stroke: 
             selected ? '#6366f1' : 
             isHighlighted ? '#b1b1b7':
+            condition > 0? '#00ff00':  //похоже, не работает, тк condition = 0
             '#888',
           strokeWidth: 2,
-          // strokeDasharray: data?.value > 50 ? '5 5' : 'none',
+          strokeDasharray: data?.value > 50 ? '5 5' : 'none',
+          // strokeDasharray: data?.value > 0 ? '#00ff00' : '#0000ff'
         }}
       />
       <EdgeLabelRenderer>
@@ -52,7 +54,7 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected }) 
               type="number"
               min="0"
               max="100"
-              value={data?.value || 0}
+              value={data?.condition ?? 0}
               onChange={handleChange}
               className="input"
               style={{ 
@@ -60,7 +62,6 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected }) 
                 boxShadow: selected ? '0 0 0 1px #6366f1' : 'none'
               }}
             />
-            <span>%</span>
           </div>
         </div>
       </EdgeLabelRenderer>
