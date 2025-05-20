@@ -8,7 +8,7 @@ import "./App.scss"
 
 export const App = () => {
   const [view, setView] = useState(<ViewLibrary/>)
-
+    console.log("in app")
   if ( !getSelfFromLocalStorage()?.id ) window.location.href = "/login"
   else {
     return <div className={"App"}>

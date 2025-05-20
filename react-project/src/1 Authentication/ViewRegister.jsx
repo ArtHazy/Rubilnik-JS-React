@@ -1,6 +1,6 @@
 import { limits } from '../values.mjs';
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
-import { http_post_user } from '../HTTP_requests.mjs';
+import { http_user_register } from '../HTTP_requests.mjs';
 import "./ViewAuth.scss"
 import { handleEnterKey } from '../functions.mjs';
 
@@ -9,7 +9,7 @@ export const ViewRegister = () => {
     else return <div className='ViewRegister'>
         <div className="form">
             
-            <hstack style={{gap:0}} ><div className='reg accent'>REG</div><div className='ister accent'>ISTER</div></hstack>
+            <div className={"hstack"} style={{gap:0}} ><div className='reg accent'>REG</div><div className='ister accent'>ISTER</div></div>
 
             <div className='form'>
                 <input id="username-input" type="text" placeholder='username' maxLength={limits.maxNameLength} onKeyDown={(e) => handleEnterKey(e, '.form', 'submit')} />
@@ -26,8 +26,10 @@ export const ViewRegister = () => {
                     let password = document.getElementById('password-input').value;
                     let email = document.getElementById('email-input').value;
 
-                    let {isOk, userId} = http_post_user({name,email,password}, ()=>{load.remove(), submit.hidden=false})
-                    if (isOk) putSelfInLocalStorage({id:userId,name,email,password}), window.location.href='/';
+                    http_user_register({name,email,password}, (isOk, userId)=>{
+                        load.remove(), submit.hidden=false
+                        if (isOk) putSelfInLocalStorage({id:userId,name,email,password}), window.location.href='/';
+                    })
                 }}>Register</button>
             </div>
             <a href="/login"><small>Login</small></a>

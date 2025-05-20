@@ -3,41 +3,97 @@ import { useNotification } from "./2 App/ContextNotification";
 
 export const onerror = (e) => {const { showNotification } = useNotification(); showNotification(e.message, error);}
 
-export function http_user_verify({email, password}, onload){
-    let isOk, id;
-    const req = new XMLHttpRequest();
-    req.open('POST', AUTH_SERVICE_URL+"/user/verify", false)
-    req.setRequestHeader('Content-Type', 'application/json');
-    req.onload = ()=>{ onload(); isOk=req.status==200; id = JSON.parse(req.responseText).id;}
-    req.onerror = onerror;
-    req.send(JSON.stringify( {validation:{email, password}} ));
-    console.log('isOk',isOk);
-    return {isOk, id};
-}
-export function http_post_user({name, email, password}, onload){
-    let isOk, id;
+// export function http_user_verify({email, password}, onload){
+//     let isOk, id;
+//     const req = new XMLHttpRequest();
+//     req.open('POST', AUTH_SERVICE_URL+"/user/verify", false)
+//     req.setRequestHeader('Content-Type', 'application/json');
+//     req.onload = ()=>{ onload(); isOk=req.status==200; id = JSON.parse(req.responseText).id;}
+//     req.onerror = onerror;
+//     req.send(JSON.stringify( {validation:{email, password}} ));
+//     console.log('isOk',isOk);
+//     return {isOk, id};
+// }
+/**
+ * @param { (isOk:boolean, id:string)=>void } onload
+ * */
+export function http_user_register({name, email, password}, onload){
+    // fetch(AUTH_SERVICE_URL+'/user', {
+    //     method: 'POST',
+    //     headers: {'Content-Type': 'application/json'},
+    //     body: {user:{name, email, password}},
+    // }).then(res => {
+    //     onload(res.ok,res.json().id)
+    // }).catch(onerror)
 
+    let isOk, id;
     const req = new XMLHttpRequest();
+    req.timeout = 2000
     req.open('POST', AUTH_SERVICE_URL+"/user", false)
     req.setRequestHeader('Content-Type', 'application/json');
-    req.onload = ()=>{ onload(); isOk=req.status==200; console.log('req',req);  id = JSON.parse(req.responseText).id; }
+    req.onload = ()=>{ isOk=req.status==200; console.log('req',req);  id = JSON.parse(req.responseText).id; onload(isOk, id);}
     req.onerror = onerror;
     req.send(JSON.stringify({ user:{name, email, password} }));
     console.log('isOk',isOk);
     return {isOk, id};
 }
-export function http_post_user_get({email, password}, onload){
+
+/**
+ * @param {(isOk:boolean, user:User)=>void} onload
+ * */
+export function http_user_login({email, password}, onload){
+    // fetch(AUTH_SERVICE_URL+'/user/get', {
+    //     method: 'POST',
+    //     headers: {'Content-Type': 'application/json'},
+    //     body: JSON.stringify( {validation:{email, password}} ),
+    // }).then(res => {
+    //     onload(res.ok,res.json())
+    // }).catch(onerror)
+
     let isOk, user;
     const req = new XMLHttpRequest();
-    req.open('POST', AUTH_SERVICE_URL+"/user/get", false)
+    req.timeout = 2000
+    req.open('POST', AUTH_SERVICE_URL+"/user/get", true)
     req.setRequestHeader('Content-Type', 'application/json');
-    req.onload = ()=>{ onload(); isOk=req.status==200; console.log('req',req);  user = JSON.parse(req.responseText); }
+    req.onload = ()=>{ isOk=req.status==200; console.log('req',req);  user = JSON.parse(req.responseText); onload(isOk,user);}
     req.onerror = onerror;
     req.send(JSON.stringify( {validation:{email, password}} ));
     console.log('isOk',isOk);
     console.log('user',user);
     return {isOk, user};
 }
+// /**
+//  * Login using spring security cookie session id
+//  * @param { (isOk:boolean, user:User)=>void } onload
+//  * */
+// export function http_user_login({name, email, password}, onload) {
+//     fetch(AUTH_SERVICE_URL+'/login', {
+//         method: 'POST',
+//         credentials: 'include',
+//         headers: {
+//             'Content-type': 'application/x-www-form-urlencoded'
+//         },
+//         body: {username: name, password}
+//     }).then((res)=>{
+//         res.status.valueOf() == 302
+//         console.log( "Login " + res.ok? "successful" : "failed")
+//         onload(res.ok, res.json());
+//     }).catch((err)=>{
+//         console.log("error", err);
+//     })
+// }
+// export function http_post_user_get({email, password}, onload){
+//     let isOk, user;
+//     const req = new XMLHttpRequest();
+//     req.open('POST', AUTH_SERVICE_URL+"/user/get", false)
+//     req.setRequestHeader('Content-Type', 'application/json');
+//     req.onload = ()=>{ onload(); isOk=req.status==200; console.log('req',req);  user = JSON.parse(req.responseText); }
+//     req.onerror = onerror;
+//     req.send(JSON.stringify( {validation:{email, password}} ));
+//     console.log('isOk',isOk);
+//     console.log('user',user);
+//     return {isOk, user};
+// }
 // export function http_delete_user({id}, onload){
 //     let isOk;
 //     const req = new XMLHttpRequest();
@@ -52,7 +108,7 @@ export function http_post_user_get({email, password}, onload){
 
 /**
  * 
- * @param { {id:{name:string},password:string} } validation 
+ * @param { {id:string,password:string} } validation
  * @param { {name,email,password} } user 
  * @param {*} onload 
  * @returns 
