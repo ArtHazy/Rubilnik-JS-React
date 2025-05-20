@@ -1,15 +1,13 @@
-import React, { useMemo } from 'react';
-
-const findViolatingEdges = (edges) => {
+export const checkGraphValidity = (nodes, edges) => {
   const violatingEdges = [];
 
-  // 1. Проверка на петли
-  const loops = edges.filter(edge => edge.source === edge.target);
-  violatingEdges.push(...loops.map(edge => edge.id));
+  // Проверка на петли
+  const loopEdges = edges.filter(edge => edge.source === edge.target);
+  violatingEdges.push(...loopEdges.map(e => e.id));
 
-  // 2. Построение графа и маппинга (source -> target) -> edge.id
+  // Построение графа для поиска циклов
   const graph = {};
-  const edgeMap = {}; // Ключ: "source-target", значение: id ребра
+  const edgeMap = {};
 
   edges.forEach(edge => {
     if (!graph[edge.source]) graph[edge.source] = [];
@@ -17,71 +15,42 @@ const findViolatingEdges = (edges) => {
     edgeMap[`${edge.source}-${edge.target}`] = edge.id;
   });
 
-  // 3. Поиск циклов через DFS
+  // Поиск циклов через DFS
   const visited = {};
   const onStack = {};
   const cycleEdges = new Set();
 
-  const dfs = (node, path) => {
-    if (visited[node]) return false;
+  const detectCycles = (node, path) => {
+    if (onStack[node]) {
+      const cycleStartIdx = path.indexOf(node);
+      const cycle = path.slice(cycleStartIdx);
+      for (let i = 0; i < cycle.length; i++) {
+        const u = cycle[i];
+        const v = cycle[(i + 1) % cycle.length];
+        const edgeKey = `${u}-${v}`;
+        if (edgeMap[edgeKey]) cycleEdges.add(edgeMap[edgeKey]);
+      }
+      return;
+    }
+
+    if (visited[node]) return;
+
     visited[node] = true;
     onStack[node] = true;
     path.push(node);
 
-    for (const neighbor of graph[node] || []) {
-      const edgeKey = `${node}-${neighbor}`;
-      if (onStack[neighbor]) {
-        // Найден цикл: извлекаем ребра из пути
-        const cycleStart = path.indexOf(neighbor);
-        const cycle = path.slice(cycleStart);
-        cycle.push(neighbor); // Замыкаем цикл
-
-        for (let i = 0; i < cycle.length - 1; i++) {
-          const u = cycle[i];
-          const v = cycle[i + 1];
-          const key = `${u}-${v}`;
-          if (edgeMap[key]) cycleEdges.add(edgeMap[key]);
-        }
-        return true;
-      }
-      if (dfs(neighbor, [...path])) return true;
-    }
+    graph[node]?.forEach(neighbor => {
+      detectCycles(neighbor, [...path]);
+    });
 
     onStack[node] = false;
-    return false;
+    path.pop();
   };
 
   Object.keys(graph).forEach(node => {
-    if (!visited[node]) dfs(node, []);
+    if (!visited[node]) detectCycles(node, []);
   });
 
   violatingEdges.push(...Array.from(cycleEdges));
-  return [...new Set(violatingEdges)]; // Удаляем дубликаты
+  return violatingEdges;
 };
-
-// Пример использования в React-компоненте
-const GraphValidator = () => {
-  const edges = [
-    { id: 'id1', source: '1', target: '2' },
-    { id: 'id2', source: '2', target: '4' },
-    { id: 'id3', source: '1', target: '3' },
-    { id: 'id4', source: '3', target: '4' },
-    { id: 'id5', source: '4', target: '1' }, // Цикл 1->2->4->1
-    { id: 'id6', source: '5', target: '5' }, // Петля
-  ];
-
-  const violatingEdges = useMemo(() => findViolatingEdges(edges), [edges]);
-
-  return (
-    <div>
-      <h3>Нарушающие ребра:</h3>
-      <ul>
-        {violatingEdges.map(id => (
-          <li key={id}>{id}</li>
-        ))}
-      </ul>
-    </div>
-  );
-};
-
-export default GraphValidator;
