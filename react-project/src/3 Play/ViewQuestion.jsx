@@ -1,20 +1,30 @@
 /* eslint-disable react/prop-types */
 
-import { useEffect, useState } from "react"
+import {useEffect, useMemo, useRef, useState} from "react"
 import { getSelfFromLocalStorage } from "../functions.mjs";
 import { WSPlayAPI } from "../WS_communication.mjs";
 import "./ViewQuestion.scss"
 
 let self = getSelfFromLocalStorage()
 
-export const ViewQuestion = ({isHost, socket, roomId, quizLength, setQuizLength, currentQuestionInd, setCurrentQuestionInd, currentQuestion, setCurrentQuestion}) => {
+export const ViewQuestion = ({isHost, socket, roomId, quizLength, setQuizLength, currentQuestionInd, setCurrentQuestionInd, currentQuestion, setCurrentQuestion, quiz}) => {
 
   const [revealedChoices, setrevealedChoices] = useState([])
 
   const isLastQuestion = (currentQuestionInd==quizLength-1)
 
-  const [flag, setFlag] = useState(false)
-  function upd(){setFlag(!flag)}
+  let targetNode;
+  if (isHost) {
+    console.log("currentQuestionInd", currentQuestionInd)
+    const startNode = JSON.parse(quiz.startEndNodesPositions).start;
+    console.log("s-node", startNode)
+    const graphEdges = JSON.parse(quiz.graphEdges).filter(e=>e.source!==startNode.id);
+    console.log("g-edges", graphEdges)
+    let questionTempId = graphEdges[1].target
+    console.log("quiz", quiz)
+    targetNode =  quiz.questions.find(q => q.tempId === questionTempId);
+    console.log("t-node", targetNode)
+  }
 
   useEffect(() => {
     console.log(socket);
@@ -75,7 +85,7 @@ export const ViewQuestion = ({isHost, socket, roomId, quizLength, setQuizLength,
       <div className="controls">
         {isHost? <button onClick={()=>socket.emitReveal() }>reveal</button> : null}
         {isHost? <button className="question_next_btn" onClick={()=>{
-          !isLastQuestion? socket.emitNext() : socket.emitEnd()
+          !isLastQuestion? socket.emitNext(1) : socket.emitEnd()
         }}> {!isLastQuestion? 'next' : 'end'} </button> 
         : null}
       </div>

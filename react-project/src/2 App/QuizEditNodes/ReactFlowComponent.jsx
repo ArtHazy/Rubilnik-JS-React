@@ -554,6 +554,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         const { quiz: responceQuiz, isOk } = http_put_quiz(selfOld, self.quizzes[ind], ()=>{})
         if(isOk){
           self.quizzes[ind] = responceQuiz;
+          onQuizChange(responceQuiz)
           putSelfInLocalStorage(self)
         }
       } catch (error) {

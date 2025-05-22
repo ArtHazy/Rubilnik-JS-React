@@ -7,9 +7,14 @@ export const ViewLobby = ({joinLanStr, joinRoomUrl, isHost, roomId, socket, quiz
   let targetNode;
   if (isHost) {
     const startNode = JSON.parse(quiz.startEndNodesPositions).start;
+    console.log("s-node", startNode)
     const graphEdges = JSON.parse(quiz.graphEdges);
+    console.log("g-edges", graphEdges)
     const startEdge = graphEdges.find(e => e.source === startNode.id);
+    console.log("s-edge", startEdge)
+    console.log("quiz", quiz)
     targetNode = quiz.questions.find(q => q.tempId === startEdge.target);
+    console.log("t-node", targetNode)
   }
 
   return <div className="ViewLobby">
