@@ -7,7 +7,7 @@ import {
   Controls,
   Background,
   useReactFlow,
-  MiniMap, ControlButton, SelectionMode, applyEdgeChanges, applyNodeChanges, ReactFlowProvider, BaseEdge, Panel, reconnectEdge, MarkerType
+  MiniMap, ControlButton, SelectionMode, applyEdgeChanges, applyNodeChanges, ReactFlowProvider, BaseEdge, Panel, reconnectEdge, MarkerType, getConnectedEdges
 } from '@xyflow/react';
 import { useParams } from 'react-router-dom';
 import { debounce, throttle, isEqual } from 'lodash';
@@ -74,14 +74,29 @@ const getRelativePosition = (childNode, parentNode) => ({
 
 const parseGraphEdges = (edgesString) => {
   try {
-    return edgesString ? JSON.parse(edgesString) : [];
+    const edges = edgesString ? JSON.parse(edgesString) : [];
+    // Генерируем id, если его нет
+    return edges.map(e => ({
+      id: e.id ?? `edge-${e.source}-${e.target}`,
+      source: e.source,
+      target: e.target,
+      condition: e.condition || 0,
+    }));
   } catch (e) {
     console.error('Error parsing graph edges:', e);
     return [];
   }
 };
 
-const serializeGraphEdges = (edges) => JSON.stringify(edges || []);
+
+const serializeGraphEdges = edges => JSON.stringify(
+  (edges || []).map(({ id, source, target, condition }) => ({
+    id: id ?? `edge-${source}-${target}`,
+    source: source,
+    target: target,
+    condition: condition || 0,
+  }))
+);
 
 const filterEdges = (edgesString, predicate) => {
   const edges = parseGraphEdges(edgesString);
@@ -186,19 +201,21 @@ const convertToFlowElements = (quiz, ind) => {
         const sourceId = tempIdMap.get(edge.source) //|| edge.source;
         const targetId = tempIdMap.get(edge.target) //|| edge.target;
 
-        edges.push({
-          id: `conn-${sourceId}-${targetId}`,
-          source: sourceId,
-          target: targetId,
-          condition: edge.condition,
-          type: 'customEdge',
-          animated: true,
-          // markerEnd: {
-          //   type: MarkerType.ArrowClosed,
-          //   width: 20,
-          //   height: 20,
-          // }
-        });
+        if (sourceId || targetId) {
+          edges.push({
+            id: `conn-${sourceId}-${targetId}`,
+            source: sourceId,
+            target: targetId,
+            condition: edge.condition,
+            type: 'customEdge',
+            animated: true,
+            // markerEnd: {
+            //   type: MarkerType.ArrowClosed,
+            //   width: 20,
+            //   height: 20,
+            // }
+          });
+        }
       }
     });
   } catch (e) {
@@ -253,16 +270,9 @@ const convertToQuizFormat = (nodes, edges) => {
     }));
 
   const graphEdges = edges
-    .filter((e) => {
-      // const sourceNode = nodes.find((n) => n.id === e.source);
-      // const targetNode = nodes.find((n) => n.id === e.target);
-      return (
-        // sourceNode?.type === 'choice' &&
-        // targetNode?.type === 'question' &&
-        e.condition !== -1
-      );
-    })
+    .filter((e) => e.condition !== -1)
     .map((e) => ({
+      id: e.id ?? `conn-${e.source}-${e.target}`,
       source: e.source,
       target: e.target,
       condition: e.condition || 0,
@@ -554,8 +564,8 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         const { quiz: responceQuiz, isOk } = http_put_quiz(selfOld, self.quizzes[ind], ()=>{})
         if(isOk){
           self.quizzes[ind] = responceQuiz;
-          onQuizChange(responceQuiz)
-          putSelfInLocalStorage(self)
+          putSelfInLocalStorage(self);
+          onQuizChange(responceQuiz);
         }
       } catch (error) {
         console.error('Ошибка сохранения:', error);
@@ -658,12 +668,13 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
       // Случай 1: start -> question
       if (sourceNode.type === 'start' && targetNode.type === 'question') {
-        // Проверка на существующие соединения из старта
         const existingStartEdges = getEdges().filter(e => e.source === sourceNode.id);
         if (existingStartEdges.length > 0) {
           alert('Стартовая нода может быть соединена только с одним вопросом');
           return;
         }
+        // sourceNode.childId = targetNode.id;
+        // return;
       }
 
       // Случай 2: question -> choice (автоматическое соединение)
@@ -789,7 +800,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const onEdgesDelete = useCallback((deletedEdges) => {
     const deletedEdgeIds = deletedEdges.map(edge => edge.id);
 
-    const choicesToRemove = new Set();
+    const choicesToRemove = new Set();  
     
     // Обрабатываем каждое удаленное ребро
     const updatedNodes = deletedEdges.flatMap(edge => {
@@ -797,7 +808,6 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         if (targetNode?.type === 'choice' && targetNode.parentId) {
             const sourceNode = getNode(edge.source);
             if (!sourceNode) return [];
-            // deletedEdgeIds
             
             // Добавляем choice в список для удаления
             choicesToRemove.add(targetNode.id);

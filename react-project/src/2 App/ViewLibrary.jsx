@@ -44,24 +44,15 @@ export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
         e.currentTarget.style.setProperty('--y', `${y}px`);
     };
 
-    // return <div className='QuizTile'>
-    //     <button id="del" onClick={()=>{ 
-    //         if (Array.isArray(quizzes) && confirm("delete?")){
-    //             if (http_delete_quiz(self,quiz.id,()=>{})) console.log('deleted: ',quizzes.splice(ind,1) , upd())
-    //         }
-    //     }}><span className="material-symbols-outlined">delete</span></button>
-    //     <button id="edit" onClick={()=>{console.log(quiz), window.location='/edit-quiz/'+ind}}> {quiz.title}<br/>{quiz.isInDB? null:"unsaved"}</button>
-    //     <button id="run" onClick={()=>{console.log("test",quiz); startRoomAsHost(navigate, quiz)}} ><span className="material-symbols-outlined">play_arrow</span></button>
-    // </div>
-
     return (
         <div className='quiz-tile-container'>
-          {/* Кнопка удаления - левая верхняя четверть */}
+          {/* Кнопка удаления */}
           <button 
             className="delete-btn" 
             onClick={() => {
               if (Array.isArray(quizzes) && confirm("Delete quiz?")) {
                 if (http_delete_quiz(self, quiz.id, () => {})) {
+                  localStorage.setItem(`quiz_orphans_${ind}`, '[]'); 
                   console.log('Deleted:', quizzes.splice(ind, 1), upd());
                 }
               }
