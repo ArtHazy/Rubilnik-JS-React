@@ -34,14 +34,6 @@ const rfStyle = {
   //backgroundColor: '#D0C0F7',
 };
 
-// Компонент конечной ноды
-// const EndNode = () => (
-//   <div className="end">
-//     <div className="content">🏁 Конец викторины</div>
-//     <Handle type="target" position={Position.Top} />
-//   </div>
-// );
-
 const nodeColor = (node) => {
   switch (node.type) {
     case 'start': return '#ff9900';
@@ -65,7 +57,7 @@ const edgeTypes = {
 
 const panOnDrag = [1, 2];
 const SAFE_ZONE_RADIUS = 100; 
-const MAX_CHOICES_PER_QUESTION = 4; // Выносим в константу
+const MAX_CHOICES_PER_QUESTION = 4;
 
 const checkMaxChoices = (count) => {
   if (count >= MAX_CHOICES_PER_QUESTION) {
@@ -214,9 +206,12 @@ const convertToFlowElements = (quiz, ind) => {
   }
 
   const initialNodeIds = new Set(initialNodes.map(n => n.id));
+  // console.log("OOOOOOOOOOOO", JSON.parse(localStorage.getItem(`quiz_orphans_${ind}`)));
   const orphans = JSON.parse(localStorage.getItem(`quiz_orphans_${ind}`) || '[]');
   const filteredOrphans = orphans.filter(node => !initialNodeIds.has(node.id));
   const nodes = initialNodes.concat( filteredOrphans );
+
+  // console.log("orphans", orphans);
 
   return { nodes, edges };
 };
@@ -259,8 +254,8 @@ const convertToQuizFormat = (nodes, edges) => {
 
   const graphEdges = edges
     .filter((e) => {
-      const sourceNode = nodes.find((n) => n.id === e.source);
-      const targetNode = nodes.find((n) => n.id === e.target);
+      // const sourceNode = nodes.find((n) => n.id === e.source);
+      // const targetNode = nodes.find((n) => n.id === e.target);
       return (
         // sourceNode?.type === 'choice' &&
         // targetNode?.type === 'question' &&
@@ -330,12 +325,13 @@ const NODE_DELETE_HANDLERS = {
 const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const {ind} = useParams();
   // const { nodes: initialNodes, edges: initialEdges } = getFlowLocalStorage();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [contextMenuNode, setContextMenuNode] = useState(null);
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
-  const contextMenuRef = useRef(null);
-  const { screenToFlowPosition, getNodes, getEdges, addNodes, addEdges } = useReactFlow();
+  const [initialElements] = useState(() => {
+    return convertToFlowElements(quiz, ind);
+  });
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialElements.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialElements.edges);
+  const [contextMenu, setContextMenu] = useState(null);
+  const { screenToFlowPosition, getNodes, getEdges, addNodes, addEdges, getNode, updateNode } = useReactFlow();
   const [hoveredQuestionId, setHoveredQuestionId] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -344,7 +340,8 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
       node.type === 'choice' && !node.parentId
     ), 
   [nodes]);
-  // const [activeConnection, setActiveConnection] = useState(null);
+
+  const [activeDragConnection, setActiveDragConnection] = useState(null);
 
   // Мемоизированные ноды с подсветкой
   const highlightedNodes = useMemo(() => {
@@ -390,9 +387,8 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     onQuizChange(newQuiz);
   }, []);
 
-  //инициализация, работает при первом обновлении страницы
   useEffect(() => {
-    console.log("START START START");
+    console.log("START START START", quiz.startEndNodesPositions);
     if (!quiz.startEndNodesPositions) {
       const newStartNode = {
         id: `START_NODE_${ind}`,
@@ -412,7 +408,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
   useEffect(() => {
     if (!isDragging) {
-      // console.log("orphans"); //дважды сохраняет
+      // console.log("orphans 2", orphans); //дважды сохраняет
       localStorage.setItem(`quiz_orphans_${ind}`, JSON.stringify(orphans)); 
     } 
   }, [orphans, isDragging]);
@@ -533,7 +529,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
                 ...filteredChoices, 
                 {
                   ...draggedNode.data.choice,
-                  tempId: draggedNode.id,
+                  parentId: draggedNode.id,
                   position: newRelativePosition
               }]
           } : q;
@@ -710,6 +706,12 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         condition = 0;
       }
 
+      // Случай 4: Обработка choice -> end
+      if (sourceNode.type === 'choice' && targetNode.type === 'end' && !sourceNode.parentId) {
+        alert('Недопустимое соединение');
+        return;
+      }
+
       console.log("CONN", conn);
 
       const newEdge = {
@@ -767,21 +769,74 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
   const onNodeContextMenu = useCallback((e, node) => {
     e.preventDefault();
-    setContextMenuNode(node);
-    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    setContextMenu({
+      type: 'NODE',
+      element: node,
+      position: { x: e.clientX, y: e.clientY }
+    });
   }, []);
 
-  //delete
-  const handleContextMenuAction = useCallback(() => {
-    if (!contextMenuNode) return;
+  const onEdgeContextMenu = useCallback((e, edge) => {
+    e.preventDefault();
+    setContextMenu({
+      type: 'EDGE',
+      element: edge,
+      position: { x: e.clientX, y: e.clientY }
+    });
+  }, []);  
 
-    const handler = NODE_DELETE_HANDLERS[contextMenuNode.type];
-    if (handler) {
-      handler(contextMenuNode.id, { onQuizChange, setNodes });
-    }
+  const onEdgesDelete = useCallback((deletedEdges) => {
+    const deletedEdgeIds = deletedEdges.map(edge => edge.id);
+
+    const choicesToRemove = new Set();
     
-    setContextMenuNode(null);
-  }, [contextMenuNode, onQuizChange, setNodes]);
+    // Обрабатываем каждое удаленное ребро
+    const updatedNodes = deletedEdges.flatMap(edge => {
+        const targetNode = getNode(edge.target);
+        if (targetNode?.type === 'choice' && targetNode.parentId) {
+            const sourceNode = getNode(edge.source);
+            if (!sourceNode) return [];
+            // deletedEdgeIds
+            
+            // Добавляем choice в список для удаления
+            choicesToRemove.add(targetNode.id);
+            
+            // Возвращаем обновленный узел
+            return {
+                ...targetNode,
+                parentId: null,
+                position: {
+                    x: targetNode.position.x + sourceNode.position.x,
+                    y: targetNode.position.y + sourceNode.position.y
+                }
+            };
+        }
+        return [];
+    });
+
+    // Обновляем узлы
+    if (updatedNodes.length > 0) {
+        setNodes(ns => ns.map(n => {
+            const update = updatedNodes.find(u => u.id === n.id);
+            return update || n;
+        }));
+    }
+
+    // Обновляем вопросы
+    onQuizChange(prev => ({
+        ...prev,
+        questions: choicesToRemove.size > 0
+            ? prev.questions.map(question => ({
+                ...question,
+                choices: question.choices.filter(choice => !choicesToRemove.has(choice.tempId))
+            }))
+            : prev.questions,
+            graphEdges: filterEdges(
+              prev.graphEdges,
+              edge => !deletedEdgeIds.includes(edge.id)
+            )
+    }));
+  }, [onQuizChange]);
 
 
   return (
@@ -801,7 +856,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
       <div style={{ flex: 1, position: 'relative' }}
         onClick={useCallback(() => {
-          setContextMenuNode(null);
+          setContextMenu(null);
         }, [])}
       >
         {/* <ReactFlowProvider> */}
@@ -810,6 +865,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
             edges={highlightedEdges}
             onNodesChange={handleNodesChange}
             onEdgesChange={onEdgesChange}
+            onEdgesDelete={onEdgesDelete}
             onConnect={onConnect}
             onReconnect={onReconnect}
             onDrop={onDrop}
@@ -821,11 +877,12 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
             onNodeDragStart={onNodeDragStart}
             onNodeDragStop={onNodeDragStop}
 
-            onMove={() => setContextMenuNode(null)}
+            onMove={() => setContextMenu(null)}
 
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onNodeContextMenu={onNodeContextMenu}
+            onEdgeContextMenu={onEdgeContextMenu}
             style={rfStyle}
             fitView
             panOnScroll
@@ -864,29 +921,82 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
           </ReactFlow>
         {/* </ReactFlowProvider> */}
 
-        {contextMenuNode && contextMenuNode.type !== 'start' && (
+        {contextMenu && (
           <div
-            ref={contextMenuRef}
             style={{
               position: 'fixed',
-              left: contextMenuPosition.x,
-              top: contextMenuPosition.y,
+              left: contextMenu.position.x,
+              top: contextMenu.position.y,
               background: 'white',
               boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
               borderRadius: '8px',
               zIndex: 1000
             }}
+            onClick={() => setContextMenu(null)}
           >
-            <div
-              style={{ 
-                padding: '8px 16px',
-                cursor: 'pointer',
-                '&:hover': { background: '#f5f5f5' }
-              }}
-              onClick={handleContextMenuAction}
-            >
-              Удалить {contextMenuNode.type === 'question' ? 'вопрос' : 'ответ'}
-            </div>
+            {contextMenu.type === 'NODE' && contextMenu.element.type !== 'start' && (
+              <div
+                style={{ 
+                  padding: '8px 16px',
+                  cursor: 'pointer',
+                  '&:hover': { background: '#f5f5f5' }
+                }}
+                onClick={() => {
+                  const handler = NODE_DELETE_HANDLERS[contextMenu.element.type];
+                  if (handler) {
+                    handler(contextMenu.element.id, { onQuizChange, setNodes });
+                  }
+                }}        
+              >
+                Удалить {contextMenu.element.type === 'question' ? 'вопрос' : 'ответ'}
+              </div>
+            )}
+
+            {contextMenu.type === 'EDGE' && (
+              <div
+                style={{ 
+                  padding: '8px 16px',
+                  cursor: 'pointer',
+                  ':hover': { background: '#f5f5f5' }
+                }}
+                onClick={() => {
+                  const targetNode = getNode(contextMenu.element.target);
+
+                  const updatedQuestions = targetNode?.type === 'choice' && targetNode.parentId
+                    ? (() => {
+                        const sourceNode = getNode(contextMenu.element.source);
+                        const newPosition = {
+                            x: targetNode.position.x + sourceNode.position.x,
+                            y: targetNode.position.y + sourceNode.position.y,
+                        };
+                        
+                        setNodes(ns => ns.map(n => 
+                            n.id === targetNode.id
+                                ? { ...n, parentId: null, position: newPosition }
+                                : n
+                        ));
+                        
+                        return quiz.questions.map(question => ({
+                            ...question,
+                            choices: question.choices.filter(choice => choice.tempId !== targetNode.id),
+                        }));
+                    })()
+                    : undefined;
+
+                  setEdges(es => es.filter(e => e.id !== contextMenu.element.id));
+                  onQuizChange(prev => ({
+                    ...prev,
+                    questions: updatedQuestions ?? prev.questions,
+                    graphEdges: filterEdges(
+                      prev.graphEdges,
+                      edge => edge.id !== contextMenu.element.id
+                    ),
+                  }));
+                }}
+              >
+                Удалить соединение
+              </div>
+            )}
           </div>
         )}
         {/* {activeConnection && (

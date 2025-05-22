@@ -99,16 +99,16 @@ export class WSPlayAPI{
             this.ws.send(JSON.stringify({event:"choice",data:{questionInd, choiceInd}}))
         }
     }
-    emitStart(){
+    emitStart(questionId){
         if (this.isOpen()){
             console.log('emitStart');
-            this.ws.send(JSON.stringify({event:"start",data:{}}) )
+            this.ws.send(JSON.stringify({event:"start",data:{ questionId }}) )
         }
     }
-    emitNext(){
+    emitNext(questionId){
         if (this.isOpen()){
             console.log('emitNext');
-            this.ws.send(JSON.stringify({event:"next",data:{}}) )
+            this.ws.send(JSON.stringify({event:"next",data:{ questionId }}) )
         }
     }
     emitReveal(){

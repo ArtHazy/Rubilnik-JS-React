@@ -6,7 +6,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 import ReactFlowComponent from "./QuizEditNodes/ReactFlowComponent"
 
 //new imports
-import 'reactflow/dist/style.css';
+import '@xyflow/react/dist/base.css';
 import './index.css';
 import "./ViewQuizEdit.scss"
 
@@ -24,32 +24,30 @@ export const ViewQuizEdit = () => {
 
     const navigate = useNavigate()
 
-    useEffect(() => {
-        const handleBackButton = (e) => {
-            alert('Вы покидаете страницу редактирования!')
-            // Блокировка стандартного поведения истории
-            window.history.pushState(null, '', window.location.href)
-        }
+    // useEffect(() => {
+    //     const handleBackButton = (e) => {
+    //         alert('Вы покидаете страницу редактирования!')
+    //         // Блокировка стандартного поведения истории
+    //         window.history.pushState(null, '', window.location.href)
+    //     }
 
-        const handleBeforeUnload = (e) => {
-            e.preventDefault()
-            e.returnValue = '' // Требуется для Chrome
-            alert('Страница будет перезагружена!')
-        }
+    //     const handleBeforeUnload = (e) => {
+    //         e.preventDefault()
+    //         e.returnValue = '' // Требуется для Chrome
+    //         alert('Страница будет перезагружена!')
+    //     }
 
-        // Добавляем начальное состояние в историю
-        window.history.pushState(null, '', window.location.href)
+    //     // Добавляем начальное состояние в историю
+    //     window.history.pushState(null, '', window.location.href)
 
-        window.addEventListener('popstate', handleBackButton)
-        window.addEventListener('beforeunload', handleBeforeUnload)
+    //     window.addEventListener('popstate', handleBackButton)
+    //     window.addEventListener('beforeunload', handleBeforeUnload)
 
-        return () => {
-            window.removeEventListener('popstate', handleBackButton)
-            window.removeEventListener('beforeunload', handleBeforeUnload)
-        }
-    }, [navigate])
-
-
+    //     return () => {
+    //         window.removeEventListener('popstate', handleBackButton)
+    //         window.removeEventListener('beforeunload', handleBeforeUnload)
+    //     }
+    // }, [navigate])
 
     return (
         <div style={{ height: '100vh', width: '100vw' }}>
