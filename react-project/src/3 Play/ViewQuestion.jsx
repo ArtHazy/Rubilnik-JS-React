@@ -10,21 +10,73 @@ let self = getSelfFromLocalStorage()
 export const ViewQuestion = ({isHost, socket, roomId, quizLength, setQuizLength, currentQuestionInd, setCurrentQuestionInd, currentQuestion, setCurrentQuestion, quiz}) => {
 
   const [revealedChoices, setrevealedChoices] = useState([])
-
   const isLastQuestion = (currentQuestionInd==quizLength-1)
 
-  let targetNode;
-  if (isHost) {
-    console.log("currentQuestionInd", currentQuestionInd)
-    const startNode = JSON.parse(quiz.startEndNodesPositions).start;
-    console.log("s-node", startNode)
-    const graphEdges = JSON.parse(quiz.graphEdges).filter(e=>e.source!==startNode.id);
-    console.log("g-edges", graphEdges)
-    let questionTempId = graphEdges[1].target
-    console.log("quiz", quiz)
-    targetNode =  quiz.questions.find(q => q.tempId === questionTempId);
-    console.log("t-node", targetNode)
+  const [navigationGraph, setNavigationGraph] = useState({})
+  const [currentTempId, setCurrentTempId] = useState(null)
+
+  // let targetNode;
+  // if (isHost) {
+  //   console.log("currentQuestionInd", currentQuestionInd)
+  //   const startNode = JSON.parse(quiz.startEndNodesPositions).start;
+  //   console.log("s-node", startNode)
+  //   const graphEdges = JSON.parse(quiz.graphEdges).filter(e=>e.source!==startNode.id);
+  //   console.log("g-edges", graphEdges)
+  //   let questionTempId = graphEdges[1].target
+  //   console.log("quiz", quiz)
+  //   targetNode =  quiz.questions.find(q => q.tempId === questionTempId);
+  //   console.log("t-node", targetNode)
+  // }
+
+  useEffect(() => {
+    if (!isHost || !quiz) return
+    
+    const edges = JSON.parse(quiz.graphEdges)
+    const graph = edges.reduce((acc, edge) => {
+      if (!acc[edge.source]) acc[edge.source] = []
+      acc[edge.source].push(edge.target)
+      return acc
+    }, {})
+    
+    setNavigationGraph(graph)
+    const startId = JSON.parse(quiz.startEndNodesPositions).start.id
+    setCurrentTempId(startId)
+  }, [quiz, isHost])
+
+  useEffect(() => {
+    if (!currentTempId || !quiz) return
+    
+    const nextQuestion = quiz.questions.find(q => q.tempId === currentTempId)
+    if (nextQuestion) {
+      setCurrentQuestion(nextQuestion)
+      setCurrentQuestionInd(prev => prev + 1)
+    }
+  }, [currentTempId])
+
+  // Логика перехода к следующему вопросу
+  const getNextQuestionId = (choiceId) => {
+    const nextIds = navigationGraph[choiceId]
+    if (!nextIds || nextIds.length === 0) return null
+    return nextIds[0] // Простейший вариант - берем первый доступный
   }
+
+  const handleNextQuestion = () => {
+    if (!revealedChoices.length) return
+    
+    // Находим корректный выбор для перехода
+    const correctChoice = currentQuestion.choices.find(c => c.correct)
+    const nextId = getNextQuestionId(correctChoice.tempId)
+    
+    if (nextId) {
+      setCurrentTempId(nextId)
+      socket.emitNext(1)
+    } else {
+      socket.emitEnd()
+    }
+    setRevealedChoices([])
+  }
+
+
 
   useEffect(() => {
     console.log(socket);
@@ -83,11 +135,17 @@ export const ViewQuestion = ({isHost, socket, roomId, quizLength, setQuizLength,
         <div className="choices">{ renderChoices() }</div>
       </div>
       <div className="controls">
-        {isHost? <button onClick={()=>socket.emitReveal() }>reveal</button> : null}
-        {isHost? <button className="question_next_btn" onClick={()=>{
-          !isLastQuestion? socket.emitNext(1) : socket.emitEnd()
-        }}> {!isLastQuestion? 'next' : 'end'} </button> 
-        : null}
+        {isHost && (
+          <>
+            <button onClick={() => socket.emitReveal()}>Reveal</button>
+            <button 
+              className="question_next_btn" 
+              onClick={() => socket.emitNext(2)}
+            >
+              {!isLastQuestion ? 'Next' : 'End'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   ) 

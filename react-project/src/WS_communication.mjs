@@ -29,7 +29,7 @@ export class WSPlayAPI{
         /** 
          * @param { {id,name} } user 
         */
-        'choice': ({user,questionInd,choiceInd})=>{},
+        'choice': ({user,questionId,choiceInd})=>{},
         'reveal': (correctChoiceInd)=>{},
         /** 
          * @param { [{}] } results 
@@ -93,10 +93,10 @@ export class WSPlayAPI{
             this.ws.send(JSON.stringify({event:"bark",data:{}}) )
         }
     }
-    emitChoice(questionInd, choiceInd){
+    emitChoice(questionId, choiceInd){
         if (this.isOpen()){
             console.log('emitChoice');
-            this.ws.send(JSON.stringify({event:"choice",data:{questionInd, choiceInd}}))
+            this.ws.send(JSON.stringify({event:"choice",data:{questionId, choiceInd}}))
         }
     }
     emitStart(questionId){
