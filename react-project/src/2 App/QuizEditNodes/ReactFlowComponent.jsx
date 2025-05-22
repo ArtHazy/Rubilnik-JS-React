@@ -529,7 +529,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
                 ...filteredChoices, 
                 {
                   ...draggedNode.data.choice,
-                  parentId: draggedNode.id,
+                  // parentId: draggedNode.id,
                   position: newRelativePosition
               }]
           } : q;
