@@ -75,15 +75,15 @@ export class WSPlayAPI{
         return res;
     }
 
-    emitJoin(validation_={id, password},roomId, onopen){
+    emitJoin({id, email, password},roomId, onopen){
         console.log('emitJoin');
-        let validation = {id:validation_.id, password:validation_.password}
+        let validation = {id, email, password}
         this.ws.send(JSON.stringify({event:"join",data:{validation,roomId}}) )
         return this
     }
-    emitCreate(validation_={id,password},quiz){
+    emitCreate({id, email, password},quiz){
         console.log('emitCreate');
-        let validation = {id:validation_.id, password:validation_.password}
+        let validation = {id, email, password}
         this.ws.send(JSON.stringify({event:"create",data:{validation,quiz}}) )
         return this
     }

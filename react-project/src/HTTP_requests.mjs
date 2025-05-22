@@ -14,6 +14,7 @@ export const onerror = (e) => {const { showNotification } = useNotification(); s
 //     console.log('isOk',isOk);
 //     return {isOk, id};
 // }
+
 /**
  * @param { (isOk:boolean, id:string)=>void } onload
  * */
@@ -42,14 +43,6 @@ export function http_user_register({name, email, password}, onload){
  * @param {(isOk:boolean, user:User)=>void} onload
  * */
 export function http_user_login({email, password}, onload){
-    // fetch(AUTH_SERVICE_URL+'/user/get', {
-    //     method: 'POST',
-    //     headers: {'Content-Type': 'application/json'},
-    //     body: JSON.stringify( {validation:{email, password}} ),
-    // }).then(res => {
-    //     onload(res.ok,res.json())
-    // }).catch(onerror)
-
     let isOk, user;
     const req = new XMLHttpRequest();
     req.timeout = 2000
@@ -62,49 +55,6 @@ export function http_user_login({email, password}, onload){
     console.log('user',user);
     return {isOk, user};
 }
-// /**
-//  * Login using spring security cookie session id
-//  * @param { (isOk:boolean, user:User)=>void } onload
-//  * */
-// export function http_user_login({name, email, password}, onload) {
-//     fetch(AUTH_SERVICE_URL+'/login', {
-//         method: 'POST',
-//         credentials: 'include',
-//         headers: {
-//             'Content-type': 'application/x-www-form-urlencoded'
-//         },
-//         body: {username: name, password}
-//     }).then((res)=>{
-//         res.status.valueOf() == 302
-//         console.log( "Login " + res.ok? "successful" : "failed")
-//         onload(res.ok, res.json());
-//     }).catch((err)=>{
-//         console.log("error", err);
-//     })
-// }
-// export function http_post_user_get({email, password}, onload){
-//     let isOk, user;
-//     const req = new XMLHttpRequest();
-//     req.open('POST', AUTH_SERVICE_URL+"/user/get", false)
-//     req.setRequestHeader('Content-Type', 'application/json');
-//     req.onload = ()=>{ onload(); isOk=req.status==200; console.log('req',req);  user = JSON.parse(req.responseText); }
-//     req.onerror = onerror;
-//     req.send(JSON.stringify( {validation:{email, password}} ));
-//     console.log('isOk',isOk);
-//     console.log('user',user);
-//     return {isOk, user};
-// }
-// export function http_delete_user({id}, onload){
-//     let isOk;
-//     const req = new XMLHttpRequest();
-//     req.open('DELETE', CORE_SERVER_URL+"/user", false)
-//     req.setRequestHeader('Content-Type', 'application/json');
-//     req.onload = ()=>{ onload(); isOk=req.status==200 }
-//     req.onerror = onerror;
-//     req.send(JSON.stringify({id}));
-//     console.log('isOk',isOk);
-//     return isOk;
-// }
 
 /**
  * 
@@ -113,17 +63,15 @@ export function http_user_login({email, password}, onload){
  * @param {*} onload 
  * @returns 
  */
-export function http_put_user(validation,user,onload){
-    validation = {id: validation.id, password: validation.password}
+export function http_put_user({id, email, password},user,onload){
     user = {name:user.name, email: user.email, password: user.password}
-
     let isOk;
     const req = new XMLHttpRequest();
     req.open('PUT', AUTH_SERVICE_URL+"/user", false)
     req.setRequestHeader('Content-Type', 'application/json');
     req.onload = ()=>{ onload(); isOk=req.status==200 }
     req.onerror = onerror;
-    req.send( JSON.stringify( {validation,user} ) );
+    req.send( JSON.stringify( {validation:{id, email, password},user} ) );
     console.log('isOk',isOk);
     return isOk;
 }
@@ -134,8 +82,7 @@ export function http_put_user(validation,user,onload){
  * @param {Function} onload
  * @returns
  */
-export function http_post_quiz(validation,quiz, onload){
-    validation = {id:validation.id, password:validation.password}
+export function http_post_quiz({id, email, password},quiz, onload){
     delete quiz.isInDB
     let isOk, quizResponce;
     const req = new XMLHttpRequest();
@@ -143,7 +90,7 @@ export function http_post_quiz(validation,quiz, onload){
     req.setRequestHeader('Content-Type', 'application/json');
     req.onload = ()=>{ onload(); isOk=req.status==200; quizResponce = JSON.parse(req.responseText);  }
     req.onerror = onerror;
-    req.send(JSON.stringify( {validation,quiz} ));
+    req.send(JSON.stringify( {validation:{id, email, password},quiz} ));
     console.log('isOk', isOk);
     quizResponce.isInDB = true;
     return {isOk, quiz: quizResponce};
@@ -153,32 +100,30 @@ export function http_post_quiz(validation,quiz, onload){
  * @param { {id:string, title:string, questions:[{title:string,choices:[{title:string,correct:boolean}]}]} } quiz 
  * @param {Function} onload
  */
-export function http_put_quiz(validation, quiz, onload){
+export function http_put_quiz({id, email, password}, quiz, onload){
     console.log("qqq",quiz);
-    console.log(validation);
+    console.log({id, email, password});
     let isOk, quizRes;
     delete quiz.isInDB
-    validation = {id:validation.id, password:validation.password}
     const req = new XMLHttpRequest();
     req.open('PUT', AUTH_SERVICE_URL+"/quiz", false)
     req.setRequestHeader('Content-Type', 'application/json');
     req.onload = ()=>{ onload(); isOk=req.status==200; quizRes=JSON.parse(req.responseText)}
     req.onerror = onerror;
-    req.send(JSON.stringify( {validation,quiz} ));
+    req.send(JSON.stringify( {validation:{id, email, password},quiz} ));
     console.log('isOk',isOk);
     console.log('req.responseText',req.responseText);
     quizRes.isInDB = true;
     return {isOk, quiz: quizRes};
 }
-export function http_delete_quiz(validation, id, onload){
+export function http_delete_quiz({id, email, password}, quizId, onload){
     let isOk;
-    validation = {id:validation.id, password:validation.password}
     const req = new XMLHttpRequest();
     req.open('DELETE', AUTH_SERVICE_URL+"/quiz", false)
     req.setRequestHeader('Content-Type', 'application/json');
     req.onload = ()=>{ onload(); isOk=req.status==200; }
     req.onerror = onerror;
-    req.send(JSON.stringify( {validation,id} ));
+    req.send(JSON.stringify( {validation:{id, email, password},id:quizId} ));
     console.log('isOk',isOk);
     return isOk;
 }
