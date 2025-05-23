@@ -177,6 +177,7 @@ export const Play = () => {
             }}> { Object.keys(roommates).length } </button>
             <div className={"hstack roommates "+(isRoommatesHidden?"hidden":"")}>
               { Object.keys(roommates).map((userId) => <div>{roommates[userId]?.name}</div>) }
+              {/* <div>placeholder</div>
               <div>placeholder</div>
               <div>placeholder</div>
               <div>placeholder</div>
@@ -187,8 +188,7 @@ export const Play = () => {
               <div>placeholder</div>
               <div>placeholder</div>
               <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div>
+              <div>placeholder</div> */}
             </div>
           </div>
       </div>

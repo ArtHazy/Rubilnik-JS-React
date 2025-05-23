@@ -11,6 +11,8 @@ export const ViewJoin = () => {
     const [flag,setFlag] = useState(false);
     const self = getSelfFromLocalStorage() || {}
 
+    console.log("self", self.name);
+
     const handleEnterPress = () => {
         console.log("enter");
         navigatePlay(roomkey)

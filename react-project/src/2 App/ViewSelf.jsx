@@ -49,11 +49,11 @@ export const ViewSelf = () => {
             </vstack>
             <vstack>
                 <button className="big" onClick={()=>{
-                    // let name = document.querySelector("#name").value;
+                    let name = self.name;
                     let email = document.querySelector("#email").value;
                     let password = document.querySelector("#password").value;
 
-                    if (http_put_user(self, {name,email,password}, ()=>{})) {removeSelfFromLocalStorage(), window.location='/'}
+                    if (http_put_user(self, {name, email, password}, ()=>{})) {removeSelfFromLocalStorage(), window.location='/'}
                     else {confirm("Failed to save changes\nLog out without saving?")? (removeSelfFromLocalStorage(), window.location='/') : null}
                 }}>log out</button>
             </vstack>
