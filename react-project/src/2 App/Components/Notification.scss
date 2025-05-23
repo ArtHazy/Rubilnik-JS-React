@@ -1,3 +1,5 @@
+@import "../../main/mixin.scss";
+
 .notification {
     position: fixed;
     top: 20px;
@@ -29,10 +31,10 @@
     to { transform: translateX(0); }
   }
 
-  @keyframes slideOut {
-    from { transform: translateX(0); }
-    to { transform: translateX(150%); }
-  }
+  // @keyframes slideOut {
+  //   from { transform: translateX(0); }
+  //   to { transform: translateX(150%); }
+  // }
 
   .notification.closing {
     animation: slideOut 0.3s ease-out forwards;
@@ -53,8 +55,8 @@
   }
   
   .error {
-    background: #f44336;
-    color: white;
+    background: var(--color-rose);
+    color: var(--color-dark);
   }
   
   .warning {

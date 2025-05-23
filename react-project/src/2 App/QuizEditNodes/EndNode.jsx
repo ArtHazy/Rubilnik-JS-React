@@ -7,18 +7,23 @@ const EndNode = ({ id, data, selected }) => {
   const nodeStyle = {
     background: '#FFEBEE',
     padding: '15px',
-    borderRadius: '8px',
+    width: '60px',
+    height: '60px',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     border: selected 
       ? '2px solid #2196F3'
       : isHighlighted  
       ? '2px solid #FF6D00' 
       : '2px solid #EF5350',
-    minWidth: '120px',
     boxShadow: selected 
       ? '0 0 8px rgba(33,150,243,0.3)' 
       : isHighlighted  
       ? '0 0 6px rgba(255,109,0,0.2)'
       : '0 2px 4px rgba(0,0,0,0.1)',
+    transition: 'all 0.2s ease',
   };
 
   const handleStyle = {
@@ -27,9 +32,10 @@ const EndNode = ({ id, data, selected }) => {
       : isHighlighted 
       ? '#FF6D00' 
       : '#EF5350',
-    width: 10,
-    height: 10,
-    top: -5,
+    width: 12,
+    height: 12,
+    borderRadius: '50%',
+    top: 0,
     transition: 'background 0.2s ease'
   };
 
@@ -41,14 +47,14 @@ const EndNode = ({ id, data, selected }) => {
       <div 
         className="content" 
         style={{ 
-          fontSize: '14px',
+          fontSize: 'inherit',
           color: '#D32F2F',
           textAlign: 'center',
           fontWeight: 500,
           letterSpacing: '0.5px'
         }}
       >
-        🏁 Конец викторины
+        Конец
       </div>
       
       <Handle

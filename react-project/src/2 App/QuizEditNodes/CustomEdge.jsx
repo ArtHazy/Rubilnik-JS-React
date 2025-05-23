@@ -41,7 +41,7 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected, co
           // strokeDasharray: data?.value > 0 ? '#00ff00' : '#0000ff'
         }}
       />
-      {/* {condition >= 0 && ( */}
+      {condition >= 0 && (
         <EdgeLabelRenderer>
           <div
             className="edge-label"
@@ -66,7 +66,7 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected, co
             </div>
           </div>
         </EdgeLabelRenderer>
-       {/* )} */}
+       )}
     </>
   );
 };

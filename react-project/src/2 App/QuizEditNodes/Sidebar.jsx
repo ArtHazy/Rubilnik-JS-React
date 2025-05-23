@@ -19,7 +19,8 @@ const Sidebar = () => {
     border: '2px dashed',
     cursor: 'grab',
     transition: 'all 0.2s',
-    margin: "5px auto"
+    margin: "5px auto",
+    color: "#525252"
   };
 
   return (

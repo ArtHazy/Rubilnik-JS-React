@@ -36,11 +36,11 @@ const rfStyle = {
 
 const nodeColor = (node) => {
   switch (node.type) {
-    case 'start': return '#ff9900';
-    case 'end': return '#ff0000';
-    case 'question': return '#6ede87';
-    case 'choice': return '#6865A5';
-    default: return '#ff0072';
+    case 'start': return '#709B95';
+    case 'end': return '#EF5350';
+    case 'question': return '#898176';
+    case 'choice': return '#B0B0B0';
+    default: return '#B83B5E';
   }
 };
 
@@ -954,15 +954,28 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px',
-                padding: '6px',
-                background: '#ffffff',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                borderRadius: '8px',
-
+                gap: 8,
+                padding: 8,
+                background: 'transparent', // Полупрозрачный светлый фон
+                border: `2px dashed #B0B0B0`,
+                boxShadow: `0 4px 20px rgba(36, 36, 36, 0.12)`,
+                borderRadius: 12,
+                backdropFilter: 'blur(4px)',
+                position: 'absolute',
+                right: 12,
                 top: '50%',
                 transform: 'translateY(-50%)',
-              }}>
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                zIndex: 1000,
+            
+                // Стили для hover-эффекта
+                ':hover': {
+                  background: 'rgba(#D9D9D9, 0.98)',
+                  boxShadow: `0 6px 24px rgba(#242424, 0.16)`,
+                  transform: 'translateY(-50%) scale(1.02)'
+                }
+              }}
+            >
             </Controls>
             <MiniMap 
               nodeColor={nodeColor} 

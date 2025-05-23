@@ -53,16 +53,46 @@ const ChoiceNode = ({ data, onUpdate }) => {
     //   choice.value = inputValue;
   };
 
+  const inputStyle = {
+    padding: '4px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+    fontFamily: 'inherit',
+    fontSize: 'inherit',
+    outline: 'none',
+    color: "#242424"
+  };
+
   return (
     <div style={{
       background: isHighlighted ? '#E3F2FD' : '#FFFFFF',
       padding: '15px',
-      borderRadius: '8px',
+      borderRadius: '12px',
       border: `2px solid ${isHighlighted ? '#64B5F6' : '#E0E0E0'}`,
       boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
     }}>
-      <Terminal type="source" position={ Position.Bottom } />
-      <Terminal type="target" position={ Position.Top } />
+      <Terminal type="source" position={ Position.Bottom } 
+        style={{ 
+          background: '#B0B0B0',
+          width: 12,
+          height: 12,
+          borderRadius: 4,
+          border: isHighlighted  
+              ? '2px solid #7A7A7A' 
+              : '2px solid #E0E0E0',
+        }}
+      />
+      <Terminal type="target" position={ Position.Top } 
+        style={{ 
+          background: '#B0B0B0',
+          width: 12,
+          height: 12,
+          borderRadius: 4,
+          border: isHighlighted  
+              ? '2px solid #7A7A7A' 
+              : '2px solid #E0E0E0',
+        }}
+      />
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div style={{ flex: 1, position: 'relative' }}>
           <input
@@ -73,10 +103,9 @@ const ChoiceNode = ({ data, onUpdate }) => {
             onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
             onBlur={handleSaveTitle}
             style={{
+              ...inputStyle,
               width: '100%',
-              padding: '4px',
               border: `1px solid ${isImage ? '#81C784' : '#ddd'}`,
-              borderRadius: '4px'
             }}
           />
           
@@ -111,7 +140,6 @@ const ChoiceNode = ({ data, onUpdate }) => {
         </div>
 
         <input 
-          style={{ marginLeft: 8, width: "3rem" }}
           type='number'
           min={0} 
           max={1}
@@ -120,6 +148,12 @@ const ChoiceNode = ({ data, onUpdate }) => {
           onChange={(e) => setInputValue(e.target.value)}
           onBlur={handleSaveValue}
           onKeyDown={(e) => e.key === 'Enter' && handleSaveValue()}
+          style={{
+            ...inputStyle,
+            marginLeft: 8,
+            width: '3rem',
+            textAlign: 'center',
+          }}      
         />
       </div>
     </div>

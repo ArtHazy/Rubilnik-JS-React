@@ -3,6 +3,7 @@
 .ViewSelf, .ViewJoin{ input{text-align: center; }}
 
 .ViewJoin{
+
     ::before {
         content: "";
         position: absolute;

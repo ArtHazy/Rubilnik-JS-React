@@ -17,6 +17,8 @@
   --choice-2-color: #F08A5D;
   --choice-3-color: #B83B5E;
   --choice-4-color: #D9D9D9;
+  --choice-5-color: #898176;
+  --choice-6-color: #3B765A;
   
   --choice-wrong-1-color: #4A605D;
   --choice-wrong-2-color: #8A5741;
@@ -26,6 +28,23 @@
   --color-gold: rgba(197, 176, 120, 1);
 
   --color-rose: #D6768E;
+
+  //add new colors
+  --color-greyHintLight: #727272;
+  --color-greyHintDark: #525252;
+  --color-beige: #D7CCAD;
+
+  //light
+  --color-greyLight: #B0B0B0;
+  --color-cyanLight: #0FD4CD;
+  --color-yellowLight: #D6BF81;
+  --color-cyanBottomBarLight: #44A9A6;
+  
+  //dark
+  --color-greyDark: #242424;
+  --color-cyanDark: #065452;
+  --color-yellowDark: #8A7B53;
+  --color-cyanBottomBarDark: #477E7C;
 }
 
 hstack, .hstack {

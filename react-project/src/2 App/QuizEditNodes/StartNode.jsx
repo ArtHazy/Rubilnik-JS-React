@@ -10,10 +10,12 @@ const StartNode = () => {
         type="source"
         position={Position.Bottom}
         style={{ 
-          background: '#ff9900',
+          background: '#709B95', 
           width: 12,
           height: 12,
-          bottom: -6 
+          bottom: -8,
+          borderRadius: '50%',
+          // border: '2px solid #709B95',
         }}
       />
     </div>
