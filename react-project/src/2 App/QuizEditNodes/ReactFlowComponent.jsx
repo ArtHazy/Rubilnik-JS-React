@@ -45,8 +45,8 @@ const nodeColor = (node) => {
 };
 
 const nodeTypes = {
-  question: QuestionNode,
-  choice: ChoiceNode,
+  question: (props) => <QuestionNode {...props} onUpdate={props.data?.onUpdate} />,
+  choice: (props) => <ChoiceNode {...props} onUpdate={props.data?.onUpdate} />,
   start: StartNode,
   end: EndNode,
 };
@@ -106,7 +106,7 @@ const filterEdges = (edgesString, predicate) => {
 const generateNodeId = () => 
   `${Date.now() * 10000 + Math.floor(Math.random() * 10000)}`;
 
-export const convertToFlowElements = (quiz, ind) => {
+export const convertToFlowElements = (quiz, onQuizChange, ind) => {
   console.log("convertToFlowElements");
   const initialNodes = [];
   const edges = [];
@@ -158,6 +158,14 @@ export const convertToFlowElements = (quiz, ind) => {
           ...question,
           tempId: questionNodeId
         },
+        onUpdate: (updatedQuestion) => {
+          onQuizChange(prev => ({
+            ...prev,
+            questions: prev.questions.map(q => 
+              q.tempId === questionNodeId ? {...q, ...updatedQuestion} : q
+            )
+          }));
+        }    
       },
       position: question.position || { x: 0, y: 0 },
     });
@@ -178,6 +186,17 @@ export const convertToFlowElements = (quiz, ind) => {
             ...choice,
             tempId: choiceNodeId
           }, 
+          onUpdate: (updatedChoice) => {
+            onQuizChange(prev => ({
+              ...prev,
+              questions: prev.questions.map(q => ({
+                ...q,
+                choices: q.choices.map(c => 
+                  c.tempId === choiceNodeId ? {...c, ...updatedChoice} : c
+                )
+              }))
+            }));
+          }
         },
         position: choice.position || {x: 0, y: (index + 1) * 100},
         parentId: questionNodeId,
@@ -326,6 +345,34 @@ const NODE_DELETE_HANDLERS = {
   }
 };
 
+function updateQuizIds(responceQuiz, quiz) {
+  // Создаем глубокую копию, чтобы избежать мутации исходного объекта
+  const updatedResponceQuiz = JSON.parse(JSON.stringify(responceQuiz));
+
+  // Обновляем вопросы
+  updatedResponceQuiz.questions = responceQuiz.questions.map(respQuestion => {
+      // Ищем вопрос в quiz с таким же tempId
+      const matchingQuizQuestion = quiz.questions.find(q => q.tempId === respQuestion.tempId);
+      if (matchingQuizQuestion) {
+          // Обновляем id вопроса
+          const updatedQuestion = { ...respQuestion, id: matchingQuizQuestion.id };
+
+          // Обновляем варианты выбора внутри вопроса
+          updatedQuestion.choices = respQuestion.choices.map(respChoice => {
+              const matchingQuizChoice = matchingQuizQuestion.choices.find(c => c.tempId === respChoice.tempId);
+              return matchingQuizChoice 
+                  ? { ...respChoice, id: matchingQuizChoice.id } 
+                  : respChoice;
+          });
+
+          return updatedQuestion;
+      }
+      return respQuestion;
+  });
+
+  return updatedResponceQuiz;
+}
+
 // const getFlowLocalStorage = () => {
 //   const savedData = localStorage.getItem(`reactFlowData`);
 //   const { nodes, edges } = JSON.parse(savedData);
@@ -340,7 +387,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const {ind} = useParams();
   // const { nodes: initialNodes, edges: initialEdges } = getFlowLocalStorage();
   const [initialElements] = useState(() => {
-    return convertToFlowElements(quiz, ind);
+    return convertToFlowElements(quiz, onQuizChange, ind);
   });
   const [nodes, setNodes, onNodesChange] = useNodesState(initialElements.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialElements.edges);
@@ -428,7 +475,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, [orphans, isDragging]);
 
   useEffect(() => {
-    const { nodes: newNodes, edges: newEdges } = convertToFlowElements(quiz, ind);
+    const { nodes: newNodes, edges: newEdges } = convertToFlowElements(quiz, onQuizChange, ind);
     setNodes(newNodes);
     setEdges(newEdges);
 
@@ -567,15 +614,16 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         self.quizzes[ind] = quiz;
         const { quiz: responceQuiz, isOk } = http_put_quiz(selfOld, self.quizzes[ind], ()=>{})
         if(isOk){
-          self.quizzes[ind] = responceQuiz;
+          const updatedResponceQuiz = updateQuizIds(responceQuiz, quiz);
+          self.quizzes[ind] = updatedResponceQuiz;
           putSelfInLocalStorage(self);
-          onQuizChange(responceQuiz); //update id 
+          onQuizChange(updatedResponceQuiz);
         }
       } catch (error) {
         console.error('Ошибка сохранения:', error);
       }
     }, 5000),
-    [ind, self, quiz.id]
+    [ind, self, quiz]
   );
 
   useEffect(() => {

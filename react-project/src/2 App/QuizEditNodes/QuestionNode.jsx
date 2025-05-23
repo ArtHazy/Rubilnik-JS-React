@@ -7,7 +7,7 @@ import Terminal from './Terminal';
  * @param {{id:string, type:string, data:{question:Question} }} param0 
  * @returns 
  */
-const QuestionNode = ({ id, data, selected }) => {
+const QuestionNode = ({ id, data, selected, onUpdate }) => {
   let { question, isHighlighted } = data;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -22,6 +22,10 @@ const QuestionNode = ({ id, data, selected }) => {
     console.log("TEST", inputTitle);
     question.title = inputTitle;
     setIsEditing(false);
+
+    if (onUpdate) {
+      onUpdate(question);
+    }
   };
 
 
@@ -48,8 +52,6 @@ const QuestionNode = ({ id, data, selected }) => {
           : isHighlighted  
             ? '2px solid #FFA000' 
             : '2px solid #FFD700',
-        minWidth: '200px',
-        minHeight: '300px',
         boxShadow: selected 
           ? '0 0 10px rgba(33,150,243,0.5)' 
           : isHighlighted  

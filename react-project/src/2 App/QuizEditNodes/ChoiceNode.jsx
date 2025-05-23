@@ -8,7 +8,7 @@ const isImageUrl = (url) => {
 };
 
 /** @param {{data:{choice:Choice}}} */
-const ChoiceNode = ({ data }) => {
+const ChoiceNode = ({ data, onUpdate }) => {
   const { choice, isHighlighted } = data
 
 
@@ -28,7 +28,10 @@ const ChoiceNode = ({ data }) => {
       choice.value = inputValue;
     setIsImage(isImageUrl(inputTitle));
     
-    if (typeof onUpdate === 'function') {
+    // if (typeof onUpdate === 'function') {
+    //   onUpdate(choice);
+    // }
+    if (onUpdate) {
       onUpdate(choice);
     }
   };

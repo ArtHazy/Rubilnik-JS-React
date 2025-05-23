@@ -27,6 +27,8 @@ export const Play = () => {
     const {state} = useLocation()
     const {roomId} = useParams()
 
+    const [quiz, onQuizChange] = useState(state?.quiz || null);
+
     const [isHost, setIsHost] = useState( Boolean(state?.quiz) )
     const [gameState, setGameState] = useState(null)
     const [usersChoices, setUsersChoices] = useState({})
@@ -44,13 +46,13 @@ export const Play = () => {
 
     // const player = new QuizPlayer(state?.quiz, roomId);
     useEffect(() => {
-      if (state?.quiz) {
-        const newPlayer = new QuizPlayer(state.quiz, roomId);
+      if (quiz) {
+        const newPlayer = new QuizPlayer(quiz, onQuizChange, roomId);
         setPlayer(newPlayer)
         setCurrentNode(newPlayer.getCurrentState().node)
         setIsFinished(newPlayer.getCurrentState().isFinished)
       }
-    }, [state?.quiz, roomId])
+    }, [quiz, roomId])
 
     const startQuestionId = useMemo(() => {
       return player?.getCurrentState().node?.data?.question?.id

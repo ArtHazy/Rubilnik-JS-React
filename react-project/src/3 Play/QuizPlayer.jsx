@@ -1,8 +1,8 @@
 import { convertToFlowElements } from "../2 App/QuizEditNodes/ReactFlowComponent";
 
 export class QuizPlayer {
-    constructor(quiz, ind) {
-        const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(quiz, ind);
+    constructor(quiz, onQuizChange, ind) {
+        const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(quiz, onQuizChange, ind);
         this.nodes = initialNodes;
         this.edges = initialEdges;
         this.currentNode = this.findStartNode();
