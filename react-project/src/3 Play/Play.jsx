@@ -2,13 +2,15 @@ import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs
 import { ViewLobby } from "./ViewLobby";
 import { ViewQuestion } from "./ViewQuestion";
 import { ViewResult } from "./ViewResult";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ViewError, ViewLoading } from "../4 Error/ViewError";
 import { WSPlayAPI } from "../WS_communication.mjs";
 import { useLocation, useParams } from "react-router-dom";
 import "./Play.scss"
 import {QR} from "./QR.jsx";
 import {AUTH_SERVICE_URL, SERVER, UI_SERVICE_URL} from "../values.mjs";
+import { QuizPlayer } from "./QuizPlayer.jsx";
+
 export const Play = () => {
 
     const [socket, setSocket] = useState(null)
@@ -36,7 +38,44 @@ export const Play = () => {
 
     const [results, setResults] = useState(null)
 
+    const [player, setPlayer] = useState(null)
+    const [currentNode, setCurrentNode] = useState(null)
+    const [isFinished, setIsFinished] = useState(false)
+
+    // const player = new QuizPlayer(state?.quiz, roomId);
+    useEffect(() => {
+      if (state?.quiz) {
+        const newPlayer = new QuizPlayer(state.quiz, roomId);
+        setPlayer(newPlayer)
+        setCurrentNode(newPlayer.getCurrentState().node)
+        setIsFinished(newPlayer.getCurrentState().isFinished)
+      }
+    }, [state?.quiz, roomId])
+
+    const startQuestionId = useMemo(() => {
+      return player?.getCurrentState().node?.data?.question?.id
+    }, [player])
+
     // console.log('state',state);
+
+    const handleNextQuestion = () => {
+      if (!player || !isHost) return
+      
+      try {
+        player.next()
+        const newState = player.getCurrentState()
+        setCurrentNode(newState.node)
+        setIsFinished(newState.isFinished)
+        console.log("isFinished", isFinished, newState.node.type);
+
+        // Синхронизация с сервером
+        isFinished ? socket.emitEnd() 
+          : newState.node.type === 'question' && socket.emitNext(newState.node.data.question.id);
+      } catch (error) {
+        console.error('Ошибка перехода:', error)
+      }
+    }
+
 
 
     useEffect(() =>{
@@ -120,8 +159,12 @@ export const Play = () => {
       {socketStatus == socketStates.open? <ViewLoading text={'cant join room'}/> : null}
 
 
-      {socketStatus == socketStates.inRoom && gameState === gameStates.lobby ? <ViewLobby joinLanStr={join_lan_str} joinRoomUrl={join_room_url} roomId={roomId} isHost={isHost} socket={socket} quiz={state?.quiz} /> : null}
-      {socketStatus == socketStates.inRoom && gameState === gameStates.live ? <ViewQuestion isHost={isHost} socket={socket} roomId={roomId} setGameState={setGameState} quizLength={quizLength} setQuizLength={setQuizLength} currentQuestionInd={currentQuestionInd} setCurrentQuestionInd={setCurrentQuestionInd} currentQuestion={currentQuestion} setCurrentQuestion={setCurrentQuestion} quiz={state?.quiz}/> : null}
+      {socketStatus == socketStates.inRoom && gameState === gameStates.lobby ? <ViewLobby joinLanStr={join_lan_str} joinRoomUrl={join_room_url} roomId={roomId} isHost={isHost} socket={socket} 
+        startQuestionId={startQuestionId} /> : null}
+      {/* quiz={state?.quiz} */}
+      {socketStatus == socketStates.inRoom && gameState === gameStates.live ? <ViewQuestion isHost={isHost} socket={socket} roomId={roomId} setGameState={setGameState} quizLength={quizLength} setQuizLength={setQuizLength} currentQuestionInd={currentQuestionInd} setCurrentQuestionInd={setCurrentQuestionInd} currentQuestion={currentQuestion} setCurrentQuestion={setCurrentQuestion}
+        isFinished={isFinished}
+        onNext={handleNextQuestion}/> : null}
       {socketStatus == socketStates.inRoom && gameState === gameStates.finished ? <ViewResult isHost={isHost} socket={socket} roomId={roomId} results={results} roommates={roommates} /> : null}
 
       {/*<div className="roommates-counter"> connected players: { Object.keys(roommates).length } </div>*/}

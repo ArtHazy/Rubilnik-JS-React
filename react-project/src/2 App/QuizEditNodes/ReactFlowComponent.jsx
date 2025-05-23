@@ -106,7 +106,7 @@ const filterEdges = (edgesString, predicate) => {
 const generateNodeId = () => 
   `${Date.now() * 10000 + Math.floor(Math.random() * 10000)}`;
 
-const convertToFlowElements = (quiz, ind) => {
+export const convertToFlowElements = (quiz, ind) => {
   console.log("convertToFlowElements");
   const initialNodes = [];
   const edges = [];
@@ -223,12 +223,16 @@ const convertToFlowElements = (quiz, ind) => {
   }
 
   const initialNodeIds = new Set(initialNodes.map(n => n.id));
-  // console.log("OOOOOOOOOOOO", JSON.parse(localStorage.getItem(`quiz_orphans_${ind}`)));
   const orphans = JSON.parse(localStorage.getItem(`quiz_orphans_${ind}`) || '[]');
   const filteredOrphans = orphans.filter(node => !initialNodeIds.has(node.id));
   const nodes = initialNodes.concat( filteredOrphans );
 
-  // console.log("orphans", orphans);
+  // //EDIT STARTEDGE
+  // const startEdgeIndex = edges.findIndex(edge => edge.source === startNode.id);
+  // if (startEdgeIndex) {
+  //   const [startEdge] = edges.splice(startEdgeIndex, 1);
+  //   edges.unshift(startEdge);
+  // }
 
   return { nodes, edges };
 };
@@ -565,7 +569,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         if(isOk){
           self.quizzes[ind] = responceQuiz;
           putSelfInLocalStorage(self);
-          onQuizChange(responceQuiz);
+          onQuizChange(responceQuiz); //update id 
         }
       } catch (error) {
         console.error('Ошибка сохранения:', error);
@@ -798,54 +802,46 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, []);  
 
   const onEdgesDelete = useCallback((deletedEdges) => {
-    const deletedEdgeIds = deletedEdges.map(edge => edge.id);
+    console.log("ttt", deletedEdges);
+    const deletedChoiceIds = deletedEdges.reduce((acc, edge) => {
+      const targetNode = nodes.find(n => n.id === edge.target);
+      console.log("targetNode", targetNode);
+      if (targetNode?.type === 'choice') {
+        acc.add(edge.target);
+      }
+      return acc;
+    }, new Set());
 
-    const choicesToRemove = new Set();  
-    
-    // Обрабатываем каждое удаленное ребро
-    const updatedNodes = deletedEdges.flatMap(edge => {
-        const targetNode = getNode(edge.target);
-        if (targetNode?.type === 'choice' && targetNode.parentId) {
-            const sourceNode = getNode(edge.source);
-            if (!sourceNode) return [];
-            
-            // Добавляем choice в список для удаления
-            choicesToRemove.add(targetNode.id);
-            
-            // Возвращаем обновленный узел
-            return {
-                ...targetNode,
-                parentId: null,
-                position: {
-                    x: targetNode.position.x + sourceNode.position.x,
-                    y: targetNode.position.y + sourceNode.position.y
-                }
-            };
-        }
-        return [];
+    console.log("deletedChoiceIds", deletedChoiceIds);
+
+    const updatedEdges = getEdges().filter(edge => {
+      const isDeleted = deletedEdges.some(de => de.id === edge.id);
+      const isConnectedToDeleted = deletedChoiceIds.has(edge.target);
+      return !isDeleted && !isConnectedToDeleted;
     });
 
-    // Обновляем узлы
-    if (updatedNodes.length > 0) {
-        setNodes(ns => ns.map(n => {
-            const update = updatedNodes.find(u => u.id === n.id);
-            return update || n;
-        }));
-    }
+    console.log("updatedEdges", updatedEdges);
 
-    // Обновляем вопросы
+    const updatedQuestions = quiz.questions.map(question => ({
+      ...question,
+      choices: question.choices.filter(
+        choice => !deletedChoiceIds.has(choice.tempId)
+      )
+    }));
+
+    console.log("updatedQuestions", updatedQuestions);
+
+    // setNodes(nodes.map(node => 
+    //   deletedChoiceIds.has(node.id) 
+    //     ? { ...node, parentId: null } 
+    //     : node
+    // ));
+    // setEdges(updatedEdges);
+  
     onQuizChange(prev => ({
-        ...prev,
-        questions: choicesToRemove.size > 0
-            ? prev.questions.map(question => ({
-                ...question,
-                choices: question.choices.filter(choice => !choicesToRemove.has(choice.tempId))
-            }))
-            : prev.questions,
-            graphEdges: filterEdges(
-              prev.graphEdges,
-              edge => !deletedEdgeIds.includes(edge.id)
-            )
+      ...prev,
+      questions: updatedQuestions,
+      graphEdges: serializeGraphEdges(updatedEdges)
     }));
   }, [onQuizChange]);
 
