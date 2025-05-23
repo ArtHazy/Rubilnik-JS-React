@@ -10,7 +10,7 @@ import {
   MiniMap, ControlButton, SelectionMode, applyEdgeChanges, applyNodeChanges, ReactFlowProvider, BaseEdge, Panel, reconnectEdge, MarkerType, getConnectedEdges
 } from '@xyflow/react';
 import { useParams } from 'react-router-dom';
-import { debounce, throttle, isEqual } from 'lodash';
+import { debounce, throttle, cloneDeep } from 'lodash';
 
 import "./styles.scss";
 
@@ -350,15 +350,15 @@ function updateQuizIds(responceQuiz, quiz) {
   const updatedResponceQuiz = JSON.parse(JSON.stringify(responceQuiz));
 
   // Обновляем вопросы
-  updatedResponceQuiz.questions = responceQuiz.questions.map(respQuestion => {
+  updatedResponceQuiz.questions = quiz.questions.map(question => {
       // Ищем вопрос в quiz с таким же tempId
-      const matchingQuizQuestion = quiz.questions.find(q => q.tempId === respQuestion.tempId);
+      const matchingQuizQuestion = responceQuiz.questions.find(q => q.tempId === question.tempId);
       if (matchingQuizQuestion) {
           // Обновляем id вопроса
-          const updatedQuestion = { ...respQuestion, id: matchingQuizQuestion.id };
+          const updatedQuestion = { ...question, id: matchingQuizQuestion.id };
 
           // Обновляем варианты выбора внутри вопроса
-          updatedQuestion.choices = respQuestion.choices.map(respChoice => {
+          updatedQuestion.choices = question.choices.map(respChoice => {
               const matchingQuizChoice = matchingQuizQuestion.choices.find(c => c.tempId === respChoice.tempId);
               return matchingQuizChoice 
                   ? { ...respChoice, id: matchingQuizChoice.id } 
@@ -367,7 +367,7 @@ function updateQuizIds(responceQuiz, quiz) {
 
           return updatedQuestion;
       }
-      return respQuestion;
+      return question;
   });
 
   return updatedResponceQuiz;
@@ -615,6 +615,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         const { quiz: responceQuiz, isOk } = http_put_quiz(selfOld, self.quizzes[ind], ()=>{})
         if(isOk){
           const updatedResponceQuiz = updateQuizIds(responceQuiz, quiz);
+          // console.log('updatedResponceQuiz',responceQuiz);
           self.quizzes[ind] = updatedResponceQuiz;
           putSelfInLocalStorage(self);
           onQuizChange(updatedResponceQuiz);

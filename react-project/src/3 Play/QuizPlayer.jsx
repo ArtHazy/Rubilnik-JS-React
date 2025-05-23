@@ -5,6 +5,8 @@ export class QuizPlayer {
         const { nodes: initialNodes, edges: initialEdges } = convertToFlowElements(quiz, onQuizChange, ind);
         this.nodes = initialNodes;
         this.edges = initialEdges;
+        console.log("initialNodes", initialNodes);
+        console.log("initialEdges", initialEdges);
         this.currentNode = this.findStartNode();
         this.history = [];
     }
