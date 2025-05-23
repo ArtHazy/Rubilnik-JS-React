@@ -30,7 +30,8 @@
     padding: 0;
     margin: var(--def-gap) 0;
     grid-template-columns: repeat(auto-fill, minmax(8cm,1fr));
-    grid-auto-rows: auto; 
+    grid-auto-rows: 155px; 
+    // margin-top: 20px;
     
   
     // background: 

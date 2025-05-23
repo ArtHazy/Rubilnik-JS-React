@@ -88,7 +88,7 @@ button {
   font-family: inherit;
   // fill: var(--color-light);
   // color: var(--color-dark);
-  border-radius: .15cm;
+  border-radius: 8px;
   cursor: pointer;
   @include button-style();
   &.big{ @include outline-hover(); min-width: 2cm; padding: 8px; }
@@ -103,7 +103,7 @@ input[type='text'],input[type='password'],input[type='email']{
   font-weight: lighter;
   height: 1.6em;
   border: transparent;
-  border-radius: 4px;
+  border-radius: 8px;
   &:focus{outline: var(--choice-1-color) solid 2px  ; outline-offset: 2px}
 }
 

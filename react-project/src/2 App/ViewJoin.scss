@@ -29,12 +29,16 @@
         z-index: 1;
         
         background-image:
-            linear-gradient(to right, rgba(0,0,0,0.05) 10px, transparent 10px),
-            linear-gradient(to bottom, rgba(0,0,0,0.05) 10px, transparent 10px);
+            linear-gradient(to right, rgba(0,0,0,0.03) 10px, transparent 10px),
+            linear-gradient(to bottom, rgba(0,0,0,0.03) 10px, transparent 10px);
         background-size: 20px 20px; // Размер ячеек сетки
         background-blend-mode: multiply;
         mix-blend-mode: overlay;
         pointer-events: none; // Чтобы сетка не перехватывала клики
+    }
+
+    button.big {
+        margin-top: 8px;
     }
     
     
@@ -55,14 +59,14 @@
             // height: 1.5em;
             text-align: safe center; 
             text-transform: capitalize;
-            border-radius: 6px;
+            border-radius: 8px;
 
             &:first-child {
-                border-radius: 12px 6px 6px 12px; // Сильное закругление слева
+                border-radius: 12px 8px 8px 12px; // Сильное закругление слева
             }
             
             &:last-child {
-                border-radius: 6px 12px 12px 6px; // Сильное закругление справа
+                border-radius: 8px 12px 12px 8px; // Сильное закругление справа
             }
         }
 
