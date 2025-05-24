@@ -34,7 +34,7 @@ export const Play = () => {
     const [usersChoices, setUsersChoices] = useState({})
 
     const [quizLength, setQuizLength] = useState(null)
-    const [currentQuestionInd, setCurrentQuestionInd] = useState(null)
+    const [currentQuestionInd, setCurrentQuestionInd] = useState(0)
     const [currentQuestion, setCurrentQuestion] = useState(null)
     const [isRoommatesHidden, setIsRoommatesHidden] = useState(true)
 
@@ -51,6 +51,8 @@ export const Play = () => {
         const { node, isFinished } = newPlayer.getCurrentState();
         setCurrentQuestion(node.data?.question ?? null);
         setIsFinished(isFinished);
+
+        // setQuizLength(newPlayer.getQuizLength())
       }
     }, [quiz, roomId])
 
@@ -68,6 +70,9 @@ export const Play = () => {
         const newState = player.getCurrentState()
         setCurrentQuestion(newState.node?.data?.question ?? null)
         setIsFinished(newState.isFinished)
+
+        const newIndex = currentQuestionInd + 1
+        setCurrentQuestionInd(newIndex)
         
         // console.log("isFinished", newState.node.data.question.id);
 
@@ -117,6 +122,14 @@ export const Play = () => {
         console.log('alert: '+user.id+":"+user.name+" left");
         setRoommates(roommates)
       }
+
+      //!!
+      // socket.eventActions.next = ({ question, index, quizLength }) => {
+      //   setCurrentQuestion(question);
+      //   setCurrentQuestionInd(index);
+      //   setQuizLength(quizLength);
+      //   setGameState(gameStates.live);
+      // };
 
       socket.eventActions.start = ({question,index,quizLength})=>{
         setCurrentQuestion(question)
@@ -169,7 +182,7 @@ export const Play = () => {
       {socketStatus == socketStates.inRoom && gameState === gameStates.lobby ? <ViewLobby joinLanStr={join_lan_str} joinRoomUrl={join_room_url} roomId={roomId} isHost={isHost} socket={socket} 
         startQuestionId={startQuestionId} /> : null}
       {/* quiz={state?.quiz} */}
-      {socketStatus == socketStates.inRoom && gameState === gameStates.live ? <ViewQuestion isHost={isHost} socket={socket} currentQuestion={currentQuestion}
+      {socketStatus == socketStates.inRoom && gameState === gameStates.live ? <ViewQuestion isHost={isHost} socket={socket} currentQuestion={currentQuestion} setCurrentQuestion={setCurrentQuestion} setCurrentQuestionInd={setCurrentQuestionInd}
         isFinished={isFinished}
         onNext={handleNextQuestion}/> : null}
       {socketStatus == socketStates.inRoom && gameState === gameStates.finished ? <ViewResult isHost={isHost} socket={socket} roomId={roomId} results={results} roommates={roommates} /> : null}

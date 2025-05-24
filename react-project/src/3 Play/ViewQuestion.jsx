@@ -5,7 +5,7 @@ import "./ViewQuestion.scss"
 
 let self = getSelfFromLocalStorage()
 
-export const ViewQuestion = ({isHost, socket, currentQuestion, isFinished, onNext}) => {
+export const ViewQuestion = ({isHost, socket, currentQuestion, setCurrentQuestion, setCurrentQuestionInd, isFinished, onNext}) => {
 
   const [revealedChoices, setrevealedChoices] = useState([])
 
@@ -20,11 +20,10 @@ export const ViewQuestion = ({isHost, socket, currentQuestion, isFinished, onNex
     console.log(socket);
 
     if (socket instanceof WSPlayAPI){
-      socket.eventActions.next = ({question,index,quizLength})=>{
+      socket.eventActions.next = ({question, index})=>{ //,,quizLength
         console.log(question);
-        
-        // setCurrentQuestion(question)
-        // setCurrentQuestionInd(index)
+        setCurrentQuestion(question)
+        setCurrentQuestionInd(index)
         setrevealedChoices([]); // setIsRevealed(false)
       }
       socket.eventActions.reveal = ({revealedChoices})=>{
