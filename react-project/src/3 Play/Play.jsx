@@ -34,14 +34,13 @@ export const Play = () => {
     const [usersChoices, setUsersChoices] = useState({})
 
     const [quizLength, setQuizLength] = useState(null)
-    const [currentQuestionInd, setCurrentQuestionInd] = useState(null)
+    // const [currentQuestionInd, setCurrentQuestionInd] = useState(null)
     const [currentQuestion, setCurrentQuestion] = useState(null)
     const [isRoommatesHidden, setIsRoommatesHidden] = useState(true)
 
     const [results, setResults] = useState(null)
 
     const [player, setPlayer] = useState(null)
-    const [currentNode, setCurrentNode] = useState(null)
     const [isFinished, setIsFinished] = useState(false)
 
     // const player = new QuizPlayer(state?.quiz, roomId);
@@ -49,8 +48,9 @@ export const Play = () => {
       if (quiz) {
         const newPlayer = new QuizPlayer(quiz, onQuizChange, roomId);
         setPlayer(newPlayer)
-        setCurrentNode(newPlayer.getCurrentState().node)
-        setIsFinished(newPlayer.getCurrentState().isFinished)
+        const { node, isFinished } = newPlayer.getCurrentState();
+        setCurrentQuestion(node.data?.question ?? null);
+        setIsFinished(isFinished);
       }
     }, [quiz, roomId])
 
@@ -58,7 +58,7 @@ export const Play = () => {
       return player?.getCurrentState().node?.data?.question?.id
     }, [player])
 
-    // console.log('state',state);
+    console.log('state',startQuestionId);
 
     const handleNextQuestion = () => {
       if (!player || !isHost) return
@@ -66,9 +66,9 @@ export const Play = () => {
       try {
         player.next()
         const newState = player.getCurrentState()
-        setCurrentNode(newState.node)
+        setCurrentQuestion(newState.node?.data?.question ?? null)
         setIsFinished(newState.isFinished)
-        console.log("isFinished", isFinished, newState.node.type);
+        // console.log("isFinished", newState.node.data.question.id);
 
         // Синхронизация с сервером
         isFinished ? socket.emitEnd() 
@@ -119,7 +119,7 @@ export const Play = () => {
 
       socket.eventActions.start = ({question,index,quizLength})=>{
         setCurrentQuestion(question)
-        setCurrentQuestionInd(index)
+        // setCurrentQuestionInd(index)
         setQuizLength(quizLength)
         setGameState(gameStates.live)
       }
@@ -149,9 +149,13 @@ export const Play = () => {
                     <span>server : {SERVER.label}</span>
                 </div>
                 <QR isSmall={true} data={join_room_url} label={"join room"}/>
-                <div className={"progress-bg"}>
+
+    
+                {/* <div className={"progress-bg"}>
                     <div className={"progress-value"} style={{width: (gameState==gameStates.finished? 1 : currentQuestionInd / quizLength)*100+"%" }} />
-                </div>
+                </div> */}
+
+
                 {/*<progress value={ gameState==gameStates.finished? 1 : currentQuestionInd / quizLength}></progress>*/}
             </div>
         }
@@ -164,7 +168,7 @@ export const Play = () => {
       {socketStatus == socketStates.inRoom && gameState === gameStates.lobby ? <ViewLobby joinLanStr={join_lan_str} joinRoomUrl={join_room_url} roomId={roomId} isHost={isHost} socket={socket} 
         startQuestionId={startQuestionId} /> : null}
       {/* quiz={state?.quiz} */}
-      {socketStatus == socketStates.inRoom && gameState === gameStates.live ? <ViewQuestion isHost={isHost} socket={socket} roomId={roomId} setGameState={setGameState} quizLength={quizLength} setQuizLength={setQuizLength} currentQuestionInd={currentQuestionInd} setCurrentQuestionInd={setCurrentQuestionInd} currentQuestion={currentQuestion} setCurrentQuestion={setCurrentQuestion}
+      {socketStatus == socketStates.inRoom && gameState === gameStates.live ? <ViewQuestion isHost={isHost} socket={socket} currentQuestion={currentQuestion}
         isFinished={isFinished}
         onNext={handleNextQuestion}/> : null}
       {socketStatus == socketStates.inRoom && gameState === gameStates.finished ? <ViewResult isHost={isHost} socket={socket} roomId={roomId} results={results} roommates={roommates} /> : null}

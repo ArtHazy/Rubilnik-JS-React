@@ -5,7 +5,7 @@ import "./ViewQuestion.scss"
 
 let self = getSelfFromLocalStorage()
 
-export const ViewQuestion = ({isHost, socket, roomId, quizLength, setQuizLength, currentQuestionInd, setCurrentQuestionInd, currentQuestion, setCurrentQuestion, isFinished, onNext}) => {
+export const ViewQuestion = ({isHost, socket, currentQuestion, isFinished, onNext}) => {
 
   const [revealedChoices, setrevealedChoices] = useState([])
 
@@ -23,9 +23,8 @@ export const ViewQuestion = ({isHost, socket, roomId, quizLength, setQuizLength,
       socket.eventActions.next = ({question,index,quizLength})=>{
         console.log(question);
         
-        setCurrentQuestion(question)
-        setCurrentQuestionInd(index)
-        setQuizLength(quizLength)
+        // setCurrentQuestion(question)
+        // setCurrentQuestionInd(index)
         setrevealedChoices([]); // setIsRevealed(false)
       }
       socket.eventActions.reveal = ({revealedChoices})=>{
@@ -49,7 +48,7 @@ export const ViewQuestion = ({isHost, socket, roomId, quizLength, setQuizLength,
     console.log('choicestorender', choicesToRender);
     
 
-    return choicesToRender.map((choice,ind) => 
+    return choicesToRender?.map((choice,ind) => 
       isHost? 
         <div className={"choice _"+ind+" "+(choice.correct?"correct ":" ")+(isRevealed?"revealed ":" ")} key={JSON.stringify(choice)}>
           {choice.title}
