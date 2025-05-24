@@ -56,7 +56,7 @@ export const ViewQuestion = ({isHost, socket, currentQuestion, isFinished, onNex
         </div>
       : 
         <button className={"choice _"+ind+" "+(choice.correct?"correct ":" ")+(isRevealed?"revealed ":" ")} key={JSON.stringify(choice)} 
-          onClick={ (!isHost && !isRevealed)? ()=>socket.emitChoice(currentQuestionInd, ind) : null }
+          onClick={ (!isHost && !isRevealed)? ()=>socket.emitChoice(currentQuestion.id, ind) : null }
         >
           {choice.title}
           <div className="letter">{letters[ind]}</div>

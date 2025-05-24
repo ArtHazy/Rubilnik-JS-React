@@ -34,7 +34,7 @@ export const Play = () => {
     const [usersChoices, setUsersChoices] = useState({})
 
     const [quizLength, setQuizLength] = useState(null)
-    // const [currentQuestionInd, setCurrentQuestionInd] = useState(null)
+    const [currentQuestionInd, setCurrentQuestionInd] = useState(null)
     const [currentQuestion, setCurrentQuestion] = useState(null)
     const [isRoommatesHidden, setIsRoommatesHidden] = useState(true)
 
@@ -68,6 +68,7 @@ export const Play = () => {
         const newState = player.getCurrentState()
         setCurrentQuestion(newState.node?.data?.question ?? null)
         setIsFinished(newState.isFinished)
+        
         // console.log("isFinished", newState.node.data.question.id);
 
         // Синхронизация с сервером
@@ -119,7 +120,7 @@ export const Play = () => {
 
       socket.eventActions.start = ({question,index,quizLength})=>{
         setCurrentQuestion(question)
-        // setCurrentQuestionInd(index)
+        setCurrentQuestionInd(index)
         setQuizLength(quizLength)
         setGameState(gameStates.live)
       }
@@ -151,9 +152,9 @@ export const Play = () => {
                 <QR isSmall={true} data={join_room_url} label={"join room"}/>
 
     
-                {/* <div className={"progress-bg"}>
+                <div className={"progress-bg"}>
                     <div className={"progress-value"} style={{width: (gameState==gameStates.finished? 1 : currentQuestionInd / quizLength)*100+"%" }} />
-                </div> */}
+                </div>
 
 
                 {/*<progress value={ gameState==gameStates.finished? 1 : currentQuestionInd / quizLength}></progress>*/}
