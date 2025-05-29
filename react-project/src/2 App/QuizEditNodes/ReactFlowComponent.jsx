@@ -7,15 +7,14 @@ import {
   Controls,
   Background,
   useReactFlow,
+  getBezierPath,
   MiniMap, ControlButton, SelectionMode, applyEdgeChanges, applyNodeChanges, ReactFlowProvider, BaseEdge, Panel, reconnectEdge, MarkerType, getConnectedEdges
 } from '@xyflow/react';
 import { useParams } from 'react-router-dom';
 import { debounce, throttle, cloneDeep } from 'lodash';
 
 import "./styles.scss";
-
 import '@xyflow/react/dist/base.css';
-import './styles.scss';
 
 import { PanelControls } from './PanelControls';
 import QuestionNode from './QuestionNode';
@@ -26,6 +25,7 @@ import Sidebar from './Sidebar';
 import CustomEdge from './CustomEdge';
 // import { convertToFlowElements } from './functionsEditor';
 import { checkGraphValidity } from './compiler';
+import './ReactFlowComponent.scss';
 
 import { downloadJson, getSelfFromLocalStorage, putSelfInLocalStorage} from "../../functions.mjs"
 import { http_post_quiz, http_put_quiz } from "../../HTTP_requests.mjs"
@@ -51,7 +51,7 @@ const nodeTypes = {
   end: EndNode,
 };
 
-const edgeTypes = {
+const initialEdgeTypes = {
   customEdge: CustomEdge,
 };
 
@@ -67,35 +67,138 @@ const checkMaxChoices = (count) => {
   return false;
 };
 
-const getRelativePosition = (childNode, parentNode) => ({
-  x: childNode.position.x - parentNode.position.x,
-  y: childNode.position.y - parentNode.position.y
+const getSourceTargetPosition = (node, source = false) => ({
+  x: (node?.position?.x || 0) + (node?.measured?.width || 0) / 2,
+  y: (node?.position?.y || 0) + (source ? node?.measured?.height || 0 : 0)
 });
+
+// const getSourceTargetPosition = (node, getNode, source = false) => {
+//   // Вычисляем абсолютную позицию с учетом всех родителей
+//   let globalX = 0;
+//   let globalY = 0;
+//   let current = node;
+  
+//   while (current) {
+//       globalX += current.position?.x || 0;
+//       globalY += current.position?.y || 0;
+//       current = current.parentId ? getNode(current.parentId) : null;
+//   }
+
+//   // Вычисляем координаты точки соединения
+//   return {
+//       x: globalX + (node?.measured?.width || 0) / 2,
+//       y: globalY + (source ? (node?.measured?.height || 0) : 0)
+//   };
+// };
+
+const getDetectionArea = (node) => ({
+  x: node.position.x - SAFE_ZONE_RADIUS,
+  y: node.position.y - SAFE_ZONE_RADIUS,
+  width: (node.measured?.width || 0) + SAFE_ZONE_RADIUS * 2,
+  height: (node.measured?.height || 0) + SAFE_ZONE_RADIUS * 2
+});
+
+const getValidSourceNode = (targetPosition, targetNode, nodes) => {
+  const forbiddenConnections = [
+    ['start', 'end'],
+    ['start', 'choice'],
+    ['question', 'question'],
+    ['choice', 'choice']
+  ];
+
+  const sourceNode = nodes.find(node => {
+    if (
+      node.id === targetNode.id ||         // Нельзя к себе
+      node.id === targetNode.parentId       // Нельзя к родителю
+    ) return false;
+
+    if (targetNode.type === 'choice' && targetNode.parentId) {
+      // const originalParent = targetNode.parentId 
+      //   ? nodes.find(n => n.id === targetNode.parentId) 
+      //   : null;
+
+      // const absolutePosition = {
+      //   x: originalParent 
+      //     ? targetNode.position.x + originalParent.position.x 
+      //     : targetNode.position.x,
+      //   y: originalParent 
+      //     ? targetNode.position.y + originalParent.position.y 
+      //     : targetNode.position.y
+      // };
+      // // Calculate new relative position for target parent
+      // const newRelativePosition = {
+      //   x: absolutePosition.x - targetNode.position.x,
+      //   y: absolutePosition.y - targetNode.position.y
+      // };
+
+      // console.log("!", targetNode.position);
+      // targetPosition = absolutePosition      
+      // console.log(targetNode.position);
+    }
+
+    const area = getDetectionArea(node);
+    return (
+      targetPosition.x >= area.x &&
+      targetPosition.x <= area.x + area.width &&
+      targetPosition.y >= area.y &&
+      targetPosition.y <= area.y + area.height
+    )? node : null;
+  });
+
+  const isForbidden = forbiddenConnections.some(
+    ([srcType, tgtType]) => 
+      sourceNode?.type === srcType && targetNode.type === tgtType &&
+      sourceNode?.type === tgtType && targetNode.type === srcType
+  );
+
+  if (!sourceNode || isForbidden) return null;
+
+  // Проверка на максимальное кол-во ответов
+  if (sourceNode.type === 'question' && targetNode.type === 'choice') {
+    const choicesCount = sourceNode.data?.question?.choices?.length || 0;
+    return checkMaxChoices(choicesCount) ? null : sourceNode;
+  }
+  if (sourceNode.type === 'choice' && targetNode.type === 'question') {
+    
+  }
+  
+  return sourceNode;
+};
 
 const parseGraphEdges = (edgesString) => {
   try {
     const edges = edgesString ? JSON.parse(edgesString) : [];
     // Генерируем id, если его нет
-    return edges.map(e => ({
-      id: e.id ?? `edge-${e.source}-${e.target}`,
-      source: e.source,
-      target: e.target,
-      condition: e.condition || 0,
-    }));
+    return edges
+      .filter(
+        e => e.source != null && 
+        e.target != null && 
+        e.id !== 'temp-edge')
+      .map(e => ({
+        id: e.id ?? `edge-${e.source}-${e.target}`,
+        source: e.source,
+        target: e.target,
+        condition: e.condition || 0,
+      }));
   } catch (e) {
-    console.error('Error parsing graph edges:', e);
-    return [];
+      console.error('Error parsing graph edges:', e);
+      return [];
   }
 };
 
 
 const serializeGraphEdges = edges => JSON.stringify(
-  (edges || []).map(({ id, source, target, condition }) => ({
-    id: id ?? `edge-${source}-${target}`,
-    source: source,
-    target: target,
-    condition: condition || 0,
-  }))
+  (edges || [])
+    .filter(
+      e => e.source != null && 
+      e.target != null && 
+      e.id !== 'temp-edge')
+    .map(({ id, source, target, condition }) => ({
+      id: id ?? `edge-${source}-${target}`,
+      source: source,
+      target: target,
+      condition: condition || 0,
+    }))
 );
 
 const filterEdges = (edgesString, predicate) => {
@@ -124,6 +227,7 @@ export const convertToFlowElements = (quiz, onQuizChange, ind) => {
     id: startEndData.start?.id ?? `START_NODE_${ind}`,
     type: 'start',
     position: startEndData.start?.position || { x: 0, y: 0},
+    deletable: false,
     // data: startEndData.start?.data
   }; 
 
@@ -265,6 +369,7 @@ const convertToQuizFormat = (nodes, edges) => {
     start: startNode ? {
       id: startNode.id,
       position: startNode.position,
+      deletable: false,
       // data: startNode.data
     } : null,
     ends: endNodes.map(endNode => ({
@@ -373,19 +478,59 @@ function updateQuizIds(responceQuiz, quiz) {
   return updatedResponceQuiz;
 }
 
-// const getFlowLocalStorage = () => {
-//   const savedData = localStorage.getItem(`reactFlowData`);
-//   const { nodes, edges } = JSON.parse(savedData);
-//   return { nodes, edges };
-// }
+const handleEdgeRemoval = (deletedEdges, currentNodes, currentEdges, questions) => {
+  // 1. Собираем информацию об отвязываемых выборах
+  const choicesWithParent = [];
+  const choiceIdsToUnlink = new Set();
 
+  deletedEdges.forEach(edge => {
+    const targetNode = currentNodes.find(n => n.id === edge.target);
+    if (targetNode?.type === 'choice' && targetNode.parentId) {
+      const parentNode = currentNodes.find(n => n.id === targetNode.parentId);
+      if (parentNode) {
+        choicesWithParent.push({
+          choiceNode: targetNode,
+          parentNode: parentNode
+        });
+        choiceIdsToUnlink.add(targetNode.id);
+      }
+    }
+  });
+
+  // 2. Обновляем узлы (выносим выборы из вопросов)
+  const updatedNodes = currentNodes.map(node => {
+    const choiceData = choicesWithParent.find(c => c.choiceNode.id === node.id);
+    return choiceData ? {
+      ...node,
+      parentId: null,
+      position: {
+        x: choiceData.choiceNode.position.x + choiceData.parentNode.position.x,
+        y: choiceData.choiceNode.position.y + choiceData.parentNode.position.y
+      }
+    } : node;
+  });
+
+  // 3. Удаляем выборы из вопросов
+  const updatedQuestions = questions.map(question => ({
+    ...question,
+    choices: question.choices.filter(choice => !choiceIdsToUnlink.has(choice.tempId))
+  }));
+
+  // 4. Фильтруем рёбра (удаляем связанные с отвязанными выборами)
+  const updatedEdges = currentEdges.filter(edge => {
+    const isDeleted = deletedEdges.some(de => de.id === edge.id);
+    const isConnectedToUnlinked = choiceIdsToUnlink.has(edge.source) || choiceIdsToUnlink.has(edge.target);
+    return !isDeleted && !isConnectedToUnlinked;
+  });
+
+  return { updatedNodes, updatedQuestions, updatedEdges };
+};
 
 /** 
  * @param {{self:User,quiz:Quiz}} param0  
 */
 const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const {ind} = useParams();
-  // const { nodes: initialNodes, edges: initialEdges } = getFlowLocalStorage();
   const [initialElements] = useState(() => {
     return convertToFlowElements(quiz, onQuizChange, ind);
   });
@@ -403,11 +548,10 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   [nodes]);
 
   const [activeDragConnection, setActiveDragConnection] = useState(null);
+  const [tempEdge, setTempEdge] = useState(null);
 
   // Мемоизированные ноды с подсветкой
   const highlightedNodes = useMemo(() => {
-    // const violating = checkGraphValidity(nodes, edges);
-
     return nodes.map(node => ({
       ...node,
       data: {
@@ -454,7 +598,8 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
       const newStartNode = {
         id: `START_NODE_${ind}`,
         type: 'start',
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
+        deletable: false,
       };
 
       onQuizChange(prev => ({
@@ -498,58 +643,115 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     setHoveredQuestionId(null);
   }, []);
 
-  const onNodeDragStart = useCallback((event) => {
+  // Кастомный рендер для preview edge
+  const edgeTypes = useMemo(() => ({
+    ...initialEdgeTypes,
+    preview: ({ data, ...props }) => {
+      const [path] = getBezierPath({
+        sourceX: data.sourceX,
+        sourceY: data.sourceY,
+        targetX: data.targetX,
+        targetY: data.targetY,
+        sourcePosition: 'top',
+        targetPosition: 'bottom',
+      });
+      return (
+        <BaseEdge
+          {...props}
+          path={path}
+          style={{
+            stroke: '#00ff88',
+            strokeWidth: 2,
+            strokeDasharray: '5 5',
+            animation: 'dashdraw 0.5s linear infinite',
+            zIndex: 9999
+          }}
+        />
+      )
+    }
+  }), []);
+
+  const onNodeDragStart = useCallback((event, draggedNode) => {
     setIsDragging(true);
+
+    // for CHOICE
+    const targetPosition = getSourceTargetPosition(draggedNode);
+
+    setTempEdge({
+      id: `temp-edge`,
+      source: draggedNode.id,
+      target: draggedNode.id,
+      type: 'preview',
+      data: {
+        sourceX: targetPosition.x,
+        sourceY: targetPosition.y,
+        targetX: targetPosition.x,
+        targetY: targetPosition.y,
+        sourcePosition: 'top',
+        targetPosition: 'bottom',
+      }
+    });
   }, []);
 
-  const onNodeDrag = useCallback((event, node) => {
-  }, []);
+  const onNodeDrag = useCallback((event, draggedNode) => {
+    if (!tempEdge) return;
+
+    const targetNode = draggedNode;
+    const targetPosition = getSourceTargetPosition(targetNode);
+    const sourceNode = getValidSourceNode(targetPosition, targetNode, getNodes());
+    const sourcePosition = getSourceTargetPosition(sourceNode, true);
+
+    console.log("sourceNode", sourceNode);
+    if (!sourceNode) {
+      setTempEdge(prev => ({
+        ...prev,
+        target: draggedNode.id, // Цель = сам узел (ребро не будет отрисовываться)
+        data: {
+          ...prev.data,
+          sourceX: targetPosition.x,
+          sourceY: targetPosition.y,
+          targetX: targetPosition.x,
+          targetY: targetPosition.y,
+        }
+      }));
+      return;
+    }
+
+    // Обновляем позицию
+    setTempEdge(prev => ({
+      ...prev,
+      target: sourceNode?.id,
+      data: {
+        ...prev.data,
+        sourceX: targetPosition.x,
+        sourceY: targetPosition.y,
+        targetX: sourcePosition.x,
+        targetY: sourcePosition.y,
+        sourcePosition: 'top',
+        targetPosition: 'bottom',
+      }
+    }));
+  }, [tempEdge, screenToFlowPosition]);
 
   const onNodeDragStop = useCallback((event, draggedNode) => { 
     setIsDragging(false);
+    setTempEdge(null);
 
     if (draggedNode.parentId !== null) saveChanges(); 
-
-    if (draggedNode.type !== 'choice' || !screenToFlowPosition || !onQuizChange) return;
     
-    const dropPosition = screenToFlowPosition({ 
-      x: event.clientX, 
-      y: event.clientY 
-    });
+    const dropPosition = getSourceTargetPosition(draggedNode);
 
     // Находим ноду под курсором
     const nodes = getNodes();
-    let targetNode = null;
+    const targetNode = getValidSourceNode(dropPosition, draggedNode, getNodes());
 
-    // Ищем целевую ноду и сразу считаем ответы
-    for (const node of nodes) {
-      // Проверяем только вопросы
-      if (node.type === 'question' && node.id !== draggedNode.parentId) {
-        // Проверка попадания курсора в ноду
-        const nodeRect = {
-          x: node.position.x,
-          y: node.position.y,
-          width: node.measured?.width,
-          height: node.measured?.height
-        };
-        
-        const isCursorInside = 
-          dropPosition.x >= nodeRect.x &&
-          dropPosition.x <= nodeRect.x + nodeRect.width &&
-          dropPosition.y >= nodeRect.y &&
-          dropPosition.y <= nodeRect.y + nodeRect.height;
-
-        if (isCursorInside) {
-          targetNode = node;
-          break;
-        }
-      }
-    }
+    console.log("RRRRRRR", targetNode, draggedNode);
 
     if (!targetNode) return;
 
-    const choicesCount = targetNode.data?.question?.choices?.length;
-    
+    console.log("check");
+
+    const choicesCount = targetNode.data?.question?.choices?.length || 0;
     if (checkMaxChoices(choicesCount)) return;
 
     const originalParent = draggedNode.parentId 
@@ -570,6 +772,10 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
       x: absolutePosition.x - targetNode.position.x,
       y: absolutePosition.y - targetNode.position.y
     };
+
+    // let condition = 0;
+    // let isInternal = false;
+    // let conn = true;
 
     onQuizChange(prev => ({
       ...prev,
@@ -704,12 +910,31 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         ['choice', 'choice']
       ];
 
-      const checkConnect = forbiddenConnections.some(([a, b]) => sourceNode.type === a && targetNode.type === b);
+      const isInvalidConnection = forbiddenConnections.some(([a, b]) => sourceNode.type === a && targetNode.type === b);
     
-      if (checkConnect) {
-        alert('Недопустимое соединение');
+      if (isInvalidConnection) {
+        // Создаём временное красное соединение
+        const tempEdge = {
+          id: `invalid-${Date.now()}`,
+          source: connection.source,
+          target: connection.target,
+          style: {
+            stroke: '#ff0000',
+            strokeWidth: 2,
+          },
+          className: 'animated-flash',
+        };
+        
+        // Добавляем временное соединение в список
+        setEdges((eds) => [...eds, tempEdge]);
+        
+        // Удаляем через 1 секунду
+        setTimeout(() => {
+          setEdges((eds) => eds.filter((e) => e.id !== tempEdge.id));
+        }, 900);
+        
         return;
-      }    
+      }  
 
       let condition = 0;
       let isInternal = false;
@@ -776,8 +1001,6 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         alert('Недопустимое соединение');
         return;
       }
-
-      console.log("CONN", conn);
 
       const newEdge = {
         ...connection,
@@ -851,49 +1074,35 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, []);  
 
   const onEdgesDelete = useCallback((deletedEdges) => {
-    console.log("ttt", deletedEdges);
-    const deletedChoiceIds = deletedEdges.reduce((acc, edge) => {
-      const targetNode = nodes.find(n => n.id === edge.target);
-      console.log("targetNode", targetNode);
-      if (targetNode?.type === 'choice') {
-        acc.add(edge.target);
-      }
-      return acc;
-    }, new Set());
-
-    console.log("deletedChoiceIds", deletedChoiceIds);
-
-    const updatedEdges = getEdges().filter(edge => {
-      const isDeleted = deletedEdges.some(de => de.id === edge.id);
-      const isConnectedToDeleted = deletedChoiceIds.has(edge.target);
-      return !isDeleted && !isConnectedToDeleted;
-    });
-
-    console.log("updatedEdges", updatedEdges);
-
-    const updatedQuestions = quiz.questions.map(question => ({
-      ...question,
-      choices: question.choices.filter(
-        choice => !deletedChoiceIds.has(choice.tempId)
-      )
-    }));
-
-    console.log("updatedQuestions", updatedQuestions);
-
-    // setNodes(nodes.map(node => 
-    //   deletedChoiceIds.has(node.id) 
-    //     ? { ...node, parentId: null } 
-    //     : node
-    // ));
-    // setEdges(updatedEdges);
+    const result = handleEdgeRemoval(
+      deletedEdges,
+      getNodes(),
+      getEdges(),
+      quiz.questions
+    );
   
+    setNodes(result.updatedNodes);
+    
     onQuizChange(prev => ({
       ...prev,
-      questions: updatedQuestions,
-      graphEdges: serializeGraphEdges(updatedEdges)
+      questions: result.updatedQuestions,
+      graphEdges: serializeGraphEdges(result.updatedEdges)
     }));
-  }, [onQuizChange]);
 
+  }, [quiz.questions]);
+
+  const onNodesDelete = useCallback((deletedNodes) => {
+    deletedNodes.forEach((node) => {
+      
+      if (node.type === 'start') return;
+      console.log("DELETE", node.type);
+
+      const handler = NODE_DELETE_HANDLERS[node.type];
+      if (handler) {
+        handler(node.id, { onQuizChange, setNodes });
+      }
+    });  
+  }, [quiz.questions]);
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
@@ -918,8 +1127,9 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         {/* <ReactFlowProvider> */}
           <ReactFlow
             nodes={highlightedNodes}
-            edges={highlightedEdges}
+            edges={[...highlightedEdges, ...(tempEdge ? [tempEdge] : [])]}
             onNodesChange={handleNodesChange}
+            onNodesDelete={onNodesDelete}
             onEdgesChange={onEdgesChange}
             onEdgesDelete={onEdgesDelete}
             onConnect={onConnect}
@@ -980,8 +1190,15 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
             </Controls>
             <MiniMap 
               nodeColor={nodeColor} 
-              nodeStrokeWidth={3} 
+              nodeStrokeWidth={10} 
+              // nodeStrokeColor={node => 
+              //   node.selected ? 'rgba(255, 165, 0, 0.8)' : nodeColor // Оранжевая обводка для выбранных
+              // }            
               nodeBorderRadius="16"
+              style={{
+                borderRadius: '12px', // Закругление углов всей карты
+                overflow: 'hidden', // Обрезает содержимое по границам радиуса
+              }}        
               // bgColor=""
               // maskColor=""
               zoomable 
@@ -1029,38 +1246,19 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
                   ':hover': { background: '#f5f5f5' }
                 }}
                 onClick={() => {
-                  const targetNode = getNode(contextMenu.element.target);
-
-                  const updatedQuestions = targetNode?.type === 'choice' && targetNode.parentId
-                    ? (() => {
-                        const sourceNode = getNode(contextMenu.element.source);
-                        const newPosition = {
-                            x: targetNode.position.x + sourceNode.position.x,
-                            y: targetNode.position.y + sourceNode.position.y,
-                        };
-                        
-                        setNodes(ns => ns.map(n => 
-                            n.id === targetNode.id
-                                ? { ...n, parentId: null, position: newPosition }
-                                : n
-                        ));
-                        
-                        return quiz.questions.map(question => ({
-                            ...question,
-                            choices: question.choices.filter(choice => choice.tempId !== targetNode.id),
-                        }));
-                    })()
-                    : undefined;
-
-                  setEdges(es => es.filter(e => e.id !== contextMenu.element.id));
+                  const result = handleEdgeRemoval(
+                    [contextMenu.element],
+                    getNodes(),
+                    getEdges(),
+                    quiz.questions
+                  );
+                  
+                  setNodes(result.updatedNodes);
                   onQuizChange(prev => ({
                     ...prev,
-                    questions: updatedQuestions ?? prev.questions,
-                    graphEdges: filterEdges(
-                      prev.graphEdges,
-                      edge => edge.id !== contextMenu.element.id
-                    ),
-                  }));
+                    questions: result.updatedQuestions,
+                    graphEdges: serializeGraphEdges(result.updatedEdges)
+                  }));                
                 }}
               >
                 Удалить соединение
@@ -1068,26 +1266,6 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
             )}
           </div>
         )}
-        {/* {activeConnection && (
-          <svg style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none'
-          }}>
-            <line
-              x1={activeConnection.x}
-              y1={activeConnection.y}
-              x2={activeConnection.targetX}
-              y2={activeConnection.targetY}
-              stroke="#ff0000"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-            />
-          </svg>
-        )} */}
       </div>
     </div>
   );

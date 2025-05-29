@@ -15,7 +15,7 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected, co
     sourceX,
     sourceY,
     targetX,
-    targetY,
+    targetY
   });
 
   const handleChange = (e) => {

@@ -1,20 +1,10 @@
 import {useEffect, useMemo, useRef, useState} from "react"
-import { getSelfFromLocalStorage } from "../functions.mjs";
 import { WSPlayAPI } from "../WS_communication.mjs";
 import "./ViewQuestion.scss"
-
-let self = getSelfFromLocalStorage()
 
 export const ViewQuestion = ({isHost, socket, currentQuestion, setCurrentQuestion, setCurrentQuestionInd, isFinished, onNext}) => {
 
   const [revealedChoices, setrevealedChoices] = useState([])
-
-  // let isLastQuestion;
-  // let node = null;
-  // isHost && (player.next(), ({ node, isFinished: isLastQuestion } = player.getCurrentState()));
-  // const questionId = node?.data?.question?.id;
-  // console.log("isLastQuestion", isLastQuestion);
-  // console.log("questionId", node);
 
   useEffect(() => {
     console.log(socket);

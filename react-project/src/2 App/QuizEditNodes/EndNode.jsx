@@ -1,4 +1,5 @@
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
+import Terminal from './Terminal';
 
 const EndNode = ({ id, data, selected }) => {
   const { isHighlighted } = data;
@@ -57,7 +58,7 @@ const EndNode = ({ id, data, selected }) => {
         Конец
       </div>
       
-      <Handle
+      <Terminal
         type="target"
         position={Position.Top}
         style={handleStyle} // Правильное применение стилей

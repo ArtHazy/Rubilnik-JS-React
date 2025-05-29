@@ -1,12 +1,13 @@
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
+import Terminal from './Terminal';
 
 const StartNode = () => {
   return (
-    <div className="start-node">
+    <div className="start-node" tabIndex={-1}>
       <div className="content">
         🚀 Начало викторины
       </div>
-      <Handle
+      <Terminal
         type="source"
         position={Position.Bottom}
         style={{ 
