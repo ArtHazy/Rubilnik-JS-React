@@ -1,9 +1,10 @@
-import { useEffect, useState, useMemo } from "react"
+import {useEffect, useState, useMemo, lazy} from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getSelfFromLocalStorage } from "../functions.mjs"
 import { ReactFlowProvider } from '@xyflow/react';
 
-import ReactFlowComponent from "./QuizEditNodes/ReactFlowComponent"
+// import ReactFlowComponent from "./QuizEditNodes/ReactFlowComponent"
+const ReactFlowComponent = lazy(() => import("./QuizEditNodes/ReactFlowComponent"))
 
 //new imports
 import '@xyflow/react/dist/base.css';

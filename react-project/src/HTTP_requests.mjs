@@ -16,7 +16,7 @@ export const onerror = (e) => {const { showNotification } = useNotification(); s
 // }
 
 /**
- * @param { (isOk:boolean, id:string)=>void } onload
+ * @param { (isOk:boolean, resText:string )=>void } onload
  * */
 export function http_user_register({name, email, password}, onload){
     // fetch(AUTH_SERVICE_URL+'/user', {
@@ -27,16 +27,15 @@ export function http_user_register({name, email, password}, onload){
     //     onload(res.ok,res.json().id)
     // }).catch(onerror)
 
-    let isOk, id;
+    let isOk;
     const req = new XMLHttpRequest();
     req.timeout = 2000
-    req.open('POST', AUTH_SERVICE_URL+"/user", false)
+    req.open('POST', AUTH_SERVICE_URL+"/user", true)
     req.setRequestHeader('Content-Type', 'application/json');
-    req.onload = ()=>{ isOk=req.status==200; console.log('req',req);  id = JSON.parse(req.responseText).id; onload(isOk, id);}
+    req.onload = ()=>{ isOk=req.status==200; console.log('req',req); onload(isOk, req.responseText);}
     req.onerror = onerror;
     req.send(JSON.stringify({ user:{name, email, password} }));
     console.log('isOk',isOk);
-    return {isOk, id};
 }
 
 /**

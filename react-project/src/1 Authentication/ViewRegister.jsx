@@ -3,8 +3,11 @@ import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs
 import { http_user_register } from '../HTTP_requests.mjs';
 import "./ViewAuth.scss"
 import { handleEnterKey } from '../functions.mjs';
+import {useNotification} from "../2 App/ContextNotification.jsx";
 
 export const ViewRegister = () => {
+    const { showNotification } = useNotification();
+
     if ( getSelfFromLocalStorage()?.id ) window.location.href='/'
     else return <div className='ViewRegister'>
         <div className="form">
@@ -26,9 +29,11 @@ export const ViewRegister = () => {
                     let password = document.getElementById('password-input').value;
                     let email = document.getElementById('email-input').value;
 
-                    http_user_register({name,email,password}, (isOk, userId)=>{
-                        load.remove(), submit.hidden=false
-                        if (isOk) putSelfInLocalStorage({id:userId,name,email,password}), window.location.href='/';
+                    http_user_register({name,email,password}, (isOk, resText)=>{
+                        load.remove()
+                        submit.hidden=false
+                        showNotification(resText, isOk? 'success' : 'error')
+                        setTimeout(()=>{window.location.href='/login'}, 3000)
                     })
                 }}>Register</button>
             </div>
