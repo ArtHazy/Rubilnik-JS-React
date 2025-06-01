@@ -3,39 +3,19 @@
 .ViewSelf, .ViewJoin{ input{text-align: center; }}
 
 .ViewSelf{
-    @include view();
+    @include base-view;
+    @include grid-overlay;
     height: 100svh;
+
     //.form{ margin: auto; box-sizing: border-box}; color: var(--color-split2);
 
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      
-      background-image:
-          linear-gradient(to right, rgba(0,0,0,0.03) 10px, transparent 10px),
-          linear-gradient(to bottom, rgba(0,0,0,0.03) 10px, transparent 10px);
-      background-size: 20px 20px; // Размер ячеек сетки
-      background-blend-mode: multiply;
-      mix-blend-mode: overlay;
-      pointer-events: none; // Чтобы сетка не перехватывала клики
-  }
-
-  button.big {
-    margin-top: 8px;
-  }
-
-  // @include view();
-  // height: 100svh;
-  // .form{ 
-  //     position: relative;
-  //     margin: auto;
-  //     z-index: 2;
-  // }
+    // @include view();
+    // height: 100svh;
+    // .form{ 
+    //     position: relative;
+    //     margin: auto;
+    //     z-index: 2;
+    // }
 }
 
 .password-container {
@@ -59,5 +39,3 @@
       }
     }
   }
-
-.ViewSelf, .ViewJoin, .ViewLibrary{ padding-bottom: 2cm; }

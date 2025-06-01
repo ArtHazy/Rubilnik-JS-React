@@ -1,7 +1,6 @@
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
 import Terminal from './Terminal';
 import { useState, useEffect } from 'react';
-import { putSelfInDB, putSelfInLocalStorage } from '../../functions.mjs';
 
 const isImageUrl = (url) => {
   return /^(https?:\/\/|data:image\/).+\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i.test(url);

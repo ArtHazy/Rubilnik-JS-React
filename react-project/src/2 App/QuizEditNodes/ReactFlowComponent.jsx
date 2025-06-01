@@ -1,17 +1,11 @@
-import React, { useCallback, useState, useRef, useMemo, useEffect  } from 'react';
-import {
-  ReactFlow,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  Controls,
-  Background,
-  useReactFlow,
-  getBezierPath,
-  MiniMap, ControlButton, SelectionMode, applyEdgeChanges, applyNodeChanges, ReactFlowProvider, BaseEdge, Panel, reconnectEdge, MarkerType, getConnectedEdges
+import React, { useCallback, useState, useMemo, useEffect  } from 'react';
+import { ReactFlow, useNodesState, useEdgesState, addEdge, Controls,
+  Background, useReactFlow, getBezierPath, MiniMap, applyNodeChanges, 
+  BaseEdge, Panel, MarkerType, SelectionMode, useOnSelectionChange
 } from '@xyflow/react';
 import { useParams } from 'react-router-dom';
-import { debounce, throttle, cloneDeep } from 'lodash';
+import debounce from 'lodash.debounce';
+import throttle from 'lodash.throttle'; 
 
 import "./styles.scss";
 import '@xyflow/react/dist/base.css';
@@ -27,11 +21,11 @@ import CustomEdge from './CustomEdge';
 import { checkGraphValidity } from './compiler';
 import './ReactFlowComponent.scss';
 
-import { downloadJson, getSelfFromLocalStorage, putSelfInLocalStorage} from "../../functions.mjs"
-import { http_post_quiz, http_put_quiz } from "../../HTTP_requests.mjs"
+import { getSelfFromLocalStorage, putSelfInLocalStorage} from "../../functions.mjs"
+import { http_put_quiz } from "../../HTTP_requests.mjs"
 
 const rfStyle = {
-  //backgroundColor: '#D0C0F7',
+  backgroundColor: '#242424',
 };
 
 const nodeColor = (node) => {
@@ -51,8 +45,77 @@ const nodeTypes = {
   end: EndNode,
 };
 
-const initialEdgeTypes = {
+/**
+ * Вычисляет новую позицию перетаскиваемого узла относительно целевого родителя
+ * 
+ * @param {Object} draggedNode - Перетаскиваемый узел { id, parentId, position: {x, y} }
+ * @param {Array} nodes - Массив всех узлов
+ * @param {Object} targetNode - Целевой родительский узел { id, position: {x, y} }
+ * @returns {{x: number, y: number}} Новая относительная позиция
+ */
+const calculateNewPositionChild = (draggedNode, targetNode, originalParent = null) => {
+  // Вычисляем абсолютную позицию на холсте
+  const absolutePosition = {
+    x: originalParent 
+      ? draggedNode.position.x + originalParent.position.x 
+      : draggedNode.position.x,
+    y: originalParent 
+      ? draggedNode.position.y + originalParent.position.y 
+      : draggedNode.position.y
+  };
+
+  // Рассчитываем позицию относительно нового родителя
+  return {
+    x: absolutePosition.x - targetNode.position.x,
+    y: absolutePosition.y - targetNode.position.y
+  };
+};
+
+const filterEdgeProps = (props) => {
+  const { 
+    sourceX, sourceY, targetX, targetY,
+    sourcePosition, targetPosition,
+    sourceHandleId, targetHandleId,
+    pathOptions,
+    markerStart, markerEnd,
+    selectable, deletable,
+    reversed,
+    ...filteredProps 
+  } = props;
+  
+  return filteredProps;
+};
+
+const edgeTypes = {
   customEdge: CustomEdge,
+  preview: ({ data, ...rest }) => {
+    const filteredProps = filterEdgeProps(rest);
+    
+    const [path] = getBezierPath({
+      sourceX: data?.sourceX || 0,
+      sourceY: data?.sourceY || 0,
+      targetX: data?.targetX || 0,
+      targetY: data?.targetY || 0,
+      sourcePosition: data?.sourcePosition,
+      targetPosition: data?.targetPosition,
+    });
+
+    return (
+      <BaseEdge
+        {...filteredProps}
+        path={path}
+        style={{
+          stroke: '#00ff88',
+          strokeWidth: 2,
+          strokeDasharray: '5 5',
+          animation: 'dashdraw 0.5s linear infinite',
+          animationDirection: (data?.reversed || false) ? 'reverse' : 'normal',
+          zIndex: 9999
+        }}
+      />
+    );
+  }
+
 };
 
 const panOnDrag = [1, 2];
@@ -67,38 +130,28 @@ const checkMaxChoices = (count) => {
   return false;
 };
 
-const getSourceTargetPosition = (node, source = false) => ({
-  x: (node?.position?.x || 0) + (node?.measured?.width || 0) / 2,
-  y: (node?.position?.y || 0) + (source ? node?.measured?.height || 0 : 0)
-});
+const getSourceTargetPosition = (node, source = false, parentNode = null) => {
+  if (!node) return { x: 0, y: 0 };
 
-// const getSourceTargetPosition = (node, getNode, source = false) => {
-//   // Вычисляем абсолютную позицию с учетом всех родителей
-//   let globalX = 0;
-//   let globalY = 0;
-//   let current = node;
-  
-//   while (current) {
-//       globalX += current.position?.x || 0;
-//       globalY += current.position?.y || 0;
-//       current = current.parentId ? getNode(current.parentId) : null;
-//   }
+  if (node.type === 'end') source = false;
+  if (node.type === 'start') source = true;
 
-//   // Вычисляем координаты точки соединения
-//   return {
-//       x: globalX + (node?.measured?.width || 0) / 2,
-//       y: globalY + (source ? (node?.measured?.height || 0) : 0)
-//   };
-// };
+  const offset = parentNode?.position || {x: 0, y: 0};
 
-const getDetectionArea = (node) => ({
-  x: node.position.x - SAFE_ZONE_RADIUS,
-  y: node.position.y - SAFE_ZONE_RADIUS,
+  return {
+    x: (node?.position?.x || 0) + offset.x + (node?.measured?.width || 0) / 2,
+    y: (node?.position?.y || 0) + offset.y + (source ? (node?.measured?.height || 0) : 0)
+  }
+};
+
+const getDetectionArea = (node, parentNode = null) => ({
+  x: node.position.x - (parentNode?.position.x || 0) - SAFE_ZONE_RADIUS,
+  y: node.position.y - (parentNode?.position.y || 0) - SAFE_ZONE_RADIUS,
   width: (node.measured?.width || 0) + SAFE_ZONE_RADIUS * 2,
   height: (node.measured?.height || 0) + SAFE_ZONE_RADIUS * 2
 });
 
-const getValidSourceNode = (targetPosition, targetNode, nodes) => {
+const getValidSourceNode = (targetPosition, targetNode, nodes, parentNode = null) => {
   const forbiddenConnections = [
     ['start', 'end'],
     ['start', 'choice'],
@@ -106,37 +159,17 @@ const getValidSourceNode = (targetPosition, targetNode, nodes) => {
     ['choice', 'choice']
   ];
 
+  // console.log(targetPosition);
+
   const sourceNode = nodes.find(node => {
     if (
       node.id === targetNode.id ||         // Нельзя к себе
-      node.id === targetNode.parentId       // Нельзя к родителю
+      node.id === targetNode.parentId //||       // Нельзя к родителю
+      // (node.type === 'choice' && node.parentId === null)
     ) return false;
 
-    if (targetNode.type === 'choice' && targetNode.parentId) {
-      // const originalParent = targetNode.parentId 
-      //   ? nodes.find(n => n.id === targetNode.parentId) 
-      //   : null;
+    const area = getDetectionArea(node, parentNode);
 
-      // const absolutePosition = {
-      //   x: originalParent 
-      //     ? targetNode.position.x + originalParent.position.x 
-      //     : targetNode.position.x,
-      //   y: originalParent 
-      //     ? targetNode.position.y + originalParent.position.y 
-      //     : targetNode.position.y
-      // };
-      // // Calculate new relative position for target parent
-      // const newRelativePosition = {
-      //   x: absolutePosition.x - targetNode.position.x,
-      //   y: absolutePosition.y - targetNode.position.y
-      // };
-
-      // console.log("!", targetNode.position);
-      // targetPosition = absolutePosition      
-      // console.log(targetNode.position);
-    }
-
-    const area = getDetectionArea(node);
     return (
       targetPosition.x >= area.x &&
       targetPosition.x <= area.x + area.width &&
@@ -147,7 +180,7 @@ const getValidSourceNode = (targetPosition, targetNode, nodes) => {
 
   const isForbidden = forbiddenConnections.some(
     ([srcType, tgtType]) => 
-      sourceNode?.type === srcType && targetNode.type === tgtType &&
+      sourceNode?.type === srcType && targetNode.type === tgtType ||
       sourceNode?.type === tgtType && targetNode.type === srcType
   );
 
@@ -537,9 +570,10 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialElements.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialElements.edges);
   const [contextMenu, setContextMenu] = useState(null);
-  const { screenToFlowPosition, getNodes, getEdges, addNodes, addEdges, getNode, updateNode } = useReactFlow();
+  const { screenToFlowPosition, getNodes, getEdges, getNode, addNodes, addEdges, updateNode } = useReactFlow();
   const [hoveredQuestionId, setHoveredQuestionId] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedElements, setSelectedElements] = useState({ nodes: [], edges: [] });
 
   const orphans = useMemo(() => 
     nodes.filter(node => 
@@ -587,10 +621,54 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
       dateSaved: Date.now()
     };
 
-    // console.log("SAVE", newQuiz);
-
     onQuizChange(newQuiz);
   }, []);
+
+  const onEdgesDelete = useCallback((deletedEdges) => {
+    const result = handleEdgeRemoval(
+      deletedEdges,
+      getNodes(),
+      getEdges(),
+      quiz.questions
+    );
+  
+    setNodes(result.updatedNodes);
+    
+    onQuizChange(prev => ({
+      ...prev,
+      questions: result.updatedQuestions,
+      graphEdges: serializeGraphEdges(result.updatedEdges)
+    }));
+
+  }, [quiz.questions]);
+
+  const onNodesDelete = useCallback((deletedNodes) => {
+    deletedNodes.forEach((node) => {
+      if (node.type !== 'start') {
+        const handler = NODE_DELETE_HANDLERS[node.type];
+        if (handler) {
+          handler(node.id, { onQuizChange, setNodes });
+        }
+      }
+    });  
+  }, [quiz.questions]);
+
+  const deleteSelectedElements = useCallback(() => {
+    console.log("SELECT");    
+    // Удаляем выделенные ноды
+    if (selectedElements.nodes.length > 0) {
+      onNodesDelete(selectedElements.nodes);
+    }
+    
+    // Удаляем выделенные связи
+    // if (selectedElements.edges.length > 0) {
+    //   onEdgesDelete(selectedElements.edges);
+    // }
+    
+    // Сбрасываем выделение и закрываем меню
+    setSelectedElements({ nodes: [], edges: [] });
+    setContextMenu(null);
+  }, [selectedElements, onNodesDelete, onEdgesDelete]);
 
   useEffect(() => {
     console.log("START START START", quiz.startEndNodesPositions);
@@ -631,6 +709,28 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     putSelfInLocalStorage(selfOld);
   }, [quiz]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && 
+          (selectedElements.nodes.length > 0 || selectedElements.edges.length > 0)) {
+        deleteSelectedElements();
+      }
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedElements, deleteSelectedElements]);
+
+  // Используем хук для отслеживания выделения
+  useOnSelectionChange({
+    onChange: ({ nodes, edges }) => {
+      setSelectedElements({
+        nodes: nodes.filter(node => node.selected),
+        edges: edges.filter(edge => edge.selected)
+      });
+    }
+  });
+
   const handleNodesChange = useCallback((changes) => {
     setNodes(nds => applyNodeChanges(changes, nds));
   }, []);
@@ -643,76 +743,62 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     setHoveredQuestionId(null);
   }, []);
 
-  // Кастомный рендер для preview edge
-  const edgeTypes = useMemo(() => ({
-    ...initialEdgeTypes,
-    preview: ({ data, ...props }) => {
-      const [path] = getBezierPath({
-        sourceX: data.sourceX,
-        sourceY: data.sourceY,
-        targetX: data.targetX,
-        targetY: data.targetY,
-        sourcePosition: 'top',
-        targetPosition: 'bottom',
-      });
-      return (
-        <BaseEdge
-          {...props}
-          path={path}
-          style={{
-            stroke: '#00ff88',
-            strokeWidth: 2,
-            strokeDasharray: '5 5',
-            animation: 'dashdraw 0.5s linear infinite',
-            zIndex: 9999
-          }}
-        />
-      )
-    }
-  }), []);
-
   const onNodeDragStart = useCallback((event, draggedNode) => {
     setIsDragging(true);
 
     // for CHOICE
     const targetPosition = getSourceTargetPosition(draggedNode);
+    console.log("targetPosition", targetPosition);
+
+    const targetEnd = draggedNode.type === 'end';
+    const targetStart = draggedNode.type === 'start';
+    console.log(targetEnd);
 
     setTempEdge({
       id: `temp-edge`,
-      source: draggedNode.id,
-      target: draggedNode.id,
+      source: (targetEnd)? draggedNode.targetHandleId : draggedNode.id,
+      target: (targetStart)? draggedNode.sourceHandleId : draggedNode.id,
       type: 'preview',
       data: {
         sourceX: targetPosition.x,
         sourceY: targetPosition.y,
         targetX: targetPosition.x,
         targetY: targetPosition.y,
-        sourcePosition: 'top',
-        targetPosition: 'bottom',
+        reversed: targetEnd,
+        sourcePosition: (targetEnd || targetStart)? 'bottom' : 'top',
+        targetPosition: (targetEnd || targetStart)? 'top' : 'bottom',
       }
     });
+
+    console.log("tempEdge", tempEdge);
   }, []);
 
   const onNodeDrag = useCallback((event, draggedNode) => {
     if (!tempEdge) return;
 
     const targetNode = draggedNode;
-    const targetPosition = getSourceTargetPosition(targetNode);
-    const sourceNode = getValidSourceNode(targetPosition, targetNode, getNodes());
-    const sourcePosition = getSourceTargetPosition(sourceNode, true);
+    const parentTargetNode = targetNode?.parentId? getNode(targetNode.parentId) : null;
+    // console.log("parentTargetNode", parentTargetNode);
+    const targetPositionTop = getSourceTargetPosition(targetNode, parentTargetNode);
+    const targetPositionBottom = getSourceTargetPosition(targetNode, true, parentTargetNode)
 
-    console.log("sourceNode", sourceNode);
+    const sourceNode = getValidSourceNode(targetPositionTop, targetNode, getNodes(), parentTargetNode);
+    const parentSourceNode = sourceNode?.parentId? getNode(sourceNode.parentId) : null;
+    const sourcePositionTop = getSourceTargetPosition(sourceNode, parentSourceNode);
+    const sourcePositionBottom = getSourceTargetPosition(sourceNode, true, parentSourceNode);
+
+    const targetPosition = (sourceNode?.type === 'end')? targetPositionBottom : targetPositionTop
+    const sourcePosition = (targetNode?.type === 'start')? sourcePositionTop : sourcePositionBottom
+
+    const targetEnd = targetNode.type === 'end';
+    const targetStart = targetNode.type === 'start';
+
+    // console.log("sourceNode", sourceNode);
     if (!sourceNode) {
       setTempEdge(prev => ({
         ...prev,
-        target: draggedNode.id, // Цель = сам узел (ребро не будет отрисовываться)
-        data: {
-          ...prev.data,
-          sourceX: targetPosition.x,
-          sourceY: targetPosition.y,
-          targetX: targetPosition.x,
-          targetY: targetPosition.y,
-        }
+        // target: targetNode.id,
+        hidden: true,
       }));
       return;
     }
@@ -720,15 +806,18 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     // Обновляем позицию
     setTempEdge(prev => ({
       ...prev,
-      target: sourceNode?.id,
+      target: targetEnd? targetNode?.id : sourceNode?.id,
+      source: targetEnd? sourceNode?.id : targetNode?.id,
+      hidden: false,
       data: {
         ...prev.data,
-        sourceX: targetPosition.x,
-        sourceY: targetPosition.y,
-        targetX: sourcePosition.x,
-        targetY: sourcePosition.y,
-        sourcePosition: 'top',
-        targetPosition: 'bottom',
+        sourceX: targetEnd? sourcePosition.x : targetPosition.x,
+        sourceY: targetEnd? sourcePosition.y : targetPosition.y,
+        targetX: targetEnd? targetPosition.x : sourcePosition.x,
+        targetY: targetEnd? targetPosition.y : sourcePosition.y,
+        reversed: targetEnd,
+        sourcePosition: (targetEnd || targetStart)? 'bottom' : 'top',
+        targetPosition: (targetEnd || targetStart)? 'top' : 'bottom',
       }
     }));
   }, [tempEdge, screenToFlowPosition]);
@@ -738,40 +827,19 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     setTempEdge(null);
 
     if (draggedNode.parentId !== null) saveChanges(); 
-    
-    const dropPosition = getSourceTargetPosition(draggedNode);
 
-    // Находим ноду под курсором
-    const nodes = getNodes();
-    const targetNode = getValidSourceNode(dropPosition, draggedNode, getNodes());
-
-    console.log("RRRRRRR", targetNode, draggedNode);
+    const parentNodedragged = getNode(draggedNode.parentId);
+    const dropPosition = getSourceTargetPosition(draggedNode, parentNodedragged);
+    const targetNode = getValidSourceNode(dropPosition, draggedNode, getNodes(), parentNodedragged);
 
     if (!targetNode) return;
-
-    console.log("check");
 
     const choicesCount = targetNode.data?.question?.choices?.length || 0;
     if (checkMaxChoices(choicesCount)) return;
 
-    const originalParent = draggedNode.parentId 
-      ? nodes.find(n => n.id === draggedNode.parentId) 
-      : null;
-
-    const absolutePosition = {
-      x: originalParent 
-        ? draggedNode.position.x + originalParent.position.x 
-        : draggedNode.position.x,
-      y: originalParent 
-        ? draggedNode.position.y + originalParent.position.y 
-        : draggedNode.position.y
-    };
-
-    // Calculate new relative position for target parent
-    const newRelativePosition = {
-      x: absolutePosition.x - targetNode.position.x,
-      y: absolutePosition.y - targetNode.position.y
-    };
+    console.log("pos", draggedNode.position);
+    const newRelativePosition = calculateNewPositionChild(draggedNode, targetNode, parentNodedragged);
+    console.log("NEW", newRelativePosition);
 
     // let condition = 0;
     // let isInternal = false;
@@ -783,7 +851,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
           const isTargetQuestion = q.tempId === targetNode.data?.question?.tempId;
           const filteredChoices = q.choices.filter(c => c.tempId !== draggedNode.id);
 
-          if (q.tempId === originalParent?.data?.question?.tempId) {
+          if (q.tempId === parentNodedragged?.data?.question?.tempId) {
             return {
                 ...q,
                 choices: q.choices.filter(c => c.tempId !== draggedNode.id)
@@ -951,8 +1019,6 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
           alert('Стартовая нода может быть соединена только с одним вопросом');
           return;
         }
-        // sourceNode.childId = targetNode.id;
-        // return;
       }
 
       // Случай 2: question -> choice (автоматическое соединение)
@@ -960,11 +1026,13 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         condition = -1;
         conn = false;
 
+        const parentNodedragged = getNode(targetNode.parentId);
+        const newRelativePosition = calculateNewPositionChild(targetNode, sourceNode, parentNodedragged);
+
         const choicesCount = sourceNode.data.question.choices.length;
         
         if (checkMaxChoices(choicesCount)) return;  
 
-        // targetNode.data.choice.position -= sourceNode.data.question.position;
         quizUpdates.questions = quiz.questions.map(question => 
           question.tempId === sourceNode.id ? {
             ...question,
@@ -973,10 +1041,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
               {
                 ...targetNode.data.choice,
                 tempId: targetNode.id,
-                position: {
-                  x: targetNode.position.x - sourceNode.position.x,
-                  y: targetNode.position.y - sourceNode.position.y
-                }
+                position: newRelativePosition
               }
             ]
           } : question
@@ -1073,36 +1138,17 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     });
   }, []);  
 
-  const onEdgesDelete = useCallback((deletedEdges) => {
-    const result = handleEdgeRemoval(
-      deletedEdges,
-      getNodes(),
-      getEdges(),
-      quiz.questions
-    );
-  
-    setNodes(result.updatedNodes);
+  const onPaneContextMenu = useCallback((event) => {
+    event.preventDefault();
     
-    onQuizChange(prev => ({
-      ...prev,
-      questions: result.updatedQuestions,
-      graphEdges: serializeGraphEdges(result.updatedEdges)
-    }));
-
-  }, [quiz.questions]);
-
-  const onNodesDelete = useCallback((deletedNodes) => {
-    deletedNodes.forEach((node) => {
-      
-      if (node.type === 'start') return;
-      console.log("DELETE", node.type);
-
-      const handler = NODE_DELETE_HANDLERS[node.type];
-      if (handler) {
-        handler(node.id, { onQuizChange, setNodes });
-      }
-    });  
-  }, [quiz.questions]);
+    // Показываем меню только если есть выделенные элементы
+    if (selectedElements.nodes.length > 0 || selectedElements.edges.length > 0) {
+      setContextMenu({
+        type: 'SELECTION',
+        position: { x: event.clientX, y: event.clientY }
+      });
+    }
+  }, [selectedElements]);
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
@@ -1147,8 +1193,9 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
-            onNodeContextMenu={onNodeContextMenu}
-            onEdgeContextMenu={onEdgeContextMenu}
+            // onNodeContextMenu={onNodeContextMenu}
+            // onEdgeContextMenu={onEdgeContextMenu}
+            onPaneContextMenu={onPaneContextMenu}
             style={rfStyle}
             fitView
             panOnScroll
@@ -1156,7 +1203,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
             panOnDrag={panOnDrag}
             selectionMode={SelectionMode.Partial}
           >
-            <PanelControls quiz={quiz} ind={ind} />
+            <PanelControls quiz={quiz} ind={ind} onQuizChange={onQuizChange} />
             <Background />
             <Controls 
               showInteractive={false} 
@@ -1235,6 +1282,19 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
                 }}        
               >
                 Удалить {contextMenu.element.type === 'question' ? 'вопрос' : 'ответ'}
+              </div>
+            )}
+
+            {contextMenu.type === 'SELECTION' && (
+              <div
+                style={{ 
+                  padding: '8px 16px',
+                  cursor: 'pointer',
+                  ':hover': { background: '#f5f5f5' }
+                }}
+                onClick={deleteSelectedElements}
+              >
+                Удалить выделенное
               </div>
             )}
 

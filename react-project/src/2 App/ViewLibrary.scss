@@ -1,22 +1,8 @@
 @import "../main/mixin.scss";
 
 .ViewLibrary{
-  @include view();
-  margin-bottom: 2cm;
-   
-  .QuizTile{
-    button{@include outline-hover();}
-    display: grid;
-    gap: calc(var(--def-gap)/2);
-    grid-template-columns: 1fr 5fr 1fr;
-    width: 100%;
-    height: 3cm;
-    position: relative;
-    .quiz-button{
-      height: 100%;
-      flex-grow:1;
-    }
-  }
+  @include base-view;
+
   #add{
     @include outline-hover();
     padding: var(--def-gap);
@@ -32,17 +18,237 @@
     grid-template-columns: repeat(auto-fill, minmax(8cm,1fr));
     grid-auto-rows: 155px; 
     // margin-top: 20px;
-    
+  }
+
+  .quiz-tile-container {
+    position: relative;
+    width: 95%;
+    height: 135px;
+    margin: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: transparent;
+    border-radius: 8px;
+    outline: #D6BF81 solid 3px; 
+    outline-offset: 4px;
   
-    // background: 
-    //   linear-gradient(to bottom right, #D7CCAD, transparent),
-    //   radial-gradient(#709B95, transparent),
-    //   linear-gradient(to bottom left, #0FD4CD, transparent),
-    //   linear-gradient(to left, #B0ABD6, transparent),
-    //   linear-gradient(to top right, #DFA4A6, transparent);
-    // background-blend-mode: screen;
-    // filter: brightness(0.85) saturate(4);
+    transition: 
+      outline-width var(--def-transition),
+      outline-offset var(--def-transition);
+    @media (pointer: fine){ 
+      &:hover{ 
+        outline-offset: 0px; 
+        outline-color: var(--color-light);
+      } 
+    }
+  
+    &:hover .edit-btn::after,
+    .delete-btn:hover ~ .edit-btn::after,
+    .run-btn:hover ~ .edit-btn::after {
+      opacity: 0.6;
+      transition: var(--def-transition);
+    }
+    
+    &:hover {
+      box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.2); //edit
+  
+      .delete-btn,
+      .run-btn {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto; // Разрешаем взаимодействие с кнопками
+        
+        input {
+          background: rgba(255, 255, 255, 0.9);
+          border-radius: 4px;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+          transition: all 0.2s ease;
+          
+          &:focus {
+            box-shadow: 0 2px 6px rgba(66, 133, 244, 0.3);
+            background: white;
+          }
+        }  
+      }
+      
+    }
+  
+    .icon-container {
+      //@include material-symbols-outlined();
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      pointer-events: none;
+      
+      // Ваша иконка
+      .icon {
+        width: 40px;
+        height: 40px;
+        // background: url('your-icon.svg') no-repeat center;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+      }
+    }
+  
+    .edit-btn {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      padding: 1.5rem;  
+      text-align: left;
+      background: transparent;  
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;    
+      overflow: hidden;
+      border-radius: 8px;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        width: calc(100% * 20);
+        height: 100%;
+        background-image: linear-gradient(
+          to right,
+          #D6B7AB,
+          #D6BFAB,
+          #D6D0AB,
+          #ABD6CA,
+          #D6ABD0,
+          #D7CCAD,
+          #ABD6CA,
+          #D6C1AB,
+          #D6ABB6,
+          #91D4CD,
+          #ABB5D6,
+          #B9ABD6,
+          #D6D5AB,
+          #CCABD6,
+        );
+        background-size: 100% 100%;
+        left: calc(-100% * var(--index));
+        transition: filter 0.3s ease;
+        z-index: 0;
+      }
+    
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        
+        background-image:
+          linear-gradient(to right, rgba(0,0,0,0.05) 10px, transparent 10px),
+          linear-gradient(to bottom, rgba(0,0,0,0.05) 10px, transparent 10px);
+        background-size: 20px 20px; // Размер ячеек сетки
+        background-blend-mode: multiply;
+        mix-blend-mode: overlay;
+        pointer-events: none; // Чтобы сетка не перехватывала клики
+      }
+    
+      // // Для темных тем можно добавить альтернативный вариант
+      // @media (prefers-color-scheme: dark) {
+      //   &::before {
+      //     background:
+      //       linear-gradient(to right, rgba(0,0,0,0.15) 1px, transparent 1px),
+      //       linear-gradient(to bottom, rgba(0,0,0,0.15) 1px, transparent 1px);
+      //   }
+      // }
+  
+      span {
+        color: var(--color-dark);
+        position: relative;
+        z-index: 2;
+      }
+      
+      // Для поддержки градиентов в старых браузерах
+      // @supports not (background: linear-gradient(0deg, #000, #fff)) {
+      //   background-color: hsl(var(--hue-1), 70%, #{$base-lightness});
+      // }
+    }
+  
+    .delete-btn,
+    .run-btn {
+      position: absolute; // Добавляем для позиционирования псевдоэлемента
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      z-index: 2;
+      width: 20%;
+      top: 0;
+  
+      &:hover {
+        background: rgba(0, 0, 0, 0.2) !important;
+        width: 25%;
+      }
+  
+      .material-symbols-outlined {
+        font-size: 24px;
+        color: var(--color-dark);
+      }
+    }
+  
+    .delete-btn {
+      left: 0;
+      border-radius: 8px 0 0 8px;
+      mask-image: linear-gradient(
+        to right, 
+        #000 50%,
+        transparent 100%
+      );    
+    }
+  
+    .run-btn {
+      right: 0;
+      border-radius: 0 8px 8px 0;
+      mask-image: linear-gradient(
+        to left, 
+        #000 50%,
+        transparent 100%
+      );
+    }
+  
+    .edit-input {
+      width: 50%;
+      padding: 8px 12px;
+      margin: 5px 0;
+      border: 2px solid var(--input-border, rgba(255,255,255,0.3));
+      border-radius: var(--def-radius, 4px);
+      background: var(--input-bg, rgba(255,255,255,0.15));
+      color: var(--color-light);
+      font: inherit;
+      font-size: 0.95em;
+      outline: none;
+      transition: var(--def-transition);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 3;
+      text-align: left;
+      backdrop-filter: blur(4px);
+
+      &:focus {
+        border-color: var(--color-accent, #D6BF81);
+        background: var(--input-focus-bg, rgba(255,255,255,0.25));
+        box-shadow: 
+          0 0 0 2px rgba(214, 191, 129, 0.3),
+          0 4px 8px rgba(0,0,0,0.2);
+      }
+
+      &::placeholder {
+        color: rgba(255,255,255,0.6);
+        font-style: italic;
+      }
+    }  
   }
 }
-
-.ViewSelf, .ViewJoin, .ViewLibrary{ padding-bottom: 2cm; }

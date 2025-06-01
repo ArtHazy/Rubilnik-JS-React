@@ -1,4 +1,3 @@
-// CustomEdge.jsx
 import { 
   BaseEdge, 
   getBezierPath, 

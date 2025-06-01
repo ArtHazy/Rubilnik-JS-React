@@ -1,4 +1,3 @@
-import { getSelfFromLocalStorage } from "../functions.mjs"
 import "./ViewLobby.scss"
 import {QR} from "./QR.jsx";
 import {SERVER} from "../values.mjs";

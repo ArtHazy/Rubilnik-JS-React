@@ -1,5 +1,5 @@
-import {useCallback, useState } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { useState } from 'react';
+import { Position } from '@xyflow/react';
 import Terminal from './Terminal';
 import "../../main/mixin.scss";
 

@@ -1,4 +1,4 @@
-import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
+import { getSelfFromLocalStorage } from "../functions.mjs"
 import { ViewLobby } from "./ViewLobby";
 import { ViewQuestion } from "./ViewQuestion";
 import { ViewResult } from "./ViewResult";
@@ -7,8 +7,8 @@ import { ViewError, ViewLoading } from "../4 Error/ViewError";
 import { WSPlayAPI } from "../WS_communication.mjs";
 import { useLocation, useParams } from "react-router-dom";
 import "./Play.scss"
-import {QR} from "./QR.jsx";
-import {AUTH_SERVICE_URL, SERVER, UI_SERVICE_URL} from "../values.mjs";
+import { QR } from "./QR.jsx";
+import { SERVER, UI_SERVICE_URL } from "../values.mjs";
 import { QuizPlayer } from "./QuizPlayer.jsx";
 
 export const Play = () => {

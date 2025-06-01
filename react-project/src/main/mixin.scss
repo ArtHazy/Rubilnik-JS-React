@@ -12,26 +12,11 @@
     justify-content: safe center;
     align-items: center;
 }
-//@mixin vstack {
-//    @include grid();
-//    width: fit-content;
-//    gap: calc(var(--def-gap)/2);
-//    padding: 0;
-//    grid-template-columns: 1fr;
-//    *{width: 100%; box-sizing: border-box;}
-//    justify-items: start;
-//}
-//@mixin hstack {
-//    @include grid();
-//    gap: calc(var(--def-gap)/2);
-//    *{width: 100%;}
-//}
 @mixin view {
     width: 100%;
     height: 100%;
     overflow: hidden;
     min-width: 333px;
-    // max-width: 30cm;
     font-family: inherit;
     padding: var(--def-gap);
     padding-bottom: 2cm;
@@ -66,8 +51,6 @@
     font-size: clamp( 1.5em, 2.5vw, 2em);
 }
 
-//
-
 @mixin outline{
     outline: 2px var(--color-split2) solid;
     outline-offset: -2px;
@@ -97,4 +80,33 @@
 
 @mixin input-style{
     background: var(--color-grey-inp);
+}
+
+@mixin grid-overlay {
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image:
+        linear-gradient(to right, rgba(0,0,0,0.03) 10px, transparent 10px),
+        linear-gradient(to bottom, rgba(0,0,0,0.03) 10px, transparent 10px);
+        background-size: 20px 20px;
+        background-blend-mode: multiply;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+        //z-index: 1;
+    }
+}
+
+@mixin base-view {
+    padding-bottom: 2rem; // Заменяем cm на rem
+    @include view();
+    
+    // Общие стили для всех вьюх
+    button.big {
+      margin-top: 0.5rem;
+    }
 }

@@ -45,6 +45,28 @@
   --color-cyanDark: #065452;
   --color-yellowDark: #8A7B53;
   --color-cyanBottomBarDark: #477E7C;
+
+
+  --input-bg: rgba(255, 255, 255, 0.15);
+  --input-border: rgba(255, 255, 255, 0.3);
+  --input-focus-border: var(--color-split2);
+  --input-focus-glow: rgba(214, 191, 129, 0.3);
+  --input-text: var(--color-light);
+  --input-placeholder: rgba(255, 255, 255, 0.6);
+  --input-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --input-focus-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  --input-padding: 8px 12px;
+  --input-radius: 8px;
+  --input-transition: all 0.3s ease;
+
+  --btn-bg: linear-gradient(145deg, var(--color-split1), var(--color-split2));
+  --btn-hover-bg: linear-gradient(145deg, var(--color-cyanLight), var(--color-yellowLight));
+  --btn-text: var(--color-dark);
+  --btn-border: 2px solid transparent;
+  --btn-radius: var(--def-border-radius);
+  --btn-padding: 8px 16px;
+  --btn-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --btn-hover-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
 hstack, .hstack {
@@ -103,12 +125,9 @@ input[type='text'],input[type='password'],input[type='email']{
   font-weight: lighter;
   height: 1.6em;
   border: transparent;
-  border-radius: 8px;
+  border-radius: var(--input-radius);
   &:focus{outline: var(--choice-1-color) solid 2px  ; outline-offset: 2px}
 }
-
-
-
 
 .Actions{
   border-radius: var(--def-border-radius);
@@ -140,195 +159,6 @@ input[type='text'],input[type='password'],input[type='email']{
     }
     @include button-style();
     overflow: hidden;
-  }
-}
-
-.quiz-tile-container {
-  position: relative;
-  width: 95%;
-  height: 135px;
-  margin: 10px;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-  border: transparent;
-  border-radius: 8px;
-  outline: #D6BF81 solid 3px; 
-  outline-offset: 4px;
-
-  transition: 
-    outline-width var(--def-transition),
-    outline-offset var(--def-transition);
-  @media (pointer: fine){ 
-    &:hover{ 
-      outline-offset: 0px; 
-      outline-color: var(--color-light);
-    } 
-  }
-
-  &:hover .edit-btn::after,
-  .delete-btn:hover ~ .edit-btn::after,
-  .run-btn:hover ~ .edit-btn::after {
-    opacity: 0.6;
-    transition: var(--def-transition);
-  }
-  
-  &:hover {
-    box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.2); //edit
-
-    .delete-btn,
-    .run-btn {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto; // Разрешаем взаимодействие с кнопками
-    }
-    
-  }
-
-  .icon-container {
-    //@include material-symbols-outlined();
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 3;
-    pointer-events: none;
-    
-    // Ваша иконка
-    .icon {
-      width: 40px;
-      height: 40px;
-      // background: url('your-icon.svg') no-repeat center;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-    }
-  }
-
-  .edit-btn {
-    position: relative;
-    height: 100%;
-    width: 100%;
-    padding: 1.5rem;  
-    text-align: left;
-    background: transparent;  
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;    
-    overflow: hidden;
-    border-radius: 8px;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      width: calc(100% * 20);
-      height: 100%;
-      background-image: linear-gradient(
-        to right,
-        #D6B7AB,
-        #D6BFAB,
-        #D6D0AB,
-        #ABD6CA,
-        #D6ABD0,
-        #D7CCAD,
-        #ABD6CA,
-        #D6C1AB,
-        #D6ABB6,
-        #91D4CD,
-        #ABB5D6,
-        #B9ABD6,
-        #D6D5AB,
-        #CCABD6,
-      );
-      background-size: 100% 100%;
-      left: calc(-100% * var(--index));
-      transition: filter 0.3s ease;
-      z-index: 0;
-    }
-  
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-      
-      background-image:
-        linear-gradient(to right, rgba(0,0,0,0.05) 10px, transparent 10px),
-        linear-gradient(to bottom, rgba(0,0,0,0.05) 10px, transparent 10px);
-      background-size: 20px 20px; // Размер ячеек сетки
-      background-blend-mode: multiply;
-      mix-blend-mode: overlay;
-      pointer-events: none; // Чтобы сетка не перехватывала клики
-    }
-  
-    // // Для темных тем можно добавить альтернативный вариант
-    // @media (prefers-color-scheme: dark) {
-    //   &::before {
-    //     background:
-    //       linear-gradient(to right, rgba(0,0,0,0.15) 1px, transparent 1px),
-    //       linear-gradient(to bottom, rgba(0,0,0,0.15) 1px, transparent 1px);
-    //   }
-    // }
-
-    span {
-      color: var(--color-dark);
-      position: relative;
-      z-index: 2;
-    }
-    
-    // Для поддержки градиентов в старых браузерах
-    // @supports not (background: linear-gradient(0deg, #000, #fff)) {
-    //   background-color: hsl(var(--hue-1), 70%, #{$base-lightness});
-    // }
-  }
-
-  .delete-btn,
-  .run-btn {
-    position: absolute; // Добавляем для позиционирования псевдоэлемента
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s;
-    border: none;
-    cursor: pointer;
-    background: rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    z-index: 2;
-    width: 20%;
-    top: 0;
-
-    &:hover {
-      background: rgba(0, 0, 0, 0.2) !important;
-      width: 25%;
-    }
-
-    .material-symbols-outlined {
-      font-size: 24px;
-      color: var(--color-dark);
-    }
-  }
-
-  .delete-btn {
-    left: 0;
-    border-radius: 8px 0 0 8px;
-    mask-image: linear-gradient(
-      to right, 
-      #000 50%,
-      transparent 100%
-    );    
-  }
-
-  .run-btn {
-    right: 0;
-    border-radius: 0 8px 8px 0;
-    mask-image: linear-gradient(
-      to left, 
-      #000 50%,
-      transparent 100%
-    );
   }
 }
 

@@ -1,4 +1,4 @@
-import {useEffect, useState, useMemo, lazy} from "react"
+import { useState, useMemo, lazy } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { getSelfFromLocalStorage } from "../functions.mjs"
 import { ReactFlowProvider } from '@xyflow/react';
@@ -9,7 +9,6 @@ const ReactFlowComponent = lazy(() => import("./QuizEditNodes/ReactFlowComponent
 //new imports
 import '@xyflow/react/dist/base.css';
 import './index.css';
-import "./ViewQuizEdit.scss"
 
 // Иконки
 const rem = <span className="material-symbols-outlined">remove</span>;
