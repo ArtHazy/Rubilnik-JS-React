@@ -85,3 +85,25 @@ export const handleEnterKey = (event, formSelector, submitButtonId = null, cycle
         document.getElementById(submitButtonId)?.click();
     }
 };
+/** 
+ * @param {string} name
+ * @returns {string,null}
+ * */
+export function getCookie(name){
+    const val = `; ${document.cookie}`
+    const parts = val.split(`; ${name}=`);
+    if (parts.length===2) return parts.pop().split(';').shift();
+    return null;
+}
+/**
+ * @param {string} name
+ * @returns {boolean}
+ * */
+export function checkValidationCookie(){
+    alert(getCookie('Authorization'))
+    if (!getCookie('Authorization')) {
+        window.location.href = "/login"
+        return false
+    }
+    return true
+}

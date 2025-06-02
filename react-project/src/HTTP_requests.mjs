@@ -45,7 +45,8 @@ export function http_user_login({email, password}, onload){
     let isOk, user;
     const req = new XMLHttpRequest();
     req.timeout = 2000
-    req.open('POST', AUTH_SERVICE_URL+"/user/get", true)
+    req.open('POST', AUTH_SERVICE_URL+"/user/login", true)
+    req.withCredentials = true;
     req.setRequestHeader('Content-Type', 'application/json');
     req.onload = ()=>{ isOk=req.status==200; console.log('req',req);  user = JSON.parse(req.responseText); onload(isOk,user);}
     req.onerror = onerror;
