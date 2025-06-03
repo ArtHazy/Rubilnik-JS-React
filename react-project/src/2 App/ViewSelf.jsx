@@ -53,8 +53,8 @@ export const ViewSelf = () => {
                     let email = document.querySelector("#email").value;
                     let password = document.querySelector("#password").value;
 
-                    if (http_put_user(self, {name, email, password}, ()=>{})) {removeSelfFromLocalStorage(), window.location='/'}
-                    else {confirm("Failed to save changes\nLog out without saving?")? (removeSelfFromLocalStorage(), window.location='/') : null}
+                    if (http_put_user(self, {name, email, password}, ()=>{})) {removeSelfFromLocalStorage(), window.location='/logout'}
+                    else {confirm("Failed to save changes\nLog out without saving?")? (removeSelfFromLocalStorage(), window.location='/logout') : null}
                 }}>log out</button>
             </vstack>
         </div>
