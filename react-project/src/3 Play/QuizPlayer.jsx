@@ -1,4 +1,4 @@
-import { convertToFlowElements } from "../2 App/QuizEditNodes/ReactFlowComponent";
+import { convertToFlowElements } from "../2 App/QuizEditNodes/functionsEditor";
 
 export class QuizPlayer {
     constructor(quiz, onQuizChange, ind) {

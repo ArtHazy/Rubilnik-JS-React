@@ -1,3 +1,19 @@
+.preview-edge {
+    stroke: #00ff88;
+    stroke-width: 2;
+    stroke-dasharray: 5 5;
+    animation: dashdraw 0.5s linear infinite;
+    z-index: 9999;
+    
+    &.reversed {
+        animation-direction: reverse;
+    }
+    
+    &.normal {
+        animation-direction: normal;
+    }
+}
+
 @keyframes dashdraw {
     from { stroke-dashoffset: 10; }
     to { stroke-dashoffset: 0; }
@@ -11,4 +27,74 @@
     0% { stroke-opacity: 1; }
     50% { stroke-opacity: 0.5; }
     100% { stroke-opacity: 0; }
+}
+
+/* Основные стили */
+.react-flow-container {
+    display: flex;
+    height: 100vh;
+}
+  
+.flow-wrapper {
+    flex: 1;
+    position: relative;
+}
+  
+/* Стили для ReactFlow */
+.react-flow-styles {
+    background-color: #242424;
+    height: 100vh;
+}
+  
+/* Панель сайдбара */
+.sidebar-panel {
+    padding: 12px;
+    border-radius: 12px;
+    position: absolute;
+}
+  
+/* Панель управления */
+.controls-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    background: transparent;
+    border: 2px dashed #B0B0B0;
+    box-shadow: 0 4px 20px rgba(36, 36, 36, 0.12);
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+    position: absolute;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+  
+    &:hover {
+        // background: rgba(217, 217, 217, 0.98);
+    }
+}
+  
+/* Мини-карта */
+.minimap-styles {
+    border-radius: 12px;
+    overflow: hidden;
+}
+  
+/* Контекстное меню */
+.context-menu {
+    position: fixed;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 1000;
+
+    .context-menu-item {
+        padding: 8px 16px;
+        cursor: pointer;
+      
+        &:hover {
+            background: #f0f0f0;
+            color: #cbcbcb;
+        }
+    }
 }

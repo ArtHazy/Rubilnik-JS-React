@@ -6,7 +6,9 @@ import { useEffect, useState, useMemo } from "react";
 import { ViewError, ViewLoading } from "../4 Error/ViewError";
 import { WSPlayAPI } from "../WS_communication.mjs";
 import { useLocation, useParams } from "react-router-dom";
+
 import "./Play.scss"
+
 import { QR } from "./QR.jsx";
 import { SERVER, UI_SERVICE_URL } from "../values.mjs";
 import { QuizPlayer } from "./QuizPlayer.jsx";
@@ -60,8 +62,6 @@ export const Play = () => {
       return player?.getCurrentState().node?.data?.question?.id
     }, [player])
 
-    console.log('state',startQuestionId);
-
     const handleNextQuestion = () => {
       if (!player || !isHost) return
       
@@ -73,8 +73,6 @@ export const Play = () => {
 
         const newIndex = currentQuestionInd + 1
         setCurrentQuestionInd(newIndex)
-        
-        // console.log("isFinished", newState.node.data.question.id);
 
         // Синхронизация с сервером
         isFinished ? socket.emitEnd() 
@@ -123,14 +121,6 @@ export const Play = () => {
         setRoommates(roommates)
       }
 
-      //!!
-      // socket.eventActions.next = ({ question, index, quizLength }) => {
-      //   setCurrentQuestion(question);
-      //   setCurrentQuestionInd(index);
-      //   setQuizLength(quizLength);
-      //   setGameState(gameStates.live);
-      // };
-
       socket.eventActions.start = ({question,index,quizLength})=>{
         setCurrentQuestion(question)
         setCurrentQuestionInd(index)
@@ -168,9 +158,6 @@ export const Play = () => {
                 <div className={"progress-bg"}>
                     <div className={"progress-value"} style={{width: (gameState==gameStates.finished? 1 : currentQuestionInd / quizLength)*100+"%" }} />
                 </div>
-
-
-                {/*<progress value={ gameState==gameStates.finished? 1 : currentQuestionInd / quizLength}></progress>*/}
             </div>
         }
 
@@ -181,7 +168,6 @@ export const Play = () => {
 
       {socketStatus == socketStates.inRoom && gameState === gameStates.lobby ? <ViewLobby joinLanStr={join_lan_str} joinRoomUrl={join_room_url} roomId={roomId} isHost={isHost} socket={socket} 
         startQuestionId={startQuestionId} /> : null}
-      {/* quiz={state?.quiz} */}
       {socketStatus == socketStates.inRoom && gameState === gameStates.live ? <ViewQuestion isHost={isHost} socket={socket} currentQuestion={currentQuestion} setCurrentQuestion={setCurrentQuestion} setCurrentQuestionInd={setCurrentQuestionInd}
         isFinished={isFinished}
         onNext={handleNextQuestion}/> : null}
@@ -195,18 +181,6 @@ export const Play = () => {
             }}> { Object.keys(roommates).length } </button>
             <div className={"hstack roommates "+(isRoommatesHidden?"hidden":"")}>
               { Object.keys(roommates).map((userId) => <div>{roommates[userId]?.name}</div>) }
-              {/* <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div>
-              <div>placeholder</div> */}
             </div>
           </div>
       </div>

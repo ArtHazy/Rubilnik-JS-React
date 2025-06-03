@@ -16,7 +16,6 @@ const StartNode = () => {
           height: 12,
           bottom: -8,
           borderRadius: '50%',
-          // border: '2px solid #709B95',
         }}
       />
     </div>

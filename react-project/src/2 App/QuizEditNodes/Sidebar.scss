@@ -1,0 +1,57 @@
+// Sidebar.scss
+.sidebar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .sidebar-button {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 2px dashed;
+    cursor: grab;
+    transition: all 0.2s;
+    margin: 5px auto;
+    color: #525252;
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    span {
+      font-size: 16px;
+    }
+  }
+  
+  .question-button {
+    background: #FFF5CC;
+    border-color: #FFD700;
+    
+    &:hover {
+      background: #FFE082;
+    }
+  }
+  
+  .choice-button {
+    background: #E3F2FD;
+    border-color: #64B5F6;
+    
+    &:hover {
+      background: #BBDEFB;
+    }
+  }
+  
+  .end-button {
+    background: #FFEBEE;
+    border-color: #EF5350;
+    
+    &:hover {
+      background: #FFCDD2;
+    }
+  }

@@ -17,16 +17,15 @@ import StartNode from './StartNode';
 import EndNode from './EndNode';
 import Sidebar from './Sidebar';
 import CustomEdge from './CustomEdge';
-// import { convertToFlowElements } from './functionsEditor';
 import { checkGraphValidity } from './compiler';
 import './ReactFlowComponent.scss';
 
 import { getSelfFromLocalStorage, putSelfInLocalStorage} from "../../functions.mjs"
 import { http_put_quiz } from "../../HTTP_requests.mjs"
-
-const rfStyle = {
-  backgroundColor: '#242424',
-};
+import { convertToQuizFormat, convertToFlowElements, calculateNewPositionChild, checkMaxChoices, 
+  getSourceTargetPosition, getValidSourceNode, parseGraphEdges, serializeGraphEdges, 
+  filterEdges, generateNodeId } from "./functionsEditor"
+import { useNotification } from '../ContextNotification';
 
 const nodeColor = (node) => {
   switch (node.type) {
@@ -43,32 +42,6 @@ const nodeTypes = {
   choice: (props) => <ChoiceNode {...props} onUpdate={props.data?.onUpdate} />,
   start: StartNode,
   end: EndNode,
-};
-
-/**
- * Вычисляет новую позицию перетаскиваемого узла относительно целевого родителя
- * 
- * @param {Object} draggedNode - Перетаскиваемый узел { id, parentId, position: {x, y} }
- * @param {Array} nodes - Массив всех узлов
- * @param {Object} targetNode - Целевой родительский узел { id, position: {x, y} }
- * @returns {{x: number, y: number}} Новая относительная позиция
- */
-const calculateNewPositionChild = (draggedNode, targetNode, originalParent = null) => {
-  // Вычисляем абсолютную позицию на холсте
-  const absolutePosition = {
-    x: originalParent 
-      ? draggedNode.position.x + originalParent.position.x 
-      : draggedNode.position.x,
-    y: originalParent 
-      ? draggedNode.position.y + originalParent.position.y 
-      : draggedNode.position.y
-  };
-
-  // Рассчитываем позицию относительно нового родителя
-  return {
-    x: absolutePosition.x - targetNode.position.x,
-    y: absolutePosition.y - targetNode.position.y
-  };
 };
 
 const filterEdgeProps = (props) => {
@@ -104,347 +77,11 @@ const edgeTypes = {
       <BaseEdge
         {...filteredProps}
         path={path}
-        style={{
-          stroke: '#00ff88',
-          strokeWidth: 2,
-          strokeDasharray: '5 5',
-          animation: 'dashdraw 0.5s linear infinite',
-          animationDirection: (data?.reversed || false) ? 'reverse' : 'normal',
-          zIndex: 9999
-        }}
+        className={`preview-edge ${(data?.reversed || false) ? 'reversed' : 'normal'}`}
       />
     );
   }
 
-};
-
-const panOnDrag = [1, 2];
-const SAFE_ZONE_RADIUS = 100; 
-const MAX_CHOICES_PER_QUESTION = 4;
-
-const checkMaxChoices = (count) => {
-  if (count >= MAX_CHOICES_PER_QUESTION) {
-    alert(`Максимальное количество ответов в одном вопросе — ${MAX_CHOICES_PER_QUESTION}`);
-    return true;
-  }
-  return false;
-};
-
-const getSourceTargetPosition = (node, source = false, parentNode = null) => {
-  if (!node) return { x: 0, y: 0 };
-
-  if (node.type === 'end') source = false;
-  if (node.type === 'start') source = true;
-
-  const offset = parentNode?.position || {x: 0, y: 0};
-
-  return {
-    x: (node?.position?.x || 0) + offset.x + (node?.measured?.width || 0) / 2,
-    y: (node?.position?.y || 0) + offset.y + (source ? (node?.measured?.height || 0) : 0)
-  }
-};
-
-const getDetectionArea = (node, parentNode = null) => ({
-  x: node.position.x - (parentNode?.position.x || 0) - SAFE_ZONE_RADIUS,
-  y: node.position.y - (parentNode?.position.y || 0) - SAFE_ZONE_RADIUS,
-  width: (node.measured?.width || 0) + SAFE_ZONE_RADIUS * 2,
-  height: (node.measured?.height || 0) + SAFE_ZONE_RADIUS * 2
-});
-
-const getValidSourceNode = (targetPosition, targetNode, nodes, parentNode = null) => {
-  const forbiddenConnections = [
-    ['start', 'end'],
-    ['start', 'choice'],
-    ['question', 'question'],
-    ['choice', 'choice']
-  ];
-
-  // console.log(targetPosition);
-
-  const sourceNode = nodes.find(node => {
-    if (
-      node.id === targetNode.id ||         // Нельзя к себе
-      node.id === targetNode.parentId //||       // Нельзя к родителю
-      // (node.type === 'choice' && node.parentId === null)
-    ) return false;
-
-    const area = getDetectionArea(node, parentNode);
-
-    return (
-      targetPosition.x >= area.x &&
-      targetPosition.x <= area.x + area.width &&
-      targetPosition.y >= area.y &&
-      targetPosition.y <= area.y + area.height
-    )? node : null;
-  });
-
-  const isForbidden = forbiddenConnections.some(
-    ([srcType, tgtType]) => 
-      sourceNode?.type === srcType && targetNode.type === tgtType ||
-      sourceNode?.type === tgtType && targetNode.type === srcType
-  );
-
-  if (!sourceNode || isForbidden) return null;
-
-  // Проверка на максимальное кол-во ответов
-  if (sourceNode.type === 'question' && targetNode.type === 'choice') {
-    const choicesCount = sourceNode.data?.question?.choices?.length || 0;
-    return checkMaxChoices(choicesCount) ? null : sourceNode;
-  }
-  if (sourceNode.type === 'choice' && targetNode.type === 'question') {
-    
-  }
-  
-  return sourceNode;
-};
-
-const parseGraphEdges = (edgesString) => {
-  try {
-    const edges = edgesString ? JSON.parse(edgesString) : [];
-    // Генерируем id, если его нет
-    return edges
-      .filter(
-        e => e.source != null && 
-        e.target != null && 
-        e.id !== 'temp-edge')
-      .map(e => ({
-        id: e.id ?? `edge-${e.source}-${e.target}`,
-        source: e.source,
-        target: e.target,
-        condition: e.condition || 0,
-      }));
-  } catch (e) {
-      console.error('Error parsing graph edges:', e);
-      return [];
-  }
-};
-
-
-const serializeGraphEdges = edges => JSON.stringify(
-  (edges || [])
-    .filter(
-      e => e.source != null && 
-      e.target != null && 
-      e.id !== 'temp-edge')
-    .map(({ id, source, target, condition }) => ({
-      id: id ?? `edge-${source}-${target}`,
-      source: source,
-      target: target,
-      condition: condition || 0,
-    }))
-);
-
-const filterEdges = (edgesString, predicate) => {
-  const edges = parseGraphEdges(edgesString);
-  return serializeGraphEdges(edges.filter(predicate));
-};
-
-const generateNodeId = () => 
-  `${Date.now() * 10000 + Math.floor(Math.random() * 10000)}`;
-
-export const convertToFlowElements = (quiz, onQuizChange, ind) => {
-  console.log("convertToFlowElements");
-  const initialNodes = [];
-  const edges = [];
-  const tempIdMap = new Map();
-
-  let startEndData = { start: null, ends: [] };
-  try {
-    startEndData = JSON.parse(quiz.startEndNodesPositions || '{}');
-  } catch (e) {
-    console.error('Error parsing startEndNodesPositions:', e);
-  }
-
-  // Добавляем стартовую ноду
-  const startNode = {
-    id: startEndData.start?.id ?? `START_NODE_${ind}`,
-    type: 'start',
-    position: startEndData.start?.position || { x: 0, y: 0},
-    deletable: false,
-    // data: startEndData.start?.data
-  }; 
-
-  initialNodes.push(startNode);
-  tempIdMap.set(startNode.id, startNode.id);
-
-  // Добавляем конечные ноды
-  startEndData.ends?.forEach(end => {
-    const endNode = {
-      id: end.id ?? generateNodeId(),
-      type: 'end',
-      position: end.position || { x: 0, y: 100},
-      // data: end.data
-    };
-    initialNodes.push(endNode);
-    tempIdMap.set(endNode.id, endNode.id);
-  });
-
-  // QuestionNode component params
-  quiz.questions?.forEach((question) => {
-    const questionNodeId = question.tempId ?? generateNodeId();
-
-    if(question.tempId) {
-      tempIdMap.set(question.tempId, questionNodeId);
-    }
-
-    initialNodes.push({
-      id: questionNodeId,
-      type: 'question',
-      data: { 
-        question: {
-          ...question,
-          tempId: questionNodeId
-        },
-        onUpdate: (updatedQuestion) => {
-          onQuizChange(prev => ({
-            ...prev,
-            questions: prev.questions.map(q => 
-              q.tempId === questionNodeId ? {...q, ...updatedQuestion} : q
-            )
-          }));
-        }    
-      },
-      position: question.position || { x: 0, y: 0 },
-    });
-
-    // ChoiceNode component params
-    question.choices?.forEach((choice, index) => {
-      const choiceNodeId = choice.tempId ?? generateNodeId();
-
-      if(choice.tempId) {
-        tempIdMap.set(choice.tempId, choiceNodeId);
-      }
-
-      initialNodes.push({
-        id: choiceNodeId,
-        type: 'choice',
-        data: { 
-          choice: {
-            ...choice,
-            tempId: choiceNodeId
-          }, 
-          onUpdate: (updatedChoice) => {
-            onQuizChange(prev => ({
-              ...prev,
-              questions: prev.questions.map(q => ({
-                ...q,
-                choices: q.choices.map(c => 
-                  c.tempId === choiceNodeId ? {...c, ...updatedChoice} : c
-                )
-              }))
-            }));
-          }
-        },
-        position: choice.position || {x: 0, y: (index + 1) * 100},
-        parentId: questionNodeId,
-      });
-
-      edges.push({
-        id: `auto-${questionNodeId}-${choiceNodeId}`,
-        source: questionNodeId,
-        target: choiceNodeId,
-        condition: -1,
-        type: 'customEdge',
-        animated: false,
-      });
-    });
-  });
-
-  try {
-    const parsedEdges = parseGraphEdges(quiz.graphEdges);
-    parsedEdges.forEach(edge => {
-      if (edge.condition !== -1) {
-        const sourceId = tempIdMap.get(edge.source) //|| edge.source;
-        const targetId = tempIdMap.get(edge.target) //|| edge.target;
-
-        if (sourceId || targetId) {
-          edges.push({
-            id: `conn-${sourceId}-${targetId}`,
-            source: sourceId,
-            target: targetId,
-            condition: edge.condition,
-            type: 'customEdge',
-            animated: true,
-            // markerEnd: {
-            //   type: MarkerType.ArrowClosed,
-            //   width: 20,
-            //   height: 20,
-            // }
-          });
-        }
-      }
-    });
-  } catch (e) {
-    console.error('Error parsing graph edges:', e);
-  }
-
-  const initialNodeIds = new Set(initialNodes.map(n => n.id));
-  const orphans = JSON.parse(localStorage.getItem(`quiz_orphans_${ind}`) || '[]');
-  const filteredOrphans = orphans.filter(node => !initialNodeIds.has(node.id));
-  const nodes = initialNodes.concat( filteredOrphans );
-
-  // //EDIT STARTEDGE
-  // const startEdgeIndex = edges.findIndex(edge => edge.source === startNode.id);
-  // if (startEdgeIndex) {
-  //   const [startEdge] = edges.splice(startEdgeIndex, 1);
-  //   edges.unshift(startEdge);
-  // }
-
-  return { nodes, edges };
-};
-
-const convertToQuizFormat = (nodes, edges) => {
-  console.log("convertToQuizFormat");
-  const startNode = nodes.find(n => n.type === 'start');
-  const endNodes = nodes.filter(n => n.type === 'end');
-
-  const startEndData = {
-    start: startNode ? {
-      id: startNode.id,
-      position: startNode.position,
-      deletable: false,
-      // data: startNode.data
-    } : null,
-    ends: endNodes.map(endNode => ({
-      id: endNode.id,
-      position: endNode.position,
-      // data: endNode.data
-    }))
-  };
-
-  const restoreQuestions = nodes
-    .filter(node => node.type === 'question')
-    .map(questionNode => ({
-      ...questionNode.data.question,
-      position: questionNode.position,
-      tempId: questionNode.id, //!!
-      choices: nodes
-        .filter(choiceNode => 
-          choiceNode.type === 'choice' && 
-          choiceNode.parentId === questionNode.id
-        )
-        .map(choiceNode => ({
-          ...choiceNode.data.choice,
-          tempId: choiceNode.id, //!!
-          position: choiceNode.position,
-        }))
-    }));
-
-  const graphEdges = edges
-    .filter((e) => e.condition !== -1)
-    .map((e) => ({
-      id: e.id ?? `conn-${e.source}-${e.target}`,
-      source: e.source,
-      target: e.target,
-      condition: e.condition || 0,
-    }));
-  
-  return {
-    // title: "quiz",
-    restoreQuestions,
-    graphEdgesJSON: serializeGraphEdges(graphEdges),
-    startEndNodesPositions: JSON.stringify(startEndData)
-  };
 };
 
 const NODE_DELETE_HANDLERS = {
@@ -563,6 +200,7 @@ const handleEdgeRemoval = (deletedEdges, currentNodes, currentEdges, questions) 
  * @param {{self:User,quiz:Quiz}} param0  
 */
 const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
+  const { showNotification } = useNotification();
   const {ind} = useParams();
   const [initialElements] = useState(() => {
     return convertToFlowElements(quiz, onQuizChange, ind);
@@ -581,7 +219,6 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     ), 
   [nodes]);
 
-  const [activeDragConnection, setActiveDragConnection] = useState(null);
   const [tempEdge, setTempEdge] = useState(null);
 
   // Мемоизированные ноды с подсветкой
@@ -773,7 +410,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     console.log("tempEdge", tempEdge);
   }, []);
 
-  const onNodeDrag = useCallback((event, draggedNode) => {
+  const onNodeDrag = useCallback(throttle((event, draggedNode) => {
     if (!tempEdge) return;
 
     const targetNode = draggedNode;
@@ -820,7 +457,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         targetPosition: (targetEnd || targetStart)? 'top' : 'bottom',
       }
     }));
-  }, [tempEdge, screenToFlowPosition]);
+  }, 50), [tempEdge, screenToFlowPosition]);
 
   const onNodeDragStop = useCallback((event, draggedNode) => { 
     setIsDragging(false);
@@ -893,9 +530,11 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
           self.quizzes[ind] = updatedResponceQuiz;
           putSelfInLocalStorage(self);
           onQuizChange(updatedResponceQuiz);
+        } else {
+          showNotification('Ошибка сохранения', 'error');
         }
       } catch (error) {
-        console.error('Ошибка сохранения:', error);
+        showNotification('Ошибка сохранения', 'error');
       }
     }, 5000),
     [ind, self, quiz]
@@ -1151,129 +790,93 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, [selectedElements]);
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
+    <div className="react-flow-container">
       <Panel 
         position='top-left' 
+        className="sidebar-panel"
         style={{
-          padding:12, 
-          borderRadius:12, 
-          position: 'absolute',
-          left: 0,
           top: '50%',
           transform: 'translateY(-50%)',
-        }}>
+        }}
+      >
         <Sidebar />
       </Panel>
 
-      <div style={{ flex: 1, position: 'relative' }}
+      <div className="flow-wrapper"
         onClick={useCallback(() => {
           setContextMenu(null);
         }, [])}
       >
-        {/* <ReactFlowProvider> */}
-          <ReactFlow
-            nodes={highlightedNodes}
-            edges={[...highlightedEdges, ...(tempEdge ? [tempEdge] : [])]}
-            onNodesChange={handleNodesChange}
-            onNodesDelete={onNodesDelete}
-            onEdgesChange={onEdgesChange}
-            onEdgesDelete={onEdgesDelete}
-            onConnect={onConnect}
-            onReconnect={onReconnect}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            
-            onNodeMouseEnter={onNodeMouseEnter}
-            onNodeMouseLeave={handleNodeMouseLeave}
-            onNodeDrag={onNodeDrag}
-            onNodeDragStart={onNodeDragStart}
-            onNodeDragStop={onNodeDragStop}
+        <ReactFlow
+          className="react-flow-styles"
+          nodes={highlightedNodes}
+          edges={[...highlightedEdges, ...(tempEdge ? [tempEdge] : [])]}
+          onNodesChange={handleNodesChange}
+          onNodesDelete={onNodesDelete}
+          onEdgesChange={onEdgesChange}
+          onEdgesDelete={onEdgesDelete}
+          onConnect={onConnect}
+          onReconnect={onReconnect}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          
+          onNodeMouseEnter={onNodeMouseEnter}
+          onNodeMouseLeave={handleNodeMouseLeave}
+          onNodeDrag={onNodeDrag}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDragStop={onNodeDragStop}
 
-            onMove={() => setContextMenu(null)}
+          onMove={() => setContextMenu(null)}
 
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            // onNodeContextMenu={onNodeContextMenu}
-            // onEdgeContextMenu={onEdgeContextMenu}
-            onPaneContextMenu={onPaneContextMenu}
-            style={rfStyle}
-            fitView
-            panOnScroll
-            selectionOnDrag
-            panOnDrag={panOnDrag}
-            selectionMode={SelectionMode.Partial}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          onNodeContextMenu={onNodeContextMenu}
+          onEdgeContextMenu={onEdgeContextMenu}
+          onPaneContextMenu={onPaneContextMenu}
+          fitView
+          panOnScroll
+          selectionOnDrag
+          panOnDrag={[1, 2]}
+          selectionMode={SelectionMode.Partial}
+        >
+          <PanelControls quiz={quiz} ind={ind} onQuizChange={onQuizChange} />
+          <Background />
+          <Controls 
+            showInteractive={false} 
+            position="top-right"
+            className="controls-panel"            
+            style={{
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
           >
-            <PanelControls quiz={quiz} ind={ind} onQuizChange={onQuizChange} />
-            <Background />
-            <Controls 
-              showInteractive={false} 
-              position="top-right"
-              
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                padding: 8,
-                background: 'transparent', // Полупрозрачный светлый фон
-                border: `2px dashed #B0B0B0`,
-                boxShadow: `0 4px 20px rgba(36, 36, 36, 0.12)`,
-                borderRadius: 12,
-                backdropFilter: 'blur(4px)',
-                position: 'absolute',
-                right: 12,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                zIndex: 1000,
-            
-                // Стили для hover-эффекта
-                ':hover': {
-                  background: 'rgba(#D9D9D9, 0.98)',
-                  boxShadow: `0 6px 24px rgba(#242424, 0.16)`,
-                  transform: 'translateY(-50%) scale(1.02)'
-                }
-              }}
-            >
-            </Controls>
-            <MiniMap 
-              nodeColor={nodeColor} 
-              nodeStrokeWidth={10} 
-              // nodeStrokeColor={node => 
-              //   node.selected ? 'rgba(255, 165, 0, 0.8)' : nodeColor // Оранжевая обводка для выбранных
-              // }            
-              nodeBorderRadius="16"
-              style={{
-                borderRadius: '12px', // Закругление углов всей карты
-                overflow: 'hidden', // Обрезает содержимое по границам радиуса
-              }}        
-              // bgColor=""
-              // maskColor=""
-              zoomable 
-              pannable
-            />
-          </ReactFlow>
-        {/* </ReactFlowProvider> */}
+          </Controls>
+          <MiniMap 
+            className="minimap-styles"
+            nodeColor={nodeColor} 
+            nodeStrokeWidth={10} 
+            // nodeStrokeColor={node => 
+            //   node.selected ? 'rgba(255, 165, 0, 0.8)' : nodeColor // Оранжевая обводка для выбранных
+            // }            
+            nodeBorderRadius="16"     
+            zoomable 
+            pannable
+          />
+        </ReactFlow>
 
         {contextMenu && (
           <div
+            className="context-menu"
             style={{
-              position: 'fixed',
               left: contextMenu.position.x,
               top: contextMenu.position.y,
-              background: 'white',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-              borderRadius: '8px',
-              zIndex: 1000
             }}
+    
             onClick={() => setContextMenu(null)}
           >
             {contextMenu.type === 'NODE' && contextMenu.element.type !== 'start' && (
               <div
-                style={{ 
-                  padding: '8px 16px',
-                  cursor: 'pointer',
-                  '&:hover': { background: '#f5f5f5' }
-                }}
+                className='context-menu-item'
                 onClick={() => {
                   const handler = NODE_DELETE_HANDLERS[contextMenu.element.type];
                   if (handler) {
@@ -1287,11 +890,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
             {contextMenu.type === 'SELECTION' && (
               <div
-                style={{ 
-                  padding: '8px 16px',
-                  cursor: 'pointer',
-                  ':hover': { background: '#f5f5f5' }
-                }}
+                className='context-menu-item'
                 onClick={deleteSelectedElements}
               >
                 Удалить выделенное
@@ -1300,11 +899,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
             {contextMenu.type === 'EDGE' && (
               <div
-                style={{ 
-                  padding: '8px 16px',
-                  cursor: 'pointer',
-                  ':hover': { background: '#f5f5f5' }
-                }}
+                className='context-menu-item'
                 onClick={() => {
                   const result = handleEdgeRemoval(
                     [contextMenu.element],

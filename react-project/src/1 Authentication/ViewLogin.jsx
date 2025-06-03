@@ -22,15 +22,15 @@ export const ViewLogin = () => {
                 <button id='submit' className='big' onClick={() => {
                     let submit = document.getElementById('submit');
                     submit.hidden = true;
-                    let load = document.createElement('div')
-                    load.innerHTML = '/..'
-                    submit.after(load)
+                    // let load = document.createElement('div')
+                    // load.innerHTML = '/..'
+                    // submit.after(load)
 
                     let email = document.getElementById('email-input').value;
                     let password = document.getElementById('password-input').value;
 
                     http_user_login({email,password}, (isOk,user)=>{
-                        load.remove()
+                        // load.remove()
                         submit.hidden = false
                         let quizzes = user?.quizzes
                         if (isOk && Array.isArray(quizzes)) {

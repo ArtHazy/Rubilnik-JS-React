@@ -1,15 +1,16 @@
 import { useState, useRef } from "react";
 import { limits } from "../values.mjs";
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
-import { http_delete_quiz, http_post_quiz } from "../HTTP_requests.mjs";
+import { http_delete_quiz, http_post_quiz, http_put_quiz } from "../HTTP_requests.mjs";
 import { useNavigate } from "react-router-dom";
-import LanguageSwitcher from "./LanguageSwitcher";
+import LanguageSwitcher from "../Components/LanguageSwitcher";
 import "./ViewLibrary.scss"
 
 export const ViewLibrary = () => {
   let self = getSelfFromLocalStorage();
   let quizzes = self?.quizzes
   const [flag,setFlag] = useState(false);
+  
   function upd() { putSelfInLocalStorage(self), setFlag(!flag) }    
 
   return <div className="ViewLibrary">
@@ -36,7 +37,8 @@ export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [newTitle, setNewTitle] = useState(quiz.title);
-  const clickTimeout = useRef(null);
+  const clickTimeoutRef = useRef(null);
+  const isPreloadedRef = useRef(false); // Флаг предзагрузки
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -46,7 +48,44 @@ export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
     e.currentTarget.style.setProperty('--y', `${y}px`);
   };
 
+  const handleClick = () => {
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+    }
+    
+    if (!isPreloadedRef.current) {
+      console.log("Начало предзагрузки компонента");
+      import("./QuizEditNodes/ReactFlowComponent").then(module => {
+        console.log("Компонент предзагружен");
+        isPreloadedRef.current = true;
+      }).catch(error => {
+        console.error("Ошибка предзагрузки:", error);
+      });
+    }
+
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      console.log("Одинарный клик");
+      // Если в режиме редактирования - не переходим
+      if (!isEditing) {
+        navigate(`/edit-quiz/${ind}`);
+      }
+      clickTimeoutRef.current = null;
+    }, 300);
+  };
+
   const handleDoubleClick = () => {
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+    }
+
     setIsEditing(true);
   };
 
@@ -72,7 +111,7 @@ export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
   };
 
   return (
-    <div className='quiz-tile-container'>
+    <div className='quiz-tile-container' onDoubleClick={handleDoubleClick}>
       <button 
         className="delete-btn" 
         onClick={() => {
@@ -91,17 +130,12 @@ export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
         className="edit-btn" 
         key={ind}
         style={{ '--index': ind }}
-        onDoubleClick={handleDoubleClick}
-        // onClick={() => {
-        //     // Если в режиме редактирования - не переходим
-        //     if (!isEditing) {
-        //         window.location = '/edit-quiz/' + ind;
-        //     }
-        // }}  
+        onClick={handleClick}  
         onMouseMove={handleMouseMove}
       >
         {isEditing ? (
           <input
+          className="edit-input"
             type="text"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
@@ -115,7 +149,7 @@ export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
             }}
             autoFocus
             style={{
-              width: '100%',
+              width: '50%',
               padding: '8px',
               fontSize: '1em',
               border: 'none',

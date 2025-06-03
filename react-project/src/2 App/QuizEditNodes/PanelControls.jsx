@@ -3,6 +3,10 @@ import { downloadJson } from '../../functions.mjs';
 import { startRoomAsHost } from '../ViewLibrary';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { loadQuizFromFile } from './functionsEditor';
+import { useNotification } from "../ContextNotification";
+
+import './PanelControls.scss';
 
 /**
  * 
@@ -10,6 +14,7 @@ import { useState, useEffect } from 'react';
  * @returns 
  */
 export const PanelControls = ({ quiz, ind, onQuizChange }) => {
+    const { showNotification } = useNotification();
     const navigate = useNavigate();
     const [title, setTitle] = useState(quiz.title);
     const [isTitleFocused, setIsTitleFocused] = useState(false);
@@ -25,37 +30,8 @@ export const PanelControls = ({ quiz, ind, onQuizChange }) => {
     };
 
     return (
-        <Panel 
-            position='top-left' 
-            style={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: 8,
-                padding: 8,
-                border: `2px dashed #B0B0B0`,
-                boxShadow: `0 4px 20px rgba(36, 36, 36, 0.12)`,
-                borderRadius: 12,
-                backdropFilter: 'blur(4px)',
-                position: 'absolute',
-                zIndex: 1000,
-            }}
-        >
-            {/* <button id="save" onClick={()=>{ 
-                let self = getSelfFromLocalStorage();
-                const { isOk, quiz: quizNew } = http_put_quiz(self, quiz, ()=>{});
-                if (isOk) {
-                    self.quizzes[ind] = quizNew;
-                    console.log("SRLF", self.quizzes[ind]);
-                    putSelfInLocalStorage(self);
-                }
-
-            }}> save </button> */}
-
-            <div style={{ 
-                marginBottom: 8,
-                paddingBottom: 4,
-                borderBottom: '1px solid #e0e0e0'
-            }}>
+        <Panel position='top-left' className="panel-controls-container">
+            <div className="title-container">
                 <input
                     type="text"
                     value={title}
@@ -79,24 +55,25 @@ export const PanelControls = ({ quiz, ind, onQuizChange }) => {
                 />
             </div>
 
-            <button onClick={()=>{downloadJson(quiz, quiz.title)}}>
+            <button className="control-button" onClick={()=>{downloadJson(quiz, quiz.title)}}>
                 <span className="material-symbols-outlined">download</span>
             </button>
 
             <label htmlFor="file-input">
-                <button onClick={()=>{document.getElementById("file-input").click()}}>
+                <button className="control-button" onClick={()=>{document.getElementById("file-input").click()}}>
                     <span className="material-symbols-outlined">upload</span>
                 </button>
             </label>
 
-            <input style={{display:"none"}} id="file-input" type="file" 
-                onChange={(e) => {
-                    loadQuizFromFile(e.target.files[0]); 
-                    // putSelfInLocalStorage(getSelfFromLocalStorage().quizzes[ind] = quiz)
+            <input className="file-input" id="file-input" type="file" 
+                onChange={(e) => { 
+                    const inputElement = e.target
+                    loadQuizFromFile(e.target.files[0], quiz, onQuizChange, showNotification); 
+                    inputElement.value = null;
                 }
             }/>
 
-            <button onClick={()=>{console.log("test", quiz); startRoomAsHost(navigate, quiz)}}>
+            <button className="control-button" onClick={()=>{console.log("test", quiz); startRoomAsHost(navigate, quiz)}}>
                 <span className="material-symbols-outlined">
                     play_arrow
                 </span>

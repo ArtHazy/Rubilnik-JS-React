@@ -21,16 +21,16 @@ export const ViewRegister = () => {
                 <button id='submit' className='big' onClick={() => {
                     let submit = document.getElementById('submit');
                     submit.hidden = true;
-                    let load = document.createElement('div');
-                    load.innerHTML = '/..'
-                    submit.after(load)
+                    // let load = document.createElement('div');
+                    // load.innerHTML = '/..'
+                    // submit.after(load)
 
                     let name = document.getElementById('username-input').value;
                     let password = document.getElementById('password-input').value;
                     let email = document.getElementById('email-input').value;
 
                     http_user_register({name,email,password}, (isOk, resText)=>{
-                        load.remove()
+                        // load.remove()
                         submit.hidden=false
                         showNotification(resText, isOk? 'success' : 'error')
                         setTimeout(()=>{window.location.href='/login'}, 3000)

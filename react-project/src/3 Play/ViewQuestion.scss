@@ -61,53 +61,53 @@
             padding: var(--def-gap);
             overflow:  hidden;
 
-            .choice{
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: start;
-            position: relative;
-            padding: var(--def-gap);
-            width: 100%;
-            @media (orientation: landscape){ height: 100%; }
-            @media (orientation: portrait){ min-height: 1.5cm;}
-            border-radius: var(--def-border-radius);
-            box-sizing: border-box;
-            .letter{
-                position: absolute;
-                right: var(--def-gap);
-                top: var(--def-gap);
-            }
+            .choice {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: start;
+                position: relative;
+                padding: var(--def-gap);
+                width: 100%;
+                @media (orientation: landscape){ height: 100%; }
+                @media (orientation: portrait){ min-height: 1.5cm;}
+                border-radius: var(--def-border-radius);
+                box-sizing: border-box;
+                .letter{
+                    position: absolute;
+                    right: var(--def-gap);
+                    top: var(--def-gap);
+                }
 
-            color: var(--color-dark);
-            &._0{
-                background: var(--choice-1-color);
-                &.revealed { 
-                background: var(--choice-wrong-1-color);
-                &.correct { background: var(--choice-1-color); }
+                color: var(--color-dark);
+                &._0{
+                    background: var(--choice-1-color);
+                    &.revealed { 
+                    background: var(--choice-wrong-1-color);
+                    &.correct { background: var(--choice-1-color); }
+                    }
                 }
-            }
-            &._1{
-                background: var(--choice-2-color);
-                &.revealed { 
-                background: var(--choice-wrong-2-color);
-                &.correct { background: var(--choice-2-color); }
+                &._1{
+                    background: var(--choice-2-color);
+                    &.revealed { 
+                    background: var(--choice-wrong-2-color);
+                    &.correct { background: var(--choice-2-color); }
+                    }
                 }
-            }
-            &._2{
-                background: var(--choice-3-color);
-                &.revealed { 
-                background: var(--choice-wrong-3-color);
-                &.correct { background: var(--choice-3-color); }
+                &._2{
+                    background: var(--choice-3-color);
+                    &.revealed { 
+                    background: var(--choice-wrong-3-color);
+                    &.correct { background: var(--choice-3-color); }
+                    }
                 }
-            }
-            &._3{
-                background: var(--choice-4-color);
-                &.revealed { 
-                background: var(--choice-wrong-4-color);
-                &.correct { background: var(--choice-4-color); }
+                &._3{
+                    background: var(--choice-4-color);
+                    &.revealed { 
+                    background: var(--choice-wrong-4-color);
+                    &.correct { background: var(--choice-4-color); }
+                    }
                 }
-            }
             }
         }
     }

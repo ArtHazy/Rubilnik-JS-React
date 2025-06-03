@@ -5,7 +5,7 @@ export const limits = {
     maxChoicesLength: 4,
     maxQuestionsLength: 20,
     maxQuizzesLength: 20,
-    maxQuizFileSise: 1024,
+    maxQuizFileSize: 1024,
 }
 
 // compiled services provider data

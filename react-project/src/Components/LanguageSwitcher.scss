@@ -1,0 +1,78 @@
+@import "../main/mixin.scss";
+
+.language-switcher {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  
+  .toggle-switch {
+    display: flex;
+    position: relative;
+    width: 100px;
+    height: 40px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 30px;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .language-option {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50%;
+      height: 100%;
+      z-index: 2;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+    
+    .ru {
+      color: #333;
+    }
+    
+    .en {
+      color: #333;
+    }
+    
+    .slider {
+      position: absolute;
+      top: 2px;
+      bottom: 2px;
+      width: 46px;
+      background: #f0f0f0;
+      border-radius: 30px;
+      transition: transform 0.3s ease;
+      z-index: 1;
+    }
+    
+    &.ru-active {
+      .slider {
+        transform: translateX(2px);
+        background: #f0f0f0;
+      }
+      .ru {
+        color: #1976d2;
+        font-weight: 700;
+      }
+    }
+    
+    &.en-active {
+      .slider {
+        transform: translateX(50px);
+        background: #f0f0f0;
+      }
+      .en {
+        color: #1976d2;
+        font-weight: 700;
+      }
+    }
+  }
+}

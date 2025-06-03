@@ -1,0 +1,62 @@
+.panel-controls-container {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
+    border: 2px dashed #B0B0B0;
+    box-shadow: 0 4px 20px rgba(36, 36, 36, 0.12);
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+    position: absolute;
+    z-index: 1000;
+    top: 20px;
+    left: 20px;
+    background: transparent;
+}
+  
+.title-container {
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e0e0e0;
+    width: 100%;
+}
+  
+.title-input {
+    width: 100%;
+    padding: 4px 0;
+    font-size: 14px;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    border-bottom: 1px solid transparent;
+    transition: border-bottom 0.2s ease;
+    
+    &:focus {
+        border-bottom: 2px solid #4285f4;
+    }
+}
+  
+.control-button {
+    // background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+    
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+    
+    // .material-symbols-outlined {
+    //     font-size: 20px;
+    //     color: #333;
+    // }
+}
+  
+.file-input {
+    display: none;
+}

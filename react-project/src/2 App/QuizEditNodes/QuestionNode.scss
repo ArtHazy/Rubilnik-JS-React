@@ -1,0 +1,63 @@
+// QuestionNode.scss
+.question-node {
+    background: #FFF5CC;
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid #FFD700;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    
+    &.selected {
+      border: 2px solid #2196F3;
+      box-shadow: 0 0 10px rgba(33,150,243,0.5);
+    }
+    
+    &.highlighted {
+      border: 2px solid #FFA000;
+      box-shadow: 0 0 8px rgba(255,160,0,0.3);
+    }
+  }
+  
+  .terminal {
+    background: #898176;
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    border: 2px solid #F5F3F0;
+    
+    .selected & {
+      border: 2px solid #2196F3;
+    }
+    
+    .highlighted & {
+      border: 2px solid #5A534C;
+    }
+  }
+  
+  .editable-content {
+    min-height: 1.5em;
+    padding: 2px 4px;
+    white-space: pre-wrap;
+    cursor: pointer;
+    color: #242424;
+  }
+  
+  .editable-input {
+    padding: 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+    color: #242424;
+    width: 100%;
+  }
+  
+  .choice-list {
+    font-size: 0.8em;
+    color: #666;
+  }
+  
+  .choice-item {
+    margin: 5px 0;
+    color: #444;
+  }

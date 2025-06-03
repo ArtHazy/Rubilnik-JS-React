@@ -10,12 +10,6 @@ const ReactFlowComponent = lazy(() => import("./QuizEditNodes/ReactFlowComponent
 import '@xyflow/react/dist/base.css';
 import './index.css';
 
-// Иконки
-const rem = <span className="material-symbols-outlined">remove</span>;
-const del = <span className="material-symbols-outlined">delete</span>;
-const drop_down = <span className="material-symbols-outlined">arrow_drop_down</span>;
-const drop_up = <span className="material-symbols-outlined">arrow_drop_up</span>;
-
 export const ViewQuizEdit = () => {
     const {ind} = useParams()
 
