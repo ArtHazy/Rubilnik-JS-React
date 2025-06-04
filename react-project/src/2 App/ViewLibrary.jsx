@@ -3,13 +3,12 @@ import { limits } from "../values.mjs";
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
 import { http_delete_quiz, http_post_quiz, http_put_quiz } from "../HTTP_requests.mjs";
 import { useNavigate } from "react-router-dom";
-import LanguageSwitcher from "../Components/LanguageSwitcher";
 import "./ViewLibrary.scss"
 
 export const ViewLibrary = () => {
   let self = getSelfFromLocalStorage();
   let quizzes = self?.quizzes
-  const [flag,setFlag] = useState(false);
+  const [flag, setFlag] = useState(false);
   
   function upd() { putSelfInLocalStorage(self), setFlag(!flag) }    
 
@@ -135,7 +134,7 @@ export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
       >
         {isEditing ? (
           <input
-          className="edit-input"
+            className="edit-input"
             type="text"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}

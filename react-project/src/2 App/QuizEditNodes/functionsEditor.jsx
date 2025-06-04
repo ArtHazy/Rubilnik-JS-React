@@ -1,6 +1,5 @@
 import { limits } from "../../values.mjs";
 
-const MAX_CHOICES_PER_QUESTION = 4;
 const SAFE_ZONE_RADIUS = 100;
 
 export function loadQuizFromFile(file, quiz, onQuizChange, showNotification) {
@@ -68,8 +67,8 @@ export const calculateNewPositionChild = (draggedNode, targetNode, originalParen
 };
 
 export const checkMaxChoices = (count) => {
-    if (count >= MAX_CHOICES_PER_QUESTION) {
-        alert(`Максимальное количество ответов в одном вопросе — ${MAX_CHOICES_PER_QUESTION}`);
+    if (count >= limits.maxChoicesLength) {
+        alert(`Максимальное количество ответов в одном вопросе — ${limits.maxChoicesLength}`);
         return true;
     }
     return false;
