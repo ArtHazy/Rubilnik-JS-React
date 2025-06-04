@@ -8,8 +8,8 @@ import {useNotification} from "../2 App/ContextNotification.jsx";
 export const ViewRegister = () => {
     const { showNotification } = useNotification();
 
-    if ( getSelfFromLocalStorage()?.id ) window.location.href='/'
-    else return <div className='ViewRegister'>
+    // if ( getSelfFromLocalStorage()?.id ) window.location.href='/'
+    /*else*/ return <div className='ViewRegister'>
         <div className="form">
             
             <div className={"hstack"} style={{gap:0}} ><div className='reg accent'>REG</div><div className='ister accent'>ISTER</div></div>

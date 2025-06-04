@@ -9,8 +9,7 @@ export const ViewLogin = () => {
     const { showNotification } = useNotification();
 
     // if ( getSelfFromLocalStorage()?.id ) window.location.href='/'
-    // else
-    return <div className='ViewLogin'>
+    /*else*/ return <div className='ViewLogin'>
         <div className='form'>
             <div className={"hstack"}>
                 <div className='log accent'>LOG</div>
