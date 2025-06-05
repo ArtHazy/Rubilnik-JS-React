@@ -14,6 +14,15 @@ export default defineConfig({
 ],
   server: {
     allowedHosts: [ 'rubilnik.ddns.net', 'localhost'],
+    // using proxy to pass cookies from debug server port ("npm run dev / host")
+    proxy:{
+      '/api': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/,''),
+      }
+    }
   },
   build: {
     rollupOptions: {

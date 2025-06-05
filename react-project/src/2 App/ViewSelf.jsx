@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { limits } from "../values.mjs";
 import { getSelfFromLocalStorage, putSelfInLocalStorage, removeSelfFromLocalStorage, handleEnterKey } from "../functions.mjs"
-import { http_put_user } from "../HTTP_requests.mjs";
+import {http_put_user, http_user_logout} from "../HTTP_requests.mjs";
 import "./ViewSelf.scss"
 
 export const ViewSelf = () => {
@@ -53,8 +53,8 @@ export const ViewSelf = () => {
                     let email = document.querySelector("#email").value;
                     let password = document.querySelector("#password").value;
 
-                    if (http_put_user(self, {name, email, password}, ()=>{})) {removeSelfFromLocalStorage(), window.location='/logout'}
-                    else {confirm("Failed to save changes\nLog out without saving?")? (removeSelfFromLocalStorage(), window.location='/logout') : null}
+                    if (http_put_user(self, {name, email, password}, ()=>{})) {removeSelfFromLocalStorage(), http_user_logout(), window.location.href="/login"}
+                    else {confirm("Failed to save changes\nLog out without saving?")? (removeSelfFromLocalStorage(), http_user_logout(), window.location.href="/login") : null}
                 }}>log out</button>
             </vstack>
         </div>

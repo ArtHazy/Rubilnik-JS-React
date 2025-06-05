@@ -32,6 +32,7 @@ export function http_user_register({name, email, password}, onload){
     req.timeout = 2000
     req.open('POST', AUTH_SERVICE_URL+"/user", true)
     req.setRequestHeader('Content-Type', 'application/json');
+    req.withCredentials = true
     req.onload = ()=>{ isOk=req.status==200; console.log('req',req); onload(isOk, req.responseText);}
     req.onerror = onerror;
     req.send(JSON.stringify({ user:{name, email, password} }));
@@ -44,16 +45,33 @@ export function http_user_register({name, email, password}, onload){
 export function http_user_login({email, password}, onload){
     let isOk, user;
     const req = new XMLHttpRequest();
-    req.timeout = 2000
-    req.open('POST', AUTH_SERVICE_URL+"/user/login", true)
-    req.withCredentials = true;
+    // req.timeout = 2000
+    req.open('POST', AUTH_SERVICE_URL+"/user/login", false)
     req.setRequestHeader('Content-Type', 'application/json');
-    req.onload = ()=>{ isOk=req.status==200; console.log('req',req);  user = JSON.parse(req.responseText); onload(isOk,user);}
+    req.withCredentials = true
+    req.onload = ()=>{
+        console.log(req.status); isOk=req.status==200; console.log('req',req);  user = JSON.parse(req.responseText); onload(isOk,user);
+    }
     req.onerror = onerror;
     req.send(JSON.stringify( {validation:{email, password}} ));
-    console.log('isOk',isOk);
+    console.log('http_user_login isOk:',isOk);
     console.log('user',user);
     return {isOk, user};
+}
+/**
+ * @param {(isOk:boolean)=>void} onload
+ * */
+export function http_user_logout(onload){
+    let isOk;
+    const req = new XMLHttpRequest();
+    req.timeout = 2000
+    req.open('GET', AUTH_SERVICE_URL+"/logout", true)
+    req.setRequestHeader('Content-Type', 'application/json');
+    req.withCredentials = true
+    req.onload = ()=>{ isOk=req.status==200; console.log('req',req); onload(isOk);}
+    req.onerror = onerror;
+    req.send();
+    console.log('isOk',isOk);
 }
 
 /**
@@ -69,10 +87,11 @@ export function http_put_user({id, email, password},user,onload){
     const req = new XMLHttpRequest();
     req.open('PUT', AUTH_SERVICE_URL+"/user", false)
     req.setRequestHeader('Content-Type', 'application/json');
+    req.withCredentials = true
     req.onload = ()=>{ onload(); isOk=req.status==200 }
     req.onerror = onerror;
     req.send( JSON.stringify( {validation:{id, email, password},user} ) );
-    console.log('isOk',isOk);
+    console.log('http_put_user isOk:',isOk);
     return isOk;
 }
 
@@ -88,6 +107,7 @@ export function http_post_quiz({id, email, password},quiz, onload){
     const req = new XMLHttpRequest();
     req.open('POST', AUTH_SERVICE_URL+"/quiz", false)
     req.setRequestHeader('Content-Type', 'application/json');
+    req.withCredentials = true
     req.onload = ()=>{ onload(); isOk=req.status==200; quizResponce = JSON.parse(req.responseText);  }
     req.onerror = onerror;
     req.send(JSON.stringify( {validation:{id, email, password},quiz} ));
@@ -108,6 +128,7 @@ export function http_put_quiz({id, email, password}, quiz, onload){
     const req = new XMLHttpRequest();
     req.open('PUT', AUTH_SERVICE_URL+"/quiz", false)
     req.setRequestHeader('Content-Type', 'application/json');
+    req.withCredentials = true
     req.onload = ()=>{ onload(); isOk=req.status==200; quizRes=JSON.parse(req.responseText)}
     req.onerror = onerror;
     req.send(JSON.stringify( {validation:{id, email, password},quiz} ));
@@ -121,6 +142,7 @@ export function http_delete_quiz({id, email, password}, quizId, onload){
     const req = new XMLHttpRequest();
     req.open('DELETE', AUTH_SERVICE_URL+"/quiz", false)
     req.setRequestHeader('Content-Type', 'application/json');
+    req.withCredentials = true
     req.onload = ()=>{ onload(); isOk=req.status==200; }
     req.onerror = onerror;
     req.send(JSON.stringify( {validation:{id, email, password},id:quizId} ));
