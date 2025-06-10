@@ -389,7 +389,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
     const targetEnd = draggedNode.type === 'end';
     const targetStart = draggedNode.type === 'start';
-    console.log(targetEnd);
+    // console.log(targetEnd);
 
     setTempEdge({
       id: `temp-edge`,
@@ -884,7 +884,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
                   }
                 }}        
               >
-                Удалить {contextMenu.element.type === 'question' ? 'вопрос' : 'ответ'}
+                Удалить {contextMenu.element.type === 'question' ? 'вопрос' : 'choice' ? 'ответ' : 'конец'}
               </div>
             )}
 

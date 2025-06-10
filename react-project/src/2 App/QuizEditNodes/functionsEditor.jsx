@@ -8,7 +8,6 @@ export function loadQuizFromFile(file, quiz, onQuizChange, showNotification) {
 
     if (!file.name.toLowerCase().endsWith('.json')) {
         showNotification('Please select a JSON file', 'error');
-        console.log("error");
         return;
     }
 
@@ -148,14 +147,14 @@ export const parseGraphEdges = (edgesString) => {
         // Генерируем id, если его нет
         return edges
             .filter(
-            e => e.source != null && 
-            e.target != null && 
-            e.id !== 'temp-edge')
+                e => e.source != null && 
+                e.target != null && 
+                e.id !== 'temp-edge')
             .map(e => ({
-            id: e.id ?? `edge-${e.source}-${e.target}`,
-            source: e.source,
-            target: e.target,
-            condition: e.condition || 0,
+                id: e.id ?? `edge-${e.source}-${e.target}`,
+                source: e.source,
+                target: e.target,
+                condition: e.condition || 0,
             }));
     } catch (e) {
         console.error('Error parsing graph edges:', e);
@@ -182,6 +181,16 @@ export const filterEdges = (edgesString, predicate) => {
     const edges = parseGraphEdges(edgesString);
     return serializeGraphEdges(edges.filter(predicate));
 };
+
+export const createEdgeLookup = (edges) => {
+    const lookup = {};
+    
+    edges.forEach(edge => {
+        lookup[edge.source] = true;
+    });
+    
+    return lookup;
+};
   
 export const generateNodeId = () => 
     `${Date.now() * 10000 + Math.floor(Math.random() * 10000)}`;
@@ -204,8 +213,7 @@ export const convertToFlowElements = (quiz, onQuizChange, ind) => {
         id: startEndData.start?.id ?? `START_NODE_${ind}`,
         type: 'start',
         position: startEndData.start?.position || { x: 0, y: 0},
-        deletable: false,
-        // data: startEndData.start?.data
+        deletable: false
     }; 
     
     initialNodes.push(startNode);
@@ -213,95 +221,114 @@ export const convertToFlowElements = (quiz, onQuizChange, ind) => {
     
     // Добавляем конечные ноды
     startEndData.ends?.forEach(end => {
-          const endNode = {
+        const endNode = {
             id: end.id ?? generateNodeId(),
             type: 'end',
-        position: end.position || { x: 0, y: 100},
-        // data: end.data
+            position: end.position || { x: 0, y: 100}
         };
         initialNodes.push(endNode);
         tempIdMap.set(endNode.id, endNode.id);
     });
-    
+
+    const parsedGraphEdges = parseGraphEdges(quiz.graphEdges);
+    const outgoingEdgeLookup = createEdgeLookup(parsedGraphEdges);
+    const questionWithOutgoingMap = {}; // Карта для хранения withOutgoing по ID вопроса
+    const choiceToQuestionMap = {}; // Карта для связи choice с родительским вопросом
+
     // QuestionNode component params
     quiz.questions?.forEach((question) => {
         const questionNodeId = question.tempId ?? generateNodeId();
     
         if(question.tempId) {
-        tempIdMap.set(question.tempId, questionNodeId);
+            tempIdMap.set(question.tempId, questionNodeId);
         }
+
+        // Временные хранилища для элементов вопроса
+        const choiceNodes = [];
+        const questionEdges = [];
+        let withOutgoing = 0;  // Счетчик choice с исходящими ребрами
     
         initialNodes.push({
-        id: questionNodeId,
-        type: 'question',
-        data: { 
-            question: {
-            ...question,
-            tempId: questionNodeId
+            id: questionNodeId,
+            type: 'question',
+            data: { 
+                question: {
+                    ...question,
+                    tempId: questionNodeId,
+                },
+                onUpdate: (updatedQuestion) => {
+                    onQuizChange(prev => ({
+                        ...prev,
+                        questions: prev.questions.map(q => 
+                        q.tempId === questionNodeId ? {...q, ...updatedQuestion} : q
+                        )
+                    }));
+                }    
             },
-            onUpdate: (updatedQuestion) => {
-            onQuizChange(prev => ({
-                ...prev,
-                questions: prev.questions.map(q => 
-                q.tempId === questionNodeId ? {...q, ...updatedQuestion} : q
-                )
-            }));
-            }    
-        },
-        position: question.position || { x: 0, y: 0 },
+            position: question.position || { x: 0, y: 0 },
         });
-    
+
         // ChoiceNode component params
         question.choices?.forEach((choice, index) => {
-        const choiceNodeId = choice.tempId ?? generateNodeId();
-    
-        if(choice.tempId) {
-            tempIdMap.set(choice.tempId, choiceNodeId);
-        }
-    
-        initialNodes.push({
-            id: choiceNodeId,
-            type: 'choice',
-            data: { 
-            choice: {
-                ...choice,
-                tempId: choiceNodeId
-            }, 
-            onUpdate: (updatedChoice) => {
-                onQuizChange(prev => ({
-                ...prev,
-                questions: prev.questions.map(q => ({
-                    ...q,
-                    choices: q.choices.map(c => 
-                    c.tempId === choiceNodeId ? {...c, ...updatedChoice} : c
-                    )
-                }))
-                }));
+            const choiceNodeId = choice.tempId ?? generateNodeId();
+        
+            if(choice.tempId) {
+                tempIdMap.set(choice.tempId, choiceNodeId);
             }
-            },
-            position: choice.position || {x: 0, y: (index + 1) * 100},
-            parentId: questionNodeId,
+
+            if (outgoingEdgeLookup[choiceNodeId]) withOutgoing++;
+        
+            choiceToQuestionMap[choiceNodeId] = questionNodeId;
+            initialNodes.push({
+                id: choiceNodeId,
+                type: 'choice',
+                data: { 
+                choice: {
+                    ...choice,
+                    tempId: choiceNodeId
+                }, 
+                onUpdate: (updatedChoice) => {
+                    onQuizChange(prev => ({
+                    ...prev,
+                    questions: prev.questions.map(q => ({
+                        ...q,
+                        choices: q.choices.map(c => 
+                            c.tempId === choiceNodeId ? {...c, ...updatedChoice} : c
+                        )
+                    }))
+                    }));
+                }
+                },
+                position: choice.position || {x: 0, y: (index + 1) * 100},
+                parentId: questionNodeId,
+            });
+        
+            edges.push({
+                id: `auto-${questionNodeId}-${choiceNodeId}`,
+                source: questionNodeId,
+                target: choiceNodeId,
+                condition: -1,
+                type: 'customEdge',
+                animated: false,
+            });
         });
-    
-        edges.push({
-            id: `auto-${questionNodeId}-${choiceNodeId}`,
-            source: questionNodeId,
-            target: choiceNodeId,
-            condition: -1,
-            type: 'customEdge',
-            animated: false,
-        });
-        });
+
+        questionWithOutgoingMap[questionNodeId] = withOutgoing;
     });
     
-    try {
-        const parsedEdges = parseGraphEdges(quiz.graphEdges);
-        parsedEdges.forEach(edge => {
-        if (edge.condition !== -1) {
-            const sourceId = tempIdMap.get(edge.source) //|| edge.source;
-            const targetId = tempIdMap.get(edge.target) //|| edge.target;
-    
-            if (sourceId || targetId) {
+    parsedGraphEdges.forEach(edge => {
+    if (edge.condition !== -1) {
+        const sourceId = tempIdMap.get(edge.source) //|| edge.source;
+        const targetId = tempIdMap.get(edge.target) //|| edge.target;
+
+        if (sourceId || targetId) {
+            const parentQuestionId = choiceToQuestionMap[sourceId];
+            const withOutgoing = parentQuestionId 
+                ? questionWithOutgoingMap[parentQuestionId] 
+                : 0;
+            
+            const showConditionInput = withOutgoing >= 2;
+
             edges.push({
                 id: `conn-${sourceId}-${targetId}`,
                 source: sourceId,
@@ -309,18 +336,18 @@ export const convertToFlowElements = (quiz, onQuizChange, ind) => {
                 condition: edge.condition,
                 type: 'customEdge',
                 animated: true,
+                data: {
+                    showConditionInput // Передаем булево значение
+                }
                 // markerEnd: {
                 //   type: MarkerType.ArrowClosed,
                 //   width: 20,
                 //   height: 20,
                 // }
             });
-            }
         }
-        });
-    } catch (e) {
-        console.error('Error parsing graph edges:', e);
     }
+    });
     
     const initialNodeIds = new Set(initialNodes.map(n => n.id));
     const orphans = JSON.parse(localStorage.getItem(`quiz_orphans_${ind}`) || '[]');
@@ -346,13 +373,11 @@ export const convertToQuizFormat = (nodes, edges) => {
       start: startNode ? {
         id: startNode.id,
         position: startNode.position,
-        deletable: false,
-        // data: startNode.data
+        deletable: false
       } : null,
       ends: endNodes.map(endNode => ({
         id: endNode.id,
-        position: endNode.position,
-        // data: endNode.data
+        position: endNode.position
       }))
     };
   
@@ -361,7 +386,7 @@ export const convertToQuizFormat = (nodes, edges) => {
       .map(questionNode => ({
         ...questionNode.data.question,
         position: questionNode.position,
-        tempId: questionNode.id, //!!
+        tempId: questionNode.id,
         choices: nodes
           .filter(choiceNode => 
             choiceNode.type === 'choice' && 
@@ -369,7 +394,7 @@ export const convertToQuizFormat = (nodes, edges) => {
           )
           .map(choiceNode => ({
             ...choiceNode.data.choice,
-            tempId: choiceNode.id, //!!
+            tempId: choiceNode.id,
             position: choiceNode.position,
           }))
       }));
@@ -384,7 +409,6 @@ export const convertToQuizFormat = (nodes, edges) => {
       }));
     
     return {
-      // title: "quiz",
       restoreQuestions,
       graphEdgesJSON: serializeGraphEdges(graphEdges),
       startEndNodesPositions: JSON.stringify(startEndData)

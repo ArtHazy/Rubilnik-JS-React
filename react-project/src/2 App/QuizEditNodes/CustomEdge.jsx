@@ -7,7 +7,7 @@ import {
 import { memo } from 'react';
 
 const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected, condition }) => {
-  const { isHighlighted } = data;
+  const { isHighlighted, showConditionInput } = data;
 
   const { setEdges } = useReactFlow(); 
   const [path, labelX, labelY] = getBezierPath  ({
@@ -40,7 +40,7 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected, co
           // strokeDasharray: data?.value > 0 ? '#00ff00' : '#0000ff'
         }}
       />
-      {condition >= 0 && (
+      {showConditionInput && (
         <EdgeLabelRenderer>
           <div
             className="edge-label"

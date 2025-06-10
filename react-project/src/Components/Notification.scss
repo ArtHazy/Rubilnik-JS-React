@@ -11,9 +11,7 @@
     gap: 15px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     z-index: 10001;
-    animation: 
-      slideIn 0.3s ease-out,
-      slideOut 0.3s ease-out forwards;
+    animation: slideIn 0.3s ease-out;
   }
 
   .notification-wrapper {
@@ -31,13 +29,15 @@
     to { transform: translateX(0); }
   }
 
-  // @keyframes slideOut {
-  //   from { transform: translateX(0); }
-  //   to { transform: translateX(150%); }
-  // }
-
-  .notification.closing {
-    animation: slideOut 0.3s ease-out forwards;
+  @keyframes slideOut {
+    from { 
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to { 
+      transform: translateX(100%);
+      opacity: 0;
+    }
   }
 
   .notification.closing {
@@ -46,12 +46,12 @@
   
   .info {
     background: #2196F3;
-    color: white;
+    color: var(--color-dark);
   }
   
   .success {
     background: #4CAF50;
-    color: white;
+    color: var(--color-dark);
   }
   
   .error {
@@ -61,7 +61,7 @@
   
   .warning {
     background: #ff9800;
-    color: white;
+    color: var(--color-dark);
   }
   
   .close-btn {
