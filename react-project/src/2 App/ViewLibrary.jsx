@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { limits } from "../values.mjs";
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
 import { http_delete_quiz, http_post_quiz, http_put_quiz } from "../HTTP_requests.mjs";
@@ -6,38 +6,44 @@ import { useNavigate } from "react-router-dom";
 import "./ViewLibrary.scss"
 
 export const ViewLibrary = () => {
-  let self = getSelfFromLocalStorage();
-  let quizzes = self?.quizzes
-  const [flag, setFlag] = useState(false);
-  
-  function upd() { putSelfInLocalStorage(self), setFlag(!flag) }    
+  const [self, setSelf] = useState(() => getSelfFromLocalStorage());
+  const quizzes = self?.quizzes;
+
+  const updateSelf = (newSelf) => {
+    putSelfInLocalStorage(newSelf);
+    setSelf(newSelf);
+  };
 
   return <div className="ViewLibrary">
     <header>Your library</header>
     <div className="grid">
       {Array.isArray(quizzes)? quizzes.map((q,i)=>
-        <QuizTile quiz={q} ind={i} upd={upd} self={self} quizzes={quizzes}/>
+        <QuizTile quiz={q} ind={i} self={self} setSelf={setSelf} updateSelf={updateSelf}/>
       ): null}
       
-      {(!quizzes || quizzes.length<limits.maxQuizzesLength)? <button id="add" onClick={()=>{
-        let newQuiz = {title:'new quiz', questions:[]}
-        let {isOk, quiz} = http_post_quiz(self,newQuiz,()=>{});
-        if (isOk) {
-          if (!Array.isArray(quizzes)) quizzes = [];
-          quizzes.push({...quiz, isInDB:true}), upd()
-        }
-      }}><span className="material-symbols-outlined">add</span></button>
+      {(!quizzes || quizzes.length<limits.maxQuizzesLength)? 
+        <button id="add" onClick={()=>{
+          let newQuiz = {title:'new quiz', questions:[]}
+          let {isOk, quiz} = http_post_quiz(self,newQuiz,()=>{});
+          if (isOk) {
+            const newSelf = {...self};
+            if (!Array.isArray(quizzes)) newSelf.quizzes = [];
+            newSelf.quizzes.push({...quiz, isInDB:true});
+            updateSelf(newSelf);
+          }
+        }}><span className="material-symbols-outlined">add</span></button>
       : null}
     </div>
   </div>
 }
 
-export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
+export const QuizTile = ({quiz, ind, self, setSelf, updateSelf}) => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [newTitle, setNewTitle] = useState(quiz.title);
   const clickTimeoutRef = useRef(null);
   const isPreloadedRef = useRef(false); // Флаг предзагрузки
+  const clickCountRef = useRef(0);
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -48,44 +54,30 @@ export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
   };
 
   const handleClick = () => {
-    if (clickTimeoutRef.current) {
-      clearTimeout(clickTimeoutRef.current);
-      clickTimeoutRef.current = null;
-    }
-    
+    // Предзагрузка компонента (оставляем вашу логику)
     if (!isPreloadedRef.current) {
-      console.log("Начало предзагрузки компонента");
       import("./QuizEditNodes/ReactFlowComponent").then(module => {
-        console.log("Компонент предзагружен");
         isPreloadedRef.current = true;
-      }).catch(error => {
-        console.error("Ошибка предзагрузки:", error);
       });
     }
 
-    if (clickTimeoutRef.current) {
+    clickCountRef.current++;
+    
+    if (clickCountRef.current === 1) {
+      // Первый клик - устанавливаем таймер
+      clickTimeoutRef.current = setTimeout(() => {
+        if (clickCountRef.current === 1 && !isEditing) {
+          console.log("Одинарный клик");
+          navigate(`/edit-quiz/${ind}`);
+        }
+        clickCountRef.current = 0;
+      }, 300);
+    } else if (clickCountRef.current === 2) {
+      // Второй клик - обрабатываем как двойной
       clearTimeout(clickTimeoutRef.current);
-      clickTimeoutRef.current = null;
-      return;
+      clickCountRef.current = 0;
+      setIsEditing(true);
     }
-
-    const timeout = setTimeout(() => {
-      console.log("Одинарный клик");
-      // Если в режиме редактирования - не переходим
-      if (!isEditing) {
-        navigate(`/edit-quiz/${ind}`);
-      }
-      clickTimeoutRef.current = null;
-    }, 300);
-  };
-
-  const handleDoubleClick = () => {
-    if (clickTimeoutRef.current) {
-      clearTimeout(clickTimeoutRef.current);
-      clickTimeoutRef.current = null;
-    }
-
-    setIsEditing(true);
   };
 
   const handleTitleSave = () => {
@@ -96,31 +88,46 @@ export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
       const { isOk, quiz: serverQuiz } = http_put_quiz(self, updatedQuiz, () => {});
       
       if (isOk) {
-        // Обновляем локальное состояние
-        quizzes[ind] = serverQuiz;
-        self.quizzes = quizzes;
-        putSelfInLocalStorage(self);
-        upd();
+        const newSelf = {...self};
+        newSelf.quizzes = [...newSelf.quizzes];
+        newSelf.quizzes[ind] = serverQuiz;
+        updateSelf(newSelf);
       } else {
-        // Если ошибка - возвращаем оригинальное название
         setNewTitle(quiz.title);
       }
     }
     setIsEditing(false);
   };
 
+  const handleDelete = () => {
+    if (Array.isArray(self.quizzes) && confirm("Delete quiz?")) {
+      if (http_delete_quiz(self, quiz.id, () => {})) {
+        localStorage.setItem(`quiz_orphans_${ind}`, '[]');
+        const newSelf = {...self};
+        newSelf.quizzes = [
+          ...newSelf.quizzes.slice(0, ind),
+          ...newSelf.quizzes.slice(ind + 1)
+        ];
+        updateSelf(newSelf);
+      }
+    }
+  };
+
+
+  // Очистка таймера при размонтировании
+  useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <div className='quiz-tile-container' onDoubleClick={handleDoubleClick}>
+    <div className='quiz-tile-container'>
       <button 
         className="delete-btn" 
-        onClick={() => {
-          if (Array.isArray(quizzes) && confirm("Delete quiz?")) {
-            if (http_delete_quiz(self, quiz.id, () => {})) {
-              localStorage.setItem(`quiz_orphans_${ind}`, '[]'); 
-              console.log('Deleted:', quizzes.splice(ind, 1), upd());
-            }
-          }
-        }}
+        onClick={handleDelete}
       >
         <span className="material-symbols-outlined">delete</span>
       </button>
@@ -147,17 +154,6 @@ export const QuizTile = ({quiz, ind, upd, self, quizzes}) => {
               }
             }}
             autoFocus
-            style={{
-              width: '50%',
-              padding: '8px',
-              fontSize: '1em',
-              border: 'none',
-              outline: 'none',
-              backgroundColor: 'transparent',
-              borderBottom: '2px solid #4285f4',
-              textAlign: 'center',
-              boxSizing: 'border-box'
-            }}
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
