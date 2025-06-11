@@ -8,7 +8,7 @@ import { ViewRegister } from '../1 Authentication/ViewRegister.jsx';
 import { ViewQuizEdit } from "../2 App/ViewQuizEdit.jsx";
 import { ViewJoin } from '../2 App/ViewJoin.jsx';
 import { ViewError } from '../4 Error/ViewError.jsx';
-import { NotificationProvider } from '../2 App/ContextNotification.jsx';
+import { NotificationProvider } from '../Components/ContextNotification.jsx';
 import { Play } from '../3 Play/Play.jsx'
 import LanguageSwitcher from '../Components/LanguageSwitcher.jsx';
 

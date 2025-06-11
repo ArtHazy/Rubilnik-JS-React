@@ -1,5 +1,5 @@
 import { AUTH_SERVICE_URL } from "./values.mjs";
-import { useNotification } from "./2 App/ContextNotification";
+import { useNotification } from "./Components/ContextNotification";
 
 export const onerror = (e) => {const { showNotification } = useNotification(); showNotification(e.message, error);}
 

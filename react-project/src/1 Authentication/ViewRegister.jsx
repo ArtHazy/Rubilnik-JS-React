@@ -3,7 +3,7 @@ import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs
 import { http_user_register } from '../HTTP_requests.mjs';
 import "./ViewAuth.scss"
 import { handleEnterKey } from '../functions.mjs';
-import {useNotification} from "../2 App/ContextNotification.jsx";
+import {useNotification} from "../Components/ContextNotification.jsx";
 
 export const ViewRegister = () => {
     const { showNotification } = useNotification();

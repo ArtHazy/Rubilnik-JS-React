@@ -4,7 +4,7 @@ import { startRoomAsHost } from '../ViewLibrary';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { loadQuizFromFile } from './functionsEditor';
-import { useNotification } from "../ContextNotification";
+import { useNotification } from "../../Components/ContextNotification";
 
 import './PanelControls.scss';
 

@@ -1,18 +1,18 @@
 import { createContext, useContext, useState } from 'react';
-import Notification from '../Components/Notification';
+import Notification from './Notification';
 
 const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
 
-    const showNotification = (message, type = 'info') => {
+    const showNotification = (message, type = 'info', duration = 3300) => {
         const id = Date.now();
         setNotifications(prev => [...prev, { id, message, type }]);
         
         setTimeout(() => {
-        closeNotification(id);
-        }, 3000);
+            closeNotification(id);
+        }, duration);
     };
 
     const closeNotification = (id) => {

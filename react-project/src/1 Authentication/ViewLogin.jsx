@@ -3,7 +3,7 @@ import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs
 import { http_user_login } from '../HTTP_requests.mjs';
 import "./ViewAuth.scss"
 import { handleEnterKey } from '../functions.mjs';
-import { useNotification } from '../2 App/ContextNotification';
+import { useNotification } from '../Components/ContextNotification';
 
 export const ViewLogin = () => {
     const { showNotification } = useNotification();
@@ -24,6 +24,8 @@ export const ViewLogin = () => {
                     // let load = document.createElement('div')
                     // load.innerHTML = '/..'
                     // submit.after(load)
+
+                    showNotification('failed to login', 'error')
 
                     let email = document.getElementById('email-input').value;
                     let password = document.getElementById('password-input').value;

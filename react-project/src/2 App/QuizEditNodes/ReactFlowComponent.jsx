@@ -25,7 +25,7 @@ import { http_put_quiz } from "../../HTTP_requests.mjs"
 import { convertToQuizFormat, convertToFlowElements, calculateNewPositionChild, checkMaxChoices, 
   getSourceTargetPosition, getValidSourceNode, parseGraphEdges, serializeGraphEdges, 
   filterEdges, generateNodeId } from "./functionsEditor"
-import { useNotification } from '../ContextNotification';
+import { useNotification } from '../../Components/ContextNotification';
 
 const nodeColor = (node) => {
   switch (node.type) {
