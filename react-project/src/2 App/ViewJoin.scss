@@ -1,25 +1,12 @@
 @import "../main/mixin.scss";
 
-.ViewSelf, .ViewJoin{ input{text-align: center; }}
-
 .ViewJoin{
     @include base-view;
     @include grid-overlay;
     height: 100svh;
 
-    ::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: -1; /* Помещаем фон под основной контент */
-    }
+    input{ text-align: center; }
     
-    .form{ 
-        position: relative;
-        margin: auto;
-        z-index: 2;
-    }
     .RoomKeyInput{
         @include hstack();
         padding: 0;
