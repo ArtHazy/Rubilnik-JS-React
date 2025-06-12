@@ -1,6 +1,5 @@
 import React, {lazy} from 'react'
 import ReactDOM from 'react-dom/client'
-import './main.scss'
 import { App } from '../2 App/App.jsx';
 import { createBrowserRouter,RouterProvider} from "react-router-dom";
 import { ViewLogin } from '../1 Authentication/ViewLogin.jsx';
@@ -11,6 +10,7 @@ import { ViewError } from '../4 Error/ViewError.jsx';
 import { NotificationProvider } from '../Components/ContextNotification.jsx';
 import { Play } from '../3 Play/Play.jsx'
 import LanguageSwitcher from '../Components/LanguageSwitcher.jsx';
+// import './main.scss'
 
 // const Play = lazy(() => import('../3 Play/Play.jsx'));
 

@@ -54,7 +54,7 @@ export const QuizTile = ({quiz, ind, self, setSelf, updateSelf}) => {
   };
 
   const handleClick = () => {
-    // Предзагрузка компонента (оставляем вашу логику)
+    // Предзагрузка компонента
     if (!isPreloadedRef.current) {
       import("./QuizEditNodes/ReactFlowComponent").then(module => {
         isPreloadedRef.current = true;

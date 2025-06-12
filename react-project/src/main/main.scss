@@ -90,13 +90,6 @@ body,#root {
   a { color: var(--color-split2); }
 }
 
-.form{
-  margin: auto;
-  box-sizing: border-box;
-  color: var(--color-split2);
-  text-transform: uppercase;
-}
-
 button {
   display: flex;
   justify-content: center;
@@ -168,9 +161,9 @@ input[type='text'],input[type='password'],input[type='email']{
   
   border-radius: 8px;
   z-index: 1;
-  width: 100%;
-  max-width: 8cm ;
-  vstack{
-    width: 100%;
-  }
+  width: auto;
+
+  box-sizing: border-box;
+  color: var(--color-split2);
+  text-transform: uppercase;
 }

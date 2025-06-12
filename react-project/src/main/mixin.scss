@@ -24,6 +24,7 @@
     flex-direction: column;
     box-sizing: border-box;
     align-items: center;
+    justify-content: center;
     position: relative
 }
 
@@ -97,7 +98,6 @@
         background-blend-mode: multiply;
         mix-blend-mode: overlay;
         pointer-events: none;
-        //z-index: 1;
     }
 }
 

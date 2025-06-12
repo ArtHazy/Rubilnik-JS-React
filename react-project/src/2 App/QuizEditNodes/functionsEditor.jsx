@@ -243,9 +243,6 @@ export const convertToFlowElements = (quiz, onQuizChange, ind) => {
             tempIdMap.set(question.tempId, questionNodeId);
         }
 
-        // Временные хранилища для элементов вопроса
-        const choiceNodes = [];
-        const questionEdges = [];
         let withOutgoing = 0;  // Счетчик choice с исходящими ребрами
     
         initialNodes.push({
@@ -353,13 +350,6 @@ export const convertToFlowElements = (quiz, onQuizChange, ind) => {
     const orphans = JSON.parse(localStorage.getItem(`quiz_orphans_${ind}`) || '[]');
     const filteredOrphans = orphans.filter(node => !initialNodeIds.has(node.id));
     const nodes = initialNodes.concat( filteredOrphans );
-    
-    // //EDIT STARTEDGE
-    // const startEdgeIndex = edges.findIndex(edge => edge.source === startNode.id);
-    // if (startEdgeIndex) {
-    //   const [startEdge] = edges.splice(startEdgeIndex, 1);
-    //   edges.unshift(startEdge);
-    // }
     
     return { nodes, edges };
 };      
