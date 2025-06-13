@@ -16,7 +16,6 @@ const Sidebar = () => {
         className="sidebar-button question-button"
         role="button"
       >
-        {/* <FaQuestionCircle size={24} color="#FFB300" /> */}
         <span>Вопрос</span>
       </div>
 
@@ -27,7 +26,6 @@ const Sidebar = () => {
         className="sidebar-button choice-button"
         role="button"
       >
-        {/* style={{ fontSize: '16px' }} */}
         <span>Ответ</span> 
       </div>
       {/* Кнопка финиша */}

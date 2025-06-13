@@ -75,24 +75,6 @@
       
     }
   
-    .icon-container {
-      //@include material-symbols-outlined();
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 3;
-      pointer-events: none;
-      
-      // Ваша иконка
-      .icon {
-        width: 40px;
-        height: 40px;
-        // background: url('your-icon.svg') no-repeat center;
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-      }
-    }
-  
     .edit-btn {
       position: relative;
       height: 100%;
@@ -166,11 +148,6 @@
         position: relative;
         z-index: 2;
       }
-      
-      // Для поддержки градиентов в старых браузерах
-      // @supports not (background: linear-gradient(0deg, #000, #fff)) {
-      //   background-color: hsl(var(--hue-1), 70%, #{$base-lightness});
-      // }
     }
   
     .delete-btn,

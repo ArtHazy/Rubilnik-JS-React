@@ -103,7 +103,7 @@ button {
   font-family: inherit;
   // fill: var(--color-light);
   // color: var(--color-dark);
-  border-radius: 8px;
+  border-radius: var(--btn-radius);
   cursor: pointer;
   @include button-style();
   &.big{ @include outline-hover(); min-width: 2cm; padding: 8px; }
@@ -159,7 +159,7 @@ input[type='text'],input[type='password'],input[type='email']{
   background: var(--color-dark);
   @include grid();
   
-  border-radius: 8px;
+  border-radius: 12px;
   z-index: 1;
   width: auto;
 

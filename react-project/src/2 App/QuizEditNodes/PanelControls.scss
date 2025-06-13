@@ -1,60 +1,68 @@
 .panel-controls-container {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 8px;
-    padding: 8px;
-    border: 2px dashed #B0B0B0;
-    box-shadow: 0 4px 20px rgba(36, 36, 36, 0.12);
-    border-radius: 12px;
-    backdrop-filter: blur(4px);
     position: absolute;
     z-index: 1000;
     top: 20px;
     left: 20px;
     background: transparent;
 }
+
+.buttons-block {
+    flex-direction: column;
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    border: 2px dashed #B0B0B0;
+    box-shadow: 0 4px 20px rgba(36, 36, 36, 0.12);
+    width: fit-content;
+    backdrop-filter: blur(4px);
+}
   
 .title-container {
     margin-bottom: 8px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #e0e0e0;
     width: 100%;
-}
-  
-.title-input {
-    width: 100%;
-    padding: 4px 0;
-    font-size: 14px;
-    border: none;
-    outline: none;
-    background-color: transparent;
-    border-bottom: 1px solid transparent;
-    transition: border-bottom 0.2s ease;
-    
-    &:focus {
-        border-bottom: 2px solid #4285f4;
+
+    input {
+        backdrop-filter: blur(4px);
+        box-shadow: 0 4px 20px rgba(36, 36, 36, 0.12);
+        width: 50%;
+        padding: 4px 0;
+        text-align: center;
+        // font-size: 14px;
+        border: none;
+        outline: none;
+        border-bottom: 2px solid var(--color-light);
+        background-color: transparent;
+        transition: border-bottom 0.2s ease;
+        color: var(--color-light);
+        
+        &:focus {
+            outline: none !important;
+            outline-offset: 0 !important;
+            // color: var(--choice-1-color);
+            border-bottom: 2px solid var(--choice-1-color);
+        }
     }
 }
   
 .control-button {
-    // background: transparent;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 4px;
-    border-radius: 4px;
+    border-radius: 12px;
     transition: background 0.2s ease;
+    width: 40px;
+    height: 40px;
     
     &:hover {
         background: rgba(0, 0, 0, 0.05);
     }
-    
-    // .material-symbols-outlined {
-    //     font-size: 20px;
-    //     color: #333;
-    // }
 }
   
 .file-input {

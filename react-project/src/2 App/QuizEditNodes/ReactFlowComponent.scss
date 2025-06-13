@@ -48,7 +48,6 @@
   
 /* Панель сайдбара */
 .sidebar-panel {
-    padding: 12px;
     border-radius: 12px;
     position: absolute;
 }
@@ -68,9 +67,9 @@
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1000;
   
-    &:hover {
+    // &:hover {
         // background: rgba(217, 217, 217, 0.98);
-    }
+    // }
 }
   
 /* Мини-карта */
