@@ -102,8 +102,6 @@ export const getValidSourceNode = (targetPosition, targetNode, nodes, parentNode
       ['choice', 'choice']
     ];
   
-    // console.log(targetPosition);
-  
     const sourceNode = nodes.find(node => {
       if (
             node.id === targetNode.id ||         // Нельзя к себе
@@ -154,7 +152,7 @@ export const parseGraphEdges = (edgesString) => {
                 id: e.id ?? `edge-${e.source}-${e.target}`,
                 source: e.source,
                 target: e.target,
-                condition: e.condition || 0,
+                condition: e.condition ?? 0,
             }));
     } catch (e) {
         console.error('Error parsing graph edges:', e);
@@ -169,11 +167,11 @@ export const parseGraphEdges = (edgesString) => {
         e => e.source != null && 
         e.target != null && 
         e.id !== 'temp-edge')
-      .map(({ id, source, target, condition }) => ({
+      .map(({ id, source, target, data }) => ({
         id: id ?? `edge-${source}-${target}`,
         source: source,
         target: target,
-        condition: condition || 0,
+        condition: data?.condition ?? 0,
     }))
 );
   
@@ -304,7 +302,9 @@ export const convertToFlowElements = (quiz, onQuizChange, ind) => {
                 id: `auto-${questionNodeId}-${choiceNodeId}`,
                 source: questionNodeId,
                 target: choiceNodeId,
-                condition: -1,
+                data: {
+                    condition: -1,
+                },
                 type: 'customEdge',
                 animated: false,
             });
@@ -314,36 +314,36 @@ export const convertToFlowElements = (quiz, onQuizChange, ind) => {
     });
     
     parsedGraphEdges.forEach(edge => {
-    if (edge.condition !== -1) {
-        const sourceId = tempIdMap.get(edge.source) //|| edge.source;
-        const targetId = tempIdMap.get(edge.target) //|| edge.target;
+        if (edge.condition !== -1) {
+            const sourceId = tempIdMap.get(edge.source) //|| edge.source;
+            const targetId = tempIdMap.get(edge.target) //|| edge.target;
 
-        if (sourceId || targetId) {
-            const parentQuestionId = choiceToQuestionMap[sourceId];
-            const withOutgoing = parentQuestionId 
-                ? questionWithOutgoingMap[parentQuestionId] 
-                : 0;
-            
-            const showConditionInput = withOutgoing >= 2;
+            if (sourceId || targetId) {
+                const parentQuestionId = choiceToQuestionMap[sourceId];
+                const withOutgoing = parentQuestionId 
+                    ? questionWithOutgoingMap[parentQuestionId] 
+                    : 0;
+                
+                const showConditionInput = withOutgoing >= 2;
 
-            edges.push({
-                id: `conn-${sourceId}-${targetId}`,
-                source: sourceId,
-                target: targetId,
-                condition: edge.condition,
-                type: 'customEdge',
-                animated: true,
-                data: {
-                    showConditionInput // Передаем булево значение
-                }
-                // markerEnd: {
-                //   type: MarkerType.ArrowClosed,
-                //   width: 20,
-                //   height: 20,
-                // }
-            });
+                edges.push({
+                    id: `conn-${sourceId}-${targetId}`,
+                    source: sourceId,
+                    target: targetId,
+                    type: 'customEdge',
+                    animated: true,
+                    data: {
+                        condition: showConditionInput? edge.condition : 0,
+                        showConditionInput, // Передаем булево значение
+                    }
+                    // markerEnd: {
+                    //   type: MarkerType.ArrowClosed,
+                    //   width: 20,
+                    //   height: 20,
+                    // }
+                });
+            }
         }
-    }
     });
     
     const initialNodeIds = new Set(initialNodes.map(n => n.id));
@@ -390,12 +390,14 @@ export const convertToQuizFormat = (nodes, edges) => {
       }));
   
     const graphEdges = edges
-      .filter((e) => e.condition !== -1)
+      .filter((e) => e.data?.condition !== -1)
       .map((e) => ({
         id: e.id ?? `conn-${e.source}-${e.target}`,
         source: e.source,
         target: e.target,
-        condition: e.condition || 0,
+        data: {
+            condition: e.data?.condition ?? 0,
+        }
       }));
     
     return {

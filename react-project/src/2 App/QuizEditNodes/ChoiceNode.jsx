@@ -10,7 +10,6 @@ const isImageUrl = (url) => {
 const ChoiceNode = ({ data, onUpdate }) => {
   const { choice, isHighlighted } = data
 
-
   const [inputTitle, setInputTitle] = useState(choice.title)
   const [inputValue, setInputValue] = useState(choice.value)
   const [isImage, setIsImage] = useState(() => isImageUrl(choice.title)); 

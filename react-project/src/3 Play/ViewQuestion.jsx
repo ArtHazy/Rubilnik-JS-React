@@ -2,7 +2,7 @@ import {useEffect, useState} from "react"
 import { WSPlayAPI } from "../WS_communication.mjs";
 import "./ViewQuestion.scss"
 
-export const ViewQuestion = ({isHost, socket, currentQuestion, setCurrentQuestion, setCurrentQuestionInd, isFinished, onNext}) => {
+export const ViewQuestion = ({isHost, socket, currentQuestion, setCurrentQuestion, setCurrentQuestionInd, isFinished, onNext, player}) => {
 
   const [revealedChoices, setrevealedChoices] = useState([])
 
@@ -20,8 +20,9 @@ export const ViewQuestion = ({isHost, socket, currentQuestion, setCurrentQuestio
         console.log('alert: revealed correct choices:', revealedChoices);
         setrevealedChoices(revealedChoices)
       }
-      socket.eventActions.choice = ({user,questionInd,choiceInd})=>{
-        console.log('alert: choice from '+user.id+":"+user.name+" Q:"+questionInd+" C:"+choiceInd);
+      socket.eventActions.choice = ({user,questionId,choiceInd})=>{
+        player.recordUserChoice(user, questionId, choiceInd);
+        // console.log('alert: choice from '+user.id+":"+user.name+" Q:"+questionId+" C:"+choiceInd);
       }
     }
   },[])
@@ -33,8 +34,8 @@ export const ViewQuestion = ({isHost, socket, currentQuestion, setCurrentQuestio
     if (isRevealed) choicesToRender = revealedChoices;
     else            choicesToRender = currentQuestion?.choices;
     
-    console.log('revealedChoices', revealedChoices);
-    console.log('choicestorender', choicesToRender);
+    // console.log('revealedChoices', revealedChoices);
+    // console.log('choicestorender', choicesToRender);
     
 
     return choicesToRender?.map((choice,ind) => 

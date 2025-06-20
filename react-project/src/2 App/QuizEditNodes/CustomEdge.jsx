@@ -6,8 +6,8 @@ import {
 } from '@xyflow/react';
 import { memo } from 'react';
 
-const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected, condition }) => {
-  const { isHighlighted, showConditionInput } = data;
+const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected }) => {
+  const { condition, isHighlighted, showConditionInput } = data;
 
   const { setEdges } = useReactFlow(); 
   const [path, labelX, labelY] = getBezierPath  ({
@@ -20,7 +20,10 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected, co
   const handleChange = (e) => {
     const value = Math.min(100, Math.max(0, e.target.value)); // Ограничение 0-100
     setEdges(es => es.map(edge => 
-      edge.id === id ? { ...edge, condition: value } : edge
+      edge.id === id ? { 
+        ...edge, 
+        data: { ...edge.data, condition: value }
+      } : edge
     ));
   };
 
@@ -37,7 +40,6 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected, co
             '#888',
           strokeWidth: 2,
           strokeDasharray: data?.value > 50 ? '5 5' : 'none',
-          // strokeDasharray: data?.value > 0 ? '#00ff00' : '#0000ff'
         }}
       />
       {showConditionInput && (

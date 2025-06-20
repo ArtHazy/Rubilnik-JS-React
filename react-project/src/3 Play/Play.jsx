@@ -82,9 +82,7 @@ export const Play = () => {
       }
     }
 
-
-
-    useEffect(() =>{
+    useEffect(() => {
       const socket = new WSPlayAPI()
 
       socket.eventActions.open = ()=>{
@@ -170,7 +168,8 @@ export const Play = () => {
         startQuestionId={startQuestionId} /> : null}
       {socketStatus == socketStates.inRoom && gameState === gameStates.live ? <ViewQuestion isHost={isHost} socket={socket} currentQuestion={currentQuestion} setCurrentQuestion={setCurrentQuestion} setCurrentQuestionInd={setCurrentQuestionInd}
         isFinished={isFinished}
-        onNext={handleNextQuestion}/> : null}
+        onNext={handleNextQuestion}
+        player={player}/> : null}
       {socketStatus == socketStates.inRoom && gameState === gameStates.finished ? <ViewResult isHost={isHost} socket={socket} roomId={roomId} results={results} roommates={roommates} /> : null}
 
       {/*<div className="roommates-counter"> connected players: { Object.keys(roommates).length } </div>*/}

@@ -291,7 +291,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, [quiz.questions]);
 
   const deleteSelectedElements = useCallback(() => {
-    console.log("SELECT");    
+    // console.log("SELECT");    
     // Удаляем выделенные ноды
     if (selectedElements.nodes.length > 0) {
       onNodesDelete(selectedElements.nodes);
@@ -308,7 +308,6 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, [selectedElements, onNodesDelete, onEdgesDelete]);
 
   useEffect(() => {
-    console.log("START START START", quiz.startEndNodesPositions);
     if (!quiz.startEndNodesPositions) {
       const newStartNode = {
         id: `START_NODE_${ind}`,
@@ -339,7 +338,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     setNodes(newNodes);
     setEdges(newEdges);
 
-    console.log("quiz", quiz);
+    // console.log("quiz", quiz);
 
     const selfOld = getSelfFromLocalStorage();
     selfOld.quizzes[ind] = quiz;
@@ -385,7 +384,6 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
     // for CHOICE
     const targetPosition = getSourceTargetPosition(draggedNode);
-    console.log("targetPosition", targetPosition);
 
     const targetEnd = draggedNode.type === 'end';
     const targetStart = draggedNode.type === 'start';
@@ -406,8 +404,6 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         targetPosition: (targetEnd || targetStart)? 'top' : 'bottom',
       }
     });
-
-    console.log("tempEdge", tempEdge);
   }, []);
 
   const onNodeDrag = useCallback(throttle((event, draggedNode) => {
@@ -474,9 +470,9 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     const choicesCount = targetNode.data?.question?.choices?.length || 0;
     if (checkMaxChoices(choicesCount)) return;
 
-    console.log("pos", draggedNode.position);
+    // console.log("pos", draggedNode.position);
     const newRelativePosition = calculateNewPositionChild(draggedNode, targetNode, parentNodedragged);
-    console.log("NEW", newRelativePosition);
+    // console.log("NEW", newRelativePosition);
 
     // let condition = 0;
     // let isInternal = false;
@@ -542,7 +538,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
   useEffect(() => {
     const handleSave = () => {
-      console.log("qweertyBD");
+      // console.log("qweertyBD");
       // saveChanges();
       handleAutoSave();
     };
@@ -691,7 +687,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
       if (sourceNode?.type === 'choice' && targetNode?.type === 'question') {
         isInternal = sourceNode.parentId === targetNode.id;
         if (isInternal) {
-          condition = edges.find(e => e.source === sourceId && e.target === targetId)?.condition || 0;
+          condition = edges.find(e => e.source === sourceId && e.target === targetId)?.data?.condition ?? 0;
         }  
       }
 
@@ -711,7 +707,9 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         type: 'customEdge',
         animated: conn,
         id: (conn? 'conn' : 'auto') + `-${sourceNode.id}-${targetNode.id}`,
-        condition: condition,
+        data: {
+          condition: condition,
+        }
         // markerEnd: {
         //   type: MarkerType.ArrowClosed,
         //   width: 20,

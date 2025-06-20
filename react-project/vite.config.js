@@ -37,10 +37,6 @@ export default defineConfig(({mode})=> {
                 return 'vendor-react-dom';
               }
 
-              // if (/[\\/]node_modules[\\/]@xyflow[\\/]/.test(id)) {
-              //   return 'vendor-xyflow';
-              // }
-
               // 2. Только ядро React без React DOM
               if (/[\\/]node_modules[\\/](react|scheduler)[\\/]/.test(id)) {
                 return 'vendor-react-core';
