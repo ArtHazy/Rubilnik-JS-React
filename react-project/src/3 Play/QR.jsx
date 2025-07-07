@@ -1,11 +1,26 @@
-import "./QR.scss"
+import React, { useState, useEffect } from 'react';
+import "./QR.scss";
+import QRCode from 'qrcode';
 
-export const QR = ({label,data,isSmall})=>{
+export const QR = ({ label, data, isSmall }) => {
     const classname = "QR" + (isSmall ? " small" : "");
-    return <div className={classname}>
-        {/*<img src={"https://api.qrserver.com/v1/create-qr-code/?size=128x128&data="+roomId}/>*/}
-        <img src={"https://api.qrserver.com/v1/create-qr-code/?size=128x128&data="+data}/>
-        <span>{label}</span>
-        {/*{ window.server?.lan_connection_string? <img src={"https://api.qrserver.com/v1/create-qr-code/?size=128x128&data="+window.server.lan_connection_string}/> : null }*/}
-    </div>
-}
+    const [qrDataUrl, setQrDataUrl] = useState('');
+
+    useEffect(() => {
+        if (data) {
+            QRCode.toDataURL(data,{margin: 0, width:256, height:256},(error, url) => {
+                if (error) console.error(error);
+                else setQrDataUrl(url);
+            });
+        }
+    }, [data]);
+
+    console.log("qrDataUrl: "+qrDataUrl)
+
+    return (
+        <div className={classname}>
+            <img src={qrDataUrl} alt="QR Code" />
+            <span>{label}</span>
+        </div>
+    );
+};
