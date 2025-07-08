@@ -1,6 +1,26 @@
 @import "../main/main.scss";
 
 .ViewJoin{
+    .header-container {
+        position: absolute;
+        top: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        
+        header {
+          color: var(--color-light);
+          font-size: 1.35em;
+        }
+    }
+
+    .form-field {
+        @include vstack;
+        width: 100%;
+        align-items: flex-start; // Выравнивание меток по левому краю
+    }
+
     @include base-view;
     @include grid-overlay;
     height: 100svh;
