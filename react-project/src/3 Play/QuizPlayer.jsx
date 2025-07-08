@@ -1,5 +1,5 @@
 import { convertToFlowElements } from "../2 App/QuizEditNodes/functionsEditor";
-import { useNotification } from "../Components/ContextNotification";
+// import { useNotification } from "../Components/ContextNotification";
 
 export class QuizPlayer {
     constructor(quiz, onQuizChange, ind) {
@@ -11,7 +11,7 @@ export class QuizPlayer {
 
         this.userAnswers = new Map(); // questionId -> Map(userId -> choiceInd)
         this.choiceCounts = new Map(); // questionId -> Map(choiceInd -> count)
-        const { showNotification } = useNotification();
+        // const { showNotification } = useNotification();
     }
 
     getNodeById(id) {
@@ -190,7 +190,7 @@ export class QuizPlayer {
         const questionDbId = this.getCurrentQuestionDbId();
         if (!questionDbId) {
             console.log("No question DB ID, returning null");
-            showNotification("No question DB ID, returning null", 'error') //БЕЗ ПЕРЕВОДА
+            // showNotification("No question DB ID, returning null", 'error') //БЕЗ ПЕРЕВОДА
             console.groupEnd();
             return null;
         }

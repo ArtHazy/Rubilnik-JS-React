@@ -8,8 +8,38 @@
     max-width: 1200px;
     @include scrollbar-hidden();
 
-    // button {
-    //     color: var(--color-dark);
+    // .controls {
+    //     margin: var(--def-gap);
+    //     display: flex;
+    //     justify-content: center;
+    //     gap: var(--def-gap);
+    
+    //     button {
+    //         border-radius: var(--def-border-radius);
+    //         border: none;
+    //         color: var(--color-dark);
+    //         font-size: 1em;
+    //         cursor: pointer;
+    //         box-sizing: border-box;
+    //         position: relative;
+    //         overflow: hidden;
+    //       padding: 12px 24px;
+    //       min-width: 200px;
+    //       font-weight: bold;
+    //       display: flex;
+    //       justify-content: center;
+    //       align-items: center;
+    //       background: var(--choice-1-color);
+    //       transition: filter 0.2s;
+    
+    //       &:hover {
+    //         filter: brightness(0.9);
+    //       }
+    
+    //       &:active {
+    //         filter: brightness(0.8);
+    //       }
+    //     }
     // }
 
     .head{

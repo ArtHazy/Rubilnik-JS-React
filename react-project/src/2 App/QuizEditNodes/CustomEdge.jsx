@@ -7,7 +7,7 @@ import {
 import { memo } from 'react';
 
 const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected }) => {
-  const { condition, isHighlighted, showConditionInput } = data;
+  const { condition, isHighlighted, isInvalid, showConditionInput } = data;
 
   const { setEdges } = useReactFlow(); 
   const [path, labelX, labelY] = getBezierPath  ({
@@ -33,13 +33,13 @@ const CustomEdge = ({ id, sourceX, sourceY, targetX, targetY, data, selected }) 
         id={id} 
         path={path}
         style={{
-          stroke: 
+          stroke: isInvalid ? '#D6768E' :
             selected ? '#6366f1' : 
             isHighlighted ? '#b1b1b7':
-            condition > 0? '#00ff00':  //похоже, не работает, тк condition = 0
+            // condition > 0? '#00ff00':
             '#888',
-          strokeWidth: 2,
-          strokeDasharray: data?.value > 50 ? '5 5' : 'none',
+          strokeWidth: isInvalid ? 3 : 2,
+          strokeDasharray: isInvalid ? '5 5' : 'none',
         }}
       />
       {showConditionInput && (

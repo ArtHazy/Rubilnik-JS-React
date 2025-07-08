@@ -214,6 +214,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const [hoveredQuestionId, setHoveredQuestionId] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedElements, setSelectedElements] = useState({ nodes: [], edges: [] });
+  const [invalidEdges, setInvalidEdges] = useState([]);
 
   const orphans = useMemo(() => 
     nodes.filter(node => 
@@ -240,14 +241,16 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const highlightedEdges = useMemo(() => {
     return edges.map(edge => ({
       ...edge,
+      className: invalidEdges.includes(edge.id) ? 'invalid-edge' : '',
       data: {
         ...edge.data,
         isHighlighted: hoveredQuestionId 
           ? (edge.source === hoveredQuestionId || edge.target === hoveredQuestionId)
-          : false
+          : false,
+        isInvalid: invalidEdges.includes(edge.id) 
       }
     }));
-  }, [edges, hoveredQuestionId]);
+  }, [edges, hoveredQuestionId, invalidEdges]);
 
   const saveChanges = useCallback(() => {
     const { restoreQuestions, graphEdgesJSON, startEndNodesPositions } = convertToQuizFormat(getNodes(), getEdges());
@@ -336,6 +339,9 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   }, [orphans, isDragging]);
 
   useEffect(() => {
+    // Сбрасываем подсветку при изменении графа
+    setInvalidEdges([]);
+
     const { nodes: newNodes, edges: newEdges } = convertToFlowElements(quiz, onQuizChange, ind);
     setNodes(newNodes);
     setEdges(newEdges);
@@ -517,11 +523,12 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
   ////////////////////////
 
-  const handleAutoSave = useCallback(
+  const handleAutoSave = useCallback(//() => {
     throttle(() => {
       try {
         const violatingEdges = checkGraphValidity(getNodes(), getEdges());
-      
+        setInvalidEdges(violatingEdges);
+
         if (violatingEdges.length > 0) {
           showNotification(t('editor.graphIssuesAlert', { issues: violatingEdges.join('\n') }));
           return;
@@ -542,6 +549,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
       } catch (error) {
         showNotification(t('editor.saveError'), 'error');
       }
+    // }
     }, 5000),
     [ind, self, quiz]
   );
@@ -555,7 +563,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     debouncedSave();
     
     return () => debouncedSave.cancel();
-  }, [nodes, edges, handleAutoSave, saveChanges]);
+  }, [nodes, edges, saveChanges]);
 
   ///////////////////////////
 
