@@ -1,27 +1,45 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
+import i18n from '../main/i18n';
 import "./LanguageSwitcher.scss"
 
 const LanguageSwitcher = () => {
-  const { i18n } = useTranslation();
-  const [isRuActive, setIsRuActive] = useState(i18n.language === 'ru');
+  const [currentLang, setCurrentLang] = useState(i18n.language);
   
+  useEffect(() => {
+    const handleLanguageChange = (lng) => {
+      setCurrentLang(lng);
+    };
+    
+    i18n.on('languageChanged', handleLanguageChange);
+    
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
+
   const toggleLanguage = () => {
-    const newLanguage = isRuActive ? 'en' : 'ru';
-    i18n.changeLanguage(newLanguage);
-    localStorage.setItem('lang', newLanguage);
-    setIsRuActive(!isRuActive);
+    const newLanguage = currentLang === 'ru' ? 'en' : 'ru';
+    i18n.changeLanguage(newLanguage)
+      .then(() => {
+        localStorage.setItem('lang', newLanguage);
+      })
+      .catch(error => {
+        console.error('Language change failed:', error);
+      });
   };
 
   return (
     <div className="language-switcher">
       <div 
-        className={`toggle-switch ${isRuActive ? 'ru-active' : 'en-active'}`}
+        className="toggle-switch"
         onClick={toggleLanguage}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && toggleLanguage()}
       >
-        <span className="language-option ru">RU</span>
-        <span className="language-option en">EN</span>
-        <div className="slider"></div>
+        <span className="language-option">
+          {currentLang === 'en' ? 'EN' : 'RU'}
+        </span>
       </div>
     </div>
   );

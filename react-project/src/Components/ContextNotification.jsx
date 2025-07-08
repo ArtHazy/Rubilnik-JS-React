@@ -6,7 +6,7 @@ const NotificationContext = createContext();
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
 
-    const showNotification = (message, type = 'info', duration = 3300) => {
+    const showNotification = (message, type = 'info', duration = 3000) => {
         const id = Date.now();
         setNotifications(prev => [...prev, { id, message, type }]);
         
@@ -16,7 +16,13 @@ export const NotificationProvider = ({ children }) => {
     };
 
     const closeNotification = (id) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+        setNotifications(prev => 
+            prev.map(n => n.id === id ? {...n, isClosing: true} : n)
+        );
+        
+        setTimeout(() => {
+            setNotifications(prev => prev.filter(n => n.id !== id));
+        }, 300);
     };
 
     return (
@@ -28,6 +34,7 @@ export const NotificationProvider = ({ children }) => {
                 key={notification.id}
                 message={notification.message}
                 type={notification.type}
+                isClosing={notification.isClosing || false}
                 onClose={() => closeNotification(notification.id)}
             />
             ))}

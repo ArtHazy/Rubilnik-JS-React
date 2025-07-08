@@ -1,11 +1,14 @@
 import { Position } from '@xyflow/react';
 import Terminal from './Terminal';
+import { useTranslation } from 'react-i18next';
 
 const StartNode = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="start-node" tabIndex={-1}>
       <div className="content">
-        🚀 Начало викторины
+        🚀 {t('quizFlow.startNode')}
       </div>
       <Terminal
         type="source"

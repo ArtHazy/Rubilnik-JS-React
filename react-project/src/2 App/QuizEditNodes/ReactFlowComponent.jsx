@@ -6,6 +6,7 @@ import { ReactFlow, useNodesState, useEdgesState, addEdge, Controls,
 import { useParams } from 'react-router-dom';
 import debounce from 'lodash.debounce';
 import throttle from 'lodash.throttle'; 
+import { useTranslation } from 'react-i18next';
 
 import "./styles.scss";
 import '@xyflow/react/dist/base.css';
@@ -200,6 +201,7 @@ const handleEdgeRemoval = (deletedEdges, currentNodes, currentEdges, questions) 
  * @param {{self:User,quiz:Quiz}} param0  
 */
 const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
+  const { t } = useTranslation();
   const { showNotification } = useNotification();
   const {ind} = useParams();
   const [initialElements] = useState(() => {
@@ -513,7 +515,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         const violatingEdges = checkGraphValidity(getNodes(), getEdges());
       
         if (violatingEdges.length > 0) {
-          alert(`Обнаружены проблемы в графе:\n${violatingEdges.join('\n')}`);
+          showNotification(t('editor.graphIssuesAlert', { issues: violatingEdges.join('\n') }));
           return;
         }
 
@@ -527,10 +529,10 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
           putSelfInLocalStorage(self);
           onQuizChange(updatedResponceQuiz);
         } else {
-          showNotification('Ошибка сохранения', 'error');
+          showNotification(t('editor.saveError'), 'error');
         }
       } catch (error) {
-        showNotification('Ошибка сохранения', 'error');
+        showNotification(t('editor.saveError'), 'error');
       }
     }, 5000),
     [ind, self, quiz]
@@ -538,8 +540,6 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
   useEffect(() => {
     const handleSave = () => {
-      // console.log("qweertyBD");
-      // saveChanges();
       handleAutoSave();
     };
     
@@ -571,7 +571,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
     if (type == "question"){
       /** @type {Question} */
-      let newQuestion = {id: null, tempId: id, title:"new", position, choices:[]}
+      let newQuestion = {id: null, tempId: id, title: t('editor.newQuestionTitle'), position, choices:[]}
       newNode = { id, type, position, data: { question: newQuestion } };
       onQuizChange(prev => ({
         ...prev,
@@ -579,7 +579,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
       }));  
     } else if (type == "choice") {
       /** @type {Choice} */
-      let newChoice = {id: null, tempId: id, title:"new temp", position, value:0}
+      let newChoice = {id: null, tempId: id, title: t('editor.newChoiceTitle'), position, value:0}
       newNode = { id, type, position, parentId: null, data: { choice: newChoice } };
       setNodes((nds) => nds.concat(newNode));
     } else if (type === "end") {
@@ -610,7 +610,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
         ['start', 'end'],
         ['start', 'choice'],
         ['question', 'question'],
-        ['choice', 'choice']
+        ['choice', 'choice'],
       ];
 
       const isInvalidConnection = forbiddenConnections.some(([a, b]) => sourceNode.type === a && targetNode.type === b);
@@ -651,7 +651,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
       if (sourceNode.type === 'start' && targetNode.type === 'question') {
         const existingStartEdges = getEdges().filter(e => e.source === sourceNode.id);
         if (existingStartEdges.length > 0) {
-          alert('Стартовая нода может быть соединена только с одним вопросом');
+          showNotification(t('editor.startNodeOnlyOne'));
           return;
         }
       }
@@ -698,7 +698,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
 
       // Случай 4: Обработка choice -> end
       if (sourceNode.type === 'choice' && targetNode.type === 'end' && !sourceNode.parentId) {
-        alert('Недопустимое соединение');
+        showNotification(t('editor.invalidConnectionAlert'));
         return;
       }
 
@@ -814,7 +814,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
           onEdgesChange={onEdgesChange}
           onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
-          onReconnect={onReconnect}
+          // onReconnect={onReconnect}
           onDrop={onDrop}
           onDragOver={onDragOver}
           
@@ -882,7 +882,11 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
                   }
                 }}        
               >
-                Удалить {contextMenu.element.type === 'question' ? 'вопрос' : 'choice' ? 'ответ' : 'конец'}
+                {contextMenu.element.type === 'question' 
+                  ? t('editor.contextMenu.deleteQuestion')
+                  : contextMenu.element.type === 'choice' 
+                    ? t('editor.contextMenu.deleteChoice')
+                    : t('editor.contextMenu.deleteEnd')}
               </div>
             )}
 
@@ -891,7 +895,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
                 className='context-menu-item'
                 onClick={deleteSelectedElements}
               >
-                Удалить выделенное
+                {t('editor.contextMenu.deleteSelection')}
               </div>
             )}
 
@@ -914,7 +918,7 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
                   }));                
                 }}
               >
-                Удалить соединение
+                {t('editor.contextMenu.deleteConnection')}
               </div>
             )}
           </div>

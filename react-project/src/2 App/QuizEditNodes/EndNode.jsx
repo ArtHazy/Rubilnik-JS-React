@@ -1,7 +1,9 @@
 import { Position } from '@xyflow/react';
 import Terminal from './Terminal';
+import { useTranslation } from 'react-i18next';
 
 const EndNode = ({ id, data, selected }) => {
+  const { t } = useTranslation();
   const { isHighlighted } = data;
 
   // Выносим стили в отдельный объект
@@ -55,7 +57,7 @@ const EndNode = ({ id, data, selected }) => {
           letterSpacing: '0.5px'
         }}
       >
-        Конец
+        {t('quizFlow.endNode')}
       </div>
       
       <Terminal

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { loadQuizFromFile } from './functionsEditor';
 import { useNotification } from "../../Components/ContextNotification";
+import { useTranslation } from 'react-i18next';
 
 import './PanelControls.scss';
 
@@ -14,6 +15,7 @@ import './PanelControls.scss';
  * @returns 
  */
 export const PanelControls = ({ quiz, ind, onQuizChange }) => {
+    const { t } = useTranslation();
     const { showNotification } = useNotification();
     const navigate = useNavigate();
     const [title, setTitle] = useState(quiz.title);
@@ -37,17 +39,23 @@ export const PanelControls = ({ quiz, ind, onQuizChange }) => {
                     onChange={(e) => setTitle(e.target.value)}
                     onBlur={handleTitleSave}
                     onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
-                    placeholder="Название викторины..."
+                    placeholder={t('library.quizTitlePlaceholder')}
                 />
             </div>
 
             <div className="buttons-block">
-                <button className="control-button" onClick={()=>{downloadJson(quiz, quiz.title)}}>
+                <button className="control-button" 
+                    onClick={()=>{downloadJson(quiz, quiz.title)}}
+                    title={t('library.downloadButton')} // Всплывающая подсказка !!!!!
+                >
                     <span className="material-symbols-outlined">download</span>
                 </button>
 
                 <label htmlFor="file-input">
-                    <button className="control-button" onClick={()=>{document.getElementById("file-input").click()}}>
+                    <button className="control-button" 
+                        onClick={()=>{document.getElementById("file-input").click()}}
+                        title={t('library.uploadButton')} // Всплывающая подсказка !!!!!
+                    >
                         <span className="material-symbols-outlined">upload</span>
                     </button>
                 </label>
@@ -60,7 +68,11 @@ export const PanelControls = ({ quiz, ind, onQuizChange }) => {
                     }
                 }/>
 
-                <button className="control-button" onClick={()=>{console.log("test", quiz); startRoomAsHost(navigate, quiz)}}>
+                <button className="control-button" 
+                    onClick={()=>{console.log("test", quiz); 
+                    startRoomAsHost(navigate, quiz)}}
+                    title={t('library.playButton')} // Всплывающая подсказка !!!!!
+                >
                     <span className="material-symbols-outlined">
                         play_arrow
                     </span>

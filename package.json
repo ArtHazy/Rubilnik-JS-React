@@ -1,7 +1,10 @@
 {
   "dependencies": {
     "@xyflow/react": "^12.6.3",
+    "i18next": "^25.3.1",
+    "i18next-browser-languagedetector": "^8.2.0",
     "lodash": "^4.17.21",
+    "react-i18next": "^15.6.0",
     "reactflow": "^11.11.4"
   }
 }

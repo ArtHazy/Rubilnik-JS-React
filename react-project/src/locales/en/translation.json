@@ -1,0 +1,157 @@
+{
+  "login": {
+    "rubil": "RUBIL",
+    "nik": "NIK",
+    "emailPlaceholder": "email",
+    "passwordPlaceholder": "password",
+    "loginButton": "login",
+    "quickJoin": "guest",
+    "registerLink": "register"
+  },
+  "register": {
+    "rubil": "RUBIL",
+    "nik": "NIK",
+    "username": "username",
+    "email": "email",
+    "password": "password",
+    "button": "register",
+    "loginLink": "Login",
+    "errors": {
+      "invalidData": "Invalid registration data",
+      "userExists": "User already exists",
+      "serverError": "Server error"
+    },
+    "success": "Registration successful!"
+  },
+  "join": {
+    "title": "Join",
+    "nameLabel": "Name",
+    "namePlaceholder": "your name",
+    "keyLabel": "room code",
+    "keyPlaceholder": "enter room code",
+    "button": "Join",
+    "errors": {
+      "invalidKey": "Invalid room code",
+      "roomFull": "Room is full",
+      "roomNotFound": "Room not found"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "saveButton": "Save",
+    "idLabel": "ID",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "logoutButton": "Log out",
+    "logoutConfirm": {
+      "title": "Failed to save changes",
+      "message": "Log out without saving?"
+    }
+  },
+  "library": {
+    "title": "Library",
+    "newQuizTitle": "New event",
+    "unsavedLabel": "unsaved",
+    "deleteButton": "Delete event",
+    "playButton": "Play event",
+    "editPlaceholder": "Enter event title",
+    "deleteConfirm": "Delete this event?",
+    "maxQuizzesWarning": "You've reached the maximum number of events",
+    "quizTitlePlaceholder": "Event title...",
+    "downloadButton": "Download event",
+    "uploadButton": "Upload event",
+    "mobileEditorDisabled": "Editor is not available on mobile devices"
+  },
+  "play": {
+    "qrLabels": {
+      "joinLan": "join LAN",
+      "joinRoom": "join room"
+    },
+    "serverLabel": "Server",
+    "errors": {
+      "connectionLost": "Connection lost",
+      "nextQuestion": "Error moving to next question"
+    },
+    "loading": {
+      "cantJoinRoom": "Can't join room"
+    },
+    "notifications": {
+      "joined": "has joined",
+      "left": "left"
+    },
+    "playersCounter": "Connected players"
+  },
+  "question": {
+    "revealButton": "Reveal answers",
+    "nextButton": "Next question",
+    "endButton": "End event",
+    "choiceLabel": "Choice {{letter}}",
+    "connectionError": "Connection lost"
+  },
+  "result": {
+    "placeHeader": "Place",
+    "nameHeader": "Name",
+    "scoreHeader": "Score",
+    "winAlt": "Winner"
+  },
+  "lobby": {
+    "qrLabels": {
+      "joinLan": "Join LAN",
+      "joinRoom": "Join room"
+    },
+    "connectionCode": "Connection code",
+    "serverLabel": "Server",
+    "startButton": "START"
+  },
+  "loading": {
+    "defaultText": "Loading...",
+    "altText": "Loading indicator"
+  },
+  "quizFlow": {
+    "startNode": "Start event",
+    "endNode": "End",
+    "questionNode": "Question",
+    "choiceNode": "Choice",
+    "addQuestion": "Add question node",
+    "addChoice": "Add choice node",
+    "addEnd": "Add end node",
+    "questionPlaceholder": "Enter your question",
+    "editHint": "Double-click to edit",
+    "editQuestion": "Edit question text",
+    "choicePlaceholder": "Enter text or paste an image (Ctrl+V)",
+    "imageAlt": "Inserted image"
+  },
+  "editor": {
+    "invalidConnectionAlert": "Invalid connection",
+    "startNodeOnlyOne": "Start node can only be connected to one question",
+    "graphIssuesAlert": "Graph issues detected:\n{{issues}}",
+    "saveError": "Save error",
+    "newQuestionTitle": "New question",
+    "newChoiceTitle": "New choice",
+    "contextMenu": {
+      "deleteQuestion": "Delete question",
+      "deleteChoice": "Delete choice",
+      "deleteEnd": "Delete end",
+      "deleteSelection": "Delete selected",
+      "deleteConnection": "Delete connection"
+    }
+  },
+  "error": {
+    "oops": "Oops",
+    "defaultMessage": "An unexpected error occurred"
+  },
+  "notifications": {
+    "loginFailed": "Failed to login",
+    "loginSuccess": "Login successful!",
+    "sessionExpired": "Your session has expired",
+    "invalidCredentials": "Invalid email or password",
+    "itemsAdded": "Added {{count}} items",
+    "fileNotJSON": "Please select a JSON file",
+    "fileTooBig": "File size is too big",
+    "invalidQuizFile": "Invalid event file format",
+    "fileReadError": "Error reading file",
+    "maxChoicesReached": "Maximum number of choices per question is {{max}}"
+  }
+}

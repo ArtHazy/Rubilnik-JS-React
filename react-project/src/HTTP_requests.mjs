@@ -101,7 +101,7 @@ export function http_put_user({id, email, password},user,onload){
  * @param {Function} onload
  * @returns
  */
-export function http_post_quiz({id, email, password},quiz, onload){
+export function http_post_quiz({id, email, password},quiz, onload) {
     delete quiz.isInDB
     let isOk, quizResponce;
     const req = new XMLHttpRequest();
@@ -120,7 +120,7 @@ export function http_post_quiz({id, email, password},quiz, onload){
  * @param { {id:string, title:string, questions:[{title:string,choices:[{title:string,correct:boolean}]}]} } quiz 
  * @param {Function} onload
  */
-export function http_put_quiz({id, email, password}, quiz, onload){
+export function http_put_quiz({id, email, password}, quiz, onload) {
     console.log("qqq",quiz);
     console.log({id, email, password});
     let isOk, quizRes;
@@ -149,10 +149,3 @@ export function http_delete_quiz({id, email, password}, quizId, onload){
     console.log('isOk',isOk);
     return isOk;
 }
-
-
-
-
-
-
-

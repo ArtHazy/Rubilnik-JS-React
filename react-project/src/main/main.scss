@@ -2,7 +2,7 @@
 @import "./mixin.scss";
 
 :root{
-  --def-gap: .2cm;
+  --def-gap: 8px;
   --def-transition: .3s;
   --def-border-radius: 8px;
 
@@ -106,7 +106,16 @@ button {
   border-radius: var(--btn-radius);
   cursor: pointer;
   @include button-style();
-  &.big{ @include outline-hover(); min-width: 2cm; padding: 8px; }
+  &.big{ 
+    @include outline-hover(); 
+    min-width: 2cm; 
+    padding: 8px; 
+
+    width: 52% !important; // Ширина 50% от формы
+    max-width: 220px; // Фиксированный максимум
+    align-self: center; // Центрирование кнопки
+    margin-top: 1rem;
+  }
 }
 input, button{
   font-family: "Russo One", sans-serif;
@@ -118,6 +127,7 @@ input[type='text'],input[type='password'],input[type='email']{
   font-weight: lighter;
   height: 1.6em;
   border: transparent;
+  padding-left: 8px;
   border-radius: var(--input-radius);
   &:focus{outline: var(--choice-1-color) solid 2px  ; outline-offset: 2px}
 }
@@ -158,11 +168,9 @@ input[type='text'],input[type='password'],input[type='email']{
 .form{
   background: var(--color-dark);
   @include grid();
-  
   border-radius: 12px;
   z-index: 1;
   width: auto;
-
   box-sizing: border-box;
   color: var(--color-split2);
   text-transform: uppercase;

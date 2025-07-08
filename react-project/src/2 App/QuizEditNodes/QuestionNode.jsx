@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Position } from '@xyflow/react';
 import Terminal from './Terminal';
+import { useTranslation } from 'react-i18next';
 import "../../main/mixin.scss";
 
 /**
@@ -9,6 +10,7 @@ import "../../main/mixin.scss";
  * @returns 
  */
 const QuestionNode = ({ id, data, selected, onUpdate }) => {
+  const { t } = useTranslation();
   let { question, isHighlighted } = data;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -29,14 +31,6 @@ const QuestionNode = ({ id, data, selected, onUpdate }) => {
     }
   };
 
-
-  // const groupArea = {
-  //   x: Position.x - 200,  // Расширяем область на 200px в каждую сторону
-  //   y: Position.y - 200,
-  //   // width: (200) + 400,
-  //   // height: (200) + 400
-  // };
-
   const inputStyle = {
     padding: '4px',
     border: '1px solid #ddd',
@@ -50,11 +44,6 @@ const QuestionNode = ({ id, data, selected, onUpdate }) => {
   return (
     <div 
       style={{
-        // position: 'absolute',
-        //   left: groupArea.x,
-        //   top: groupArea.y,
-        //   width: groupArea.width,
-        //   height: groupArea.height,
         background: '#FFF5CC',
         padding: '20px',
         borderRadius: '12px',
@@ -70,6 +59,7 @@ const QuestionNode = ({ id, data, selected, onUpdate }) => {
             : '0 4px 6px rgba(0,0,0,0.1)',
       }}
       onDoubleClick={handleDoubleClick}
+      aria-label={t('quizFlow.questionNode')}
     >
       <Terminal type="source" position={ Position.Bottom } 
         style={{ 
@@ -104,7 +94,7 @@ const QuestionNode = ({ id, data, selected, onUpdate }) => {
           id="text" 
           name="text" 
           className="nodrag"
-          placeholder="Enter your question"
+          placeholder={t('quizFlow.questionPlaceholder')}
           value={inputTitle}
           onChange={(e) => setInputTitle(e.target.value)}
           onBlur={handleSave}
@@ -113,6 +103,7 @@ const QuestionNode = ({ id, data, selected, onUpdate }) => {
             ...inputStyle,
             width: '100%'
           }}
+          aria-label={t('quizFlow.editQuestion')}
         />
       ) : (
         <div style={{ 
@@ -122,7 +113,7 @@ const QuestionNode = ({ id, data, selected, onUpdate }) => {
           cursor: 'pointer',
           color: '#242424', // Основной цвет текста
         }}>
-          {question.title || 'Дважды кликните для редактирования'}
+          {question.title || t('quizFlow.editHint')}
         </div>
       )}
 

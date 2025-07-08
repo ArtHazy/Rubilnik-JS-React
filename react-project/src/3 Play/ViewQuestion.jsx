@@ -2,7 +2,7 @@ import {useEffect, useState} from "react"
 import { WSPlayAPI } from "../WS_communication.mjs";
 import "./ViewQuestion.scss"
 
-export const ViewQuestion = ({isHost, socket, currentQuestion, setCurrentQuestion, setCurrentQuestionInd, isFinished, onNext, player}) => {
+export const ViewQuestion = ({isHost, socket, currentQuestion, setCurrentQuestion, setCurrentQuestionInd, isFinished, onNext, player, t}) => {
 
   const [revealedChoices, setrevealedChoices] = useState([])
 
@@ -47,6 +47,8 @@ export const ViewQuestion = ({isHost, socket, currentQuestion, setCurrentQuestio
       : 
         <button className={"choice _"+ind+" "+(choice.correct?"correct ":" ")+(isRevealed?"revealed ":" ")} key={JSON.stringify(choice)} 
           onClick={ (!isHost && !isRevealed)? ()=>socket.emitChoice(currentQuestion.id, ind) : null }
+          disabled={isRevealed}
+          aria-label={t('question.choiceLabel', { letter: letters[ind] })}
         >
           {choice.title}
           <div className="letter">{letters[ind]}</div>
@@ -62,11 +64,12 @@ export const ViewQuestion = ({isHost, socket, currentQuestion, setCurrentQuestio
         <div className="choices">{ renderChoices() }</div>
       </div>
       <div className="controls">
-        {isHost? <button onClick={()=>socket.emitReveal() }>reveal</button> : null}
-        {isHost? <button className="question_next_btn" onClick={onNext}> {isFinished ? 'end' : 'next'} </button> 
+        {isHost? <button onClick={()=>socket.emitReveal() }>{t('question.revealButton')}</button> : null}
+        {isHost? <button className="question_next_btn" onClick={onNext} aria-label={isFinished ? t('question.endButton') : t('question.nextButton')}>
+          {isFinished ? t('question.endButton') : t('question.nextButton')} </button> 
         : null}
       </div>
     </div>
   ) 
-  else return <div>Failed to connect socket</div>
+  else return <div>{t('question.connectionError')}</div>
 }

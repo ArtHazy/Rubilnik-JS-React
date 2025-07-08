@@ -3,11 +3,41 @@ import { limits } from "../values.mjs";
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
 import { http_delete_quiz, http_post_quiz, http_put_quiz } from "../HTTP_requests.mjs";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
+import { useNotification } from "../Components/ContextNotification";
+import { Header } from '../Components/Header';
 import "./ViewLibrary.scss"
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(null);
+
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.screen.width <= 1024 || window.screen.height <= 768;
+      
+      setIsMobile(isMobileUA && isTouchDevice && isSmallScreen);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
+
+  return isMobile;
+};
+
 export const ViewLibrary = () => {
+  const { showNotification } = useNotification();
+  const { t } = useTranslation();
   const [self, setSelf] = useState(() => getSelfFromLocalStorage());
   const quizzes = self?.quizzes;
+  const isMobile = useIsMobile();
 
   const updateSelf = (newSelf) => {
     putSelfInLocalStorage(newSelf);
@@ -15,15 +45,15 @@ export const ViewLibrary = () => {
   };
 
   return <div className="ViewLibrary">
-    <header>Your library</header>
+    <Header title={t('library.title')}/>
     <div className="grid">
       {Array.isArray(quizzes)? quizzes.map((q,i)=>
-        <QuizTile quiz={q} ind={i} self={self} setSelf={setSelf} updateSelf={updateSelf}/>
+        <QuizTile quiz={q} ind={i} self={self} setSelf={setSelf} updateSelf={updateSelf} t={t} isMobile={isMobile} showNotification={showNotification}/>
       ): null}
       
-      {(!quizzes || quizzes.length<limits.maxQuizzesLength)? 
+      {((isMobile === false) && (!quizzes || quizzes.length<limits.maxQuizzesLength))? 
         <button id="add" onClick={()=>{
-          let newQuiz = {title:'new quiz', questions:[]}
+          let newQuiz = {title: t('library.newQuizTitle'), questions:[]}
           let {isOk, quiz} = http_post_quiz(self,newQuiz,()=>{});
           if (isOk) {
             const newSelf = {...self};
@@ -37,7 +67,7 @@ export const ViewLibrary = () => {
   </div>
 }
 
-export const QuizTile = ({quiz, ind, self, setSelf, updateSelf}) => {
+export const QuizTile = ({quiz, ind, self, setSelf, updateSelf, t, isMobile, showNotification}) => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [newTitle, setNewTitle] = useState(quiz.title);
@@ -55,7 +85,7 @@ export const QuizTile = ({quiz, ind, self, setSelf, updateSelf}) => {
 
   const handleClick = () => {
     // Предзагрузка компонента
-    if (!isPreloadedRef.current) {
+    if (!isPreloadedRef.current && !isMobile) {
       import("./QuizEditNodes/ReactFlowComponent").then(module => {
         isPreloadedRef.current = true;
       });
@@ -66,7 +96,10 @@ export const QuizTile = ({quiz, ind, self, setSelf, updateSelf}) => {
     if (clickCountRef.current === 1) {
       // Первый клик - устанавливаем таймер
       clickTimeoutRef.current = setTimeout(() => {
-        if (clickCountRef.current === 1 && !isEditing) {
+        if (isMobile) {
+          showNotification(t('library.mobileEditorDisabled'));
+        } 
+        else if (clickCountRef.current === 1 && !isEditing) {
           console.log("Одинарный клик");
           navigate(`/edit-quiz/${ind}`);
         }
@@ -81,6 +114,7 @@ export const QuizTile = ({quiz, ind, self, setSelf, updateSelf}) => {
   };
 
   const handleTitleSave = () => {
+    if (!isEditing) return;
     if (newTitle.trim() !== quiz.title) {
       const updatedQuiz = {...quiz, title: newTitle.trim()};
       
@@ -100,7 +134,7 @@ export const QuizTile = ({quiz, ind, self, setSelf, updateSelf}) => {
   };
 
   const handleDelete = () => {
-    if (Array.isArray(self.quizzes) && confirm("Delete quiz?")) {
+    if (Array.isArray(self.quizzes) && confirm(t('library.deleteConfirm'))) {
       if (http_delete_quiz(self, quiz.id, () => {})) {
         localStorage.setItem(`quiz_orphans_${ind}`, '[]');
         const newSelf = {...self};
@@ -128,6 +162,7 @@ export const QuizTile = ({quiz, ind, self, setSelf, updateSelf}) => {
       <button 
         className="delete-btn" 
         onClick={handleDelete}
+        aria-label={t('library.deleteButton')}
       >
         <span className="material-symbols-outlined">delete</span>
       </button>
@@ -155,12 +190,13 @@ export const QuizTile = ({quiz, ind, self, setSelf, updateSelf}) => {
             }}
             autoFocus
             onClick={(e) => e.stopPropagation()}
+            placeholder={t('library.editPlaceholder')}
           />
         ) : (
           <span>
             {quiz.title}
             <br />
-            {quiz.isInDB ? null : "unsaved"}
+            {quiz.isInDB ? null : t('library.unsavedLabel')}
           </span>
         )}
       </button>
@@ -168,6 +204,7 @@ export const QuizTile = ({quiz, ind, self, setSelf, updateSelf}) => {
       <button 
         className="run-btn" 
         onClick={() => startRoomAsHost(navigate, quiz)}
+        aria-label={t('library.playButton')}
       >
         <span className="material-symbols-outlined">play_arrow</span>
       </button>

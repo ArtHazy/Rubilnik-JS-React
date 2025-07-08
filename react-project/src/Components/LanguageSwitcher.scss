@@ -1,78 +1,51 @@
-@import "../main/mixin.scss";
+@import "../main/main.scss";
 
 .language-switcher {
   position: fixed;
-  top: 20px;
+  margin-top: 4px;
   right: 20px;
   z-index: 10000;
   
   .toggle-switch {
     display: flex;
     position: relative;
-    width: 100px;
-    height: 40px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 30px;
+    width: 60px;
+    height: 45px;
+    border-radius: var(--def-border-radius);
     cursor: pointer;
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
+    user-select: none;
+    background: var(--color-dark);
     
     &:hover {
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 0px 8px rgba(255,255,255,0.5);
     }
     
     .language-option {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 50%;
+      width: 100%;
       height: 100%;
-      z-index: 2;
       font-weight: bold;
-      transition: color 0.3s ease;
+      transition: transform var(--def-transition) ease;
+      user-select: none;
     }
-    
-    .ru {
-      color: #333;
-    }
-    
-    .en {
-      color: #333;
-    }
-    
-    .slider {
-      position: absolute;
-      top: 2px;
-      bottom: 2px;
-      width: 46px;
-      background: #f0f0f0;
-      border-radius: 30px;
-      transition: transform 0.3s ease;
-      z-index: 1;
-    }
-    
-    &.ru-active {
-      .slider {
-        transform: translateX(2px);
-        background: #f0f0f0;
+
+    .ViewRegister &,
+    .ViewLogin & {
+      background: transparent;
+      .language-option {
+        color: var(--color-dark);
       }
-      .ru {
-        color: #1976d2;
-        font-weight: 700;
+      &:hover {
+        box-shadow: 0 0px 8px rgba(0,0,0,0.5);
       }
     }
     
-    &.en-active {
-      .slider {
-        transform: translateX(50px);
-        background: #f0f0f0;
-      }
-      .en {
-        color: #1976d2;
-        font-weight: 700;
-      }
+    &:hover .language-option {
+      transform: scale(1.05);
     }
   }
 }

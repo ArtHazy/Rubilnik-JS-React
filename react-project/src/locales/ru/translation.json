@@ -1,0 +1,157 @@
+{
+  "login": {
+    "rubil": "РУБИЛЬ",
+    "nik": "НИК",
+    "emailPlaceholder": "email",
+    "passwordPlaceholder": "пароль",
+    "loginButton": "войти",
+    "quickJoin": "гость",
+    "registerLink": "регистрация"
+  },
+  "register": {
+    "rubil": "РУБИЛЬ",
+    "nik": "НИК",
+    "username": "имя",
+    "email": "email",
+    "password": "пароль",
+    "button": "регистрация",
+    "loginLink": "ЛОГИН",
+    "errors": {
+      "invalidData": "Некорректные данные регистрации",
+      "userExists": "Пользователь уже существует",
+      "serverError": "Ошибка сервера"
+    },
+    "success": "Регистрация прошла успешно!"
+  },
+  "join": {
+    "title": "Подключение",
+    "nameLabel": "Имя",
+    "namePlaceholder": "ваше имя",
+    "keyLabel": "Код комнаты",
+    "keyPlaceholder": "введите код комнаты",
+    "button": "Присоединиться",
+    "errors": {
+      "invalidKey": "Неверный код комнаты",
+      "roomFull": "Комната заполнена",
+      "roomNotFound": "Комната не найдена"
+    }
+  },
+  "profile": {
+    "title": "Профиль",
+    "saveButton": "Сохранить",
+    "idLabel": "ID",
+    "emailLabel": "Email",
+    "passwordLabel": "Пароль",
+    "showPassword": "Показать пароль",
+    "hidePassword": "Скрыть пароль",
+    "logoutButton": "Выйти",
+    "logoutConfirm": {
+      "title": "Не удалось сохранить изменения",
+      "message": "Выйти без сохранения?"
+    }
+  },
+  "library": {
+    "title": "Библиотека",
+    "newQuizTitle": "Мероприятие",
+    "unsavedLabel": "не сохранено",
+    "deleteButton": "Удалить мероприятие",
+    "playButton": "Запустить мероприятие",
+    "editPlaceholder": "Введите название мероприятия",
+    "deleteConfirm": "Удалить это мероприятие?",
+    "maxQuizzesWarning": "Достигнуто максимальное количество мероприятий",
+    "quizTitlePlaceholder": "Название мероприятия...",
+    "downloadButton": "Скачать мероприятие",
+    "uploadButton": "Загрузить мероприятие",
+    "mobileEditorDisabled": "Редактор недоступен на мобильных устройствах"
+  },
+  "play": {
+    "qrLabels": {
+      "joinLan": "LAN",
+      "joinRoom": "комната"
+    },
+    "serverLabel": "Сервер",
+    "errors": {
+      "connectionLost": "Соединение потеряно",
+      "nextQuestion": "Ошибка перехода к следующему вопросу"
+    },
+    "loading": {
+      "cantJoinRoom": "Не удалось присоединиться к комнате"
+    },
+    "notifications": {
+      "joined": "присоединился",
+      "left": "покинул комнату"
+    },
+    "playersCounter": "Подключенные игроки"
+  },
+  "question": {
+    "revealButton": "Показать ответы",
+    "nextButton": "Следующий вопрос",
+    "endButton": "Завершить мероприятие",
+    "choiceLabel": "Вариант {{letter}}",
+    "connectionError": "Соединение потеряно"
+  },
+  "result": {
+    "placeHeader": "Место",
+    "nameHeader": "Имя",
+    "scoreHeader": "Очки",
+    "winAlt": "Победитель"
+  },
+  "lobby": {
+    "qrLabels": {
+      "joinLan": "LAN",
+      "joinRoom": "Код комнаты"
+    },
+    "connectionCode": "Код комнаты",
+    "serverLabel": "Сервер",
+    "startButton": "НАЧАТЬ"
+  },
+  "quizFlow": {
+    "startNode": "Начало мероприятия",
+    "endNode": "Конец",
+    "questionNode": "Вопрос",
+    "choiceNode": "Ответ",
+    "addQuestion": "Добавить вопрос",
+    "addChoice": "Добавить ответ",
+    "addEnd": "Добавить конец",
+    "questionPlaceholder": "Введите ваш вопрос",
+    "editHint": "Дважды кликните для редактирования",
+    "editQuestion": "Редактировать текст вопроса",
+    "choicePlaceholder": "Введите текст или вставьте изображение (Ctrl+V)",
+    "imageAlt": "Вставленное изображение"
+  },
+  "editor": {
+    "invalidConnectionAlert": "Недопустимое соединение",
+    "startNodeOnlyOne": "Стартовая нода может быть соединена только с одним вопросом",
+    "graphIssuesAlert": "Обнаружены проблемы в графе:\n{{issues}}",
+    "saveError": "Ошибка сохранения",
+    "newQuestionTitle": "Новый вопрос",
+    "newChoiceTitle": "Новый ответ",
+    "contextMenu": {
+      "deleteQuestion": "Удалить вопрос",
+      "deleteChoice": "Удалить ответ",
+      "deleteEnd": "Удалить конец",
+      "deleteSelection": "Удалить выделенное",
+      "deleteConnection": "Удалить соединение"
+    }
+  },
+  "loading": {
+    "defaultText": "Загрузка...",
+    "altText": "Индикатор загрузки"
+  },
+  "error": {
+    "oops": "Упс",
+    "defaultMessage": "Произошла непредвиденная ошибка"
+  },
+  "notifications": {
+    "loginFailed": "Не удалось войти",
+    "loginSuccess": "Вход выполнен успешно!",
+    "sessionExpired": "Ваша сессия истекла",
+    "invalidCredentials": "Неверный email или пароль",
+    "itemsAdded": "Добавлено {{count}} элементов",
+    "fileNotJSON": "Пожалуйста, выберите JSON-файл",
+    "fileTooBig": "Файл слишком большой",
+    "invalidQuizFile": "Некорректный формат файла мероприятия",
+    "fileReadError": "Ошибка чтения файла",
+    "maxChoicesReached": "Максимальное количество ответов в одном вопросе — {{max}}"
+  }
+}

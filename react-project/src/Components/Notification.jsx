@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
 import './Notification.scss';
 
-const Notification = ({ message, type = 'info', onClose }) => {
-  const [isClosing, setIsClosing] = useState(false);
-
-  const startClosing = () => {
-    setIsClosing(true);
-    setTimeout(onClose, 300); // Должно совпадать с длительностью анимации
-  };
-
+const Notification = ({ message, type = 'info', isClosing, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      startClosing();
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
+    if (!isClosing) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isClosing, onClose]);
 
   return (
     <div className={`notification ${type} ${isClosing ? 'closing' : ''}`}>

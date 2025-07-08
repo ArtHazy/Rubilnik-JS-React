@@ -1,15 +1,17 @@
-@import "../main/mixin.scss";
+@import "../main/main.scss";
 
 .ViewJoin{
     @include base-view;
     @include grid-overlay;
     height: 100svh;
+    position: relative;
 
     input{ text-align: center; }
     
     .RoomKeyInput{
         @include hstack();
         padding: 0;
+        width: 100%;
 
         input[type='text']{ 
             font-size: 1.2em; 

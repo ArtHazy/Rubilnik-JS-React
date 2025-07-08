@@ -1,11 +1,11 @@
-@import "../main/mixin.scss";
+@import "../main/main.scss";
 
 .ViewSelf{
   @include base-view;
   @include grid-overlay;
   height: 100svh;
 
-  input{ text-align: center; }
+  input { text-align: center; }
 }
 
 .password-container {

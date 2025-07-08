@@ -6,6 +6,7 @@ import { useEffect, useState, useMemo } from "react";
 import { ViewError, ViewLoading } from "../4 Error/ViewError";
 import { WSPlayAPI } from "../WS_communication.mjs";
 import { useLocation, useParams } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 import "./Play.scss"
 
@@ -14,6 +15,7 @@ import { SERVER, UI_SERVICE_URL } from "../values.mjs";
 import { QuizPlayer } from "./QuizPlayer.jsx";
 
 export const Play = () => {
+    const { t } = useTranslation();
 
     const [socket, setSocket] = useState(null)
     const [socketStatus, setSocketStatus] = useState('null')
@@ -78,7 +80,7 @@ export const Play = () => {
         isFinished ? socket.emitEnd() 
           : newState.node.type === 'question' && socket.emitNext(newState.node.data.question.id);
       } catch (error) {
-        console.error('Ошибка перехода:', error)
+        console.error(t('play.errors.nextQuestion'), error)
       }
     }
 
@@ -111,11 +113,11 @@ export const Play = () => {
         setGameState(gameStates.lobby)
       }
       socket.eventActions.joined = ({user, roommates})=>{
-        console.log('alert: '+user.id+":"+user.name+" has joined");
+        console.log(`${user.id}:${user.name} ${t('play.notifications.joined')}`);
         setRoommates(roommates)
       }
       socket.eventActions.left = ({user, roommates})=>{
-        console.log('alert: '+user.id+":"+user.name+" left");
+        console.log(`${user.id}:${user.name} ${t('play.notifications.left')}`);
         setRoommates(roommates)
       }
 
@@ -145,12 +147,12 @@ export const Play = () => {
       {/* <div>socket: {socketStatus}</div> */}
         {gameState==gameStates.lobby? <div></div> :
             <div className={"status"}>
-                {join_lan_str? <QR isSmall={true} data={join_lan_str} label={"join lan"}/> : <div></div>}
+                {join_lan_str? <QR isSmall={true} data={join_lan_str} label={t('play.qrLabels.joinLan')}/> : <div></div>}
                 <div className={"vstack"}>
                     <div className={"id"}>{roomId}</div>
-                    <span>server : {SERVER.label}</span>
+                    <span>{t('play.serverLabel')}: {SERVER.label}</span>
                 </div>
-                <QR isSmall={true} data={join_room_url} label={"join room"}/>
+                <QR isSmall={true} data={join_room_url} label={t('play.qrLabels.joinRoom')}/>
 
     
                 <div className={"progress-bg"}>
@@ -160,24 +162,30 @@ export const Play = () => {
         }
 
       {socketStatus == socketStates.null? <div/> :null}
-      {socketStatus == socketStates.closed? <ViewError text={'connection lost'}/> : null}
-      {socketStatus == socketStates.open? <ViewLoading text={'cant join room'}/> : null}
+      {socketStatus == socketStates.closed? <ViewError text={t('play.errors.connectionLost')}/> : null}
+      {socketStatus == socketStates.open? <ViewLoading text={t('play.loading.cantJoinRoom')}/> : null}
 
 
       {socketStatus == socketStates.inRoom && gameState === gameStates.lobby ? <ViewLobby joinLanStr={join_lan_str} joinRoomUrl={join_room_url} roomId={roomId} isHost={isHost} socket={socket} 
-        startQuestionId={startQuestionId} /> : null}
+        startQuestionId={startQuestionId} 
+        t={t}/> : null}
       {socketStatus == socketStates.inRoom && gameState === gameStates.live ? <ViewQuestion isHost={isHost} socket={socket} currentQuestion={currentQuestion} setCurrentQuestion={setCurrentQuestion} setCurrentQuestionInd={setCurrentQuestionInd}
         isFinished={isFinished}
         onNext={handleNextQuestion}
-        player={player}/> : null}
-      {socketStatus == socketStates.inRoom && gameState === gameStates.finished ? <ViewResult isHost={isHost} socket={socket} roomId={roomId} results={results} roommates={roommates} /> : null}
+        player={player}
+        t={t}/> : null}
+      {socketStatus == socketStates.inRoom && gameState === gameStates.finished ? <ViewResult isHost={isHost} socket={socket} roomId={roomId} results={results} roommates={roommates} t={t}/> : null}
 
       {/*<div className="roommates-counter"> connected players: { Object.keys(roommates).length } </div>*/}
       <div className="hscroll">
           <div className="hstack line">
-            <button className="roommates-counter" onClick={()=>{
+            <button className="roommates-counter" 
+              onClick={()=>{
                 setIsRoommatesHidden(!isRoommatesHidden)
-            }}> { Object.keys(roommates).length } </button>
+              }}
+              aria-label={t('play.playersCounter')}>
+                { Object.keys(roommates).length } 
+            </button>
             <div className={"hstack roommates "+(isRoommatesHidden?"hidden":"")}>
               { Object.keys(roommates).map((userId) => <div>{roommates[userId]?.name}</div>) }
             </div>

@@ -1,4 +1,5 @@
 import { limits } from "../../values.mjs";
+import i18next from 'i18next';
 
 const SAFE_ZONE_RADIUS = 100;
 
@@ -7,12 +8,12 @@ export function loadQuizFromFile(file, quiz, onQuizChange, showNotification) {
     if (!(file instanceof File)) return;
 
     if (!file.name.toLowerCase().endsWith('.json')) {
-        showNotification('Please select a JSON file', 'error');
+        showNotification(i18next.t('notifications.fileNotJSON'), 'error');
         return;
     }
 
     if (file.size > limits.maxQuizFileSize) {
-        showNotification('File size is too big', 'error');
+        showNotification(i18next.t('notifications.fileTooBig'), 'error');
         return;
     }
 
@@ -30,12 +31,12 @@ export function loadQuizFromFile(file, quiz, onQuizChange, showNotification) {
             // Передаем обновленную викторину через колбэк
             onQuizChange(loadedQuiz);
         } catch (error) {
-            showNotification('Invalid quiz file format', 'error');
+            showNotification(i18next.t('notifications.invalidQuizFile'), 'error');
         }
     };
     
     fr.onerror = () => {
-        showNotification('Error reading file', 'error');
+        showNotification(i18next.t('notifications.fileReadError'), 'error');
     };
 }
 
@@ -67,7 +68,7 @@ export const calculateNewPositionChild = (draggedNode, targetNode, originalParen
 
 export const checkMaxChoices = (count) => {
     if (count >= limits.maxChoicesLength) {
-        alert(`Максимальное количество ответов в одном вопросе — ${limits.maxChoicesLength}`);
+        alert(i18next.t('notifications.maxChoicesReached', { max: limits.maxChoicesLength }));
         return true;
     }
     return false;
@@ -99,7 +100,8 @@ export const getValidSourceNode = (targetPosition, targetNode, nodes, parentNode
       ['start', 'end'],
       ['start', 'choice'],
       ['question', 'question'],
-      ['choice', 'choice']
+      ['choice', 'choice'],
+      ['choice', 'question'],
     ];
   
     const sourceNode = nodes.find(node => {
@@ -121,7 +123,7 @@ export const getValidSourceNode = (targetPosition, targetNode, nodes, parentNode
   
     const isForbidden = forbiddenConnections.some(
         ([srcType, tgtType]) => 
-            sourceNode?.type === srcType && targetNode.type === tgtType ||
+            sourceNode?.type === srcType && targetNode.type === tgtType &&
             sourceNode?.type === tgtType && targetNode.type === srcType
     );
   
@@ -129,6 +131,7 @@ export const getValidSourceNode = (targetPosition, targetNode, nodes, parentNode
   
     // Проверка на максимальное кол-во ответов
     if (sourceNode.type === 'question' && targetNode.type === 'choice') {
+        console.log("!!!!!!!!!!!!!", targetNode);
         const choicesCount = sourceNode.data?.question?.choices?.length || 0;
         return checkMaxChoices(choicesCount) ? null : sourceNode;
     }

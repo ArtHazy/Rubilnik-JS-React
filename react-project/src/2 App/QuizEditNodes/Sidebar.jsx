@@ -1,7 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import './Sidebar.scss';
 
 const Sidebar = () => {
+  const { t } = useTranslation();
+
   const onDragStart = (event, nodeType) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
@@ -15,8 +18,9 @@ const Sidebar = () => {
         onDragStart={(e) => onDragStart(e, 'question')}
         className="sidebar-button question-button"
         role="button"
+        aria-label={t('quizFlow.addQuestion')}
       >
-        <span>Вопрос</span>
+        <span>{t('quizFlow.questionNode')}</span>
       </div>
 
       {/* Кнопка ответа */}
@@ -25,8 +29,9 @@ const Sidebar = () => {
         onDragStart={(e) => onDragStart(e, 'choice')}
         className="sidebar-button choice-button"
         role="button"
+        aria-label={t('quizFlow.addChoice')}
       >
-        <span>Ответ</span> 
+        <span>{t('quizFlow.choiceNode')}</span> 
       </div>
       {/* Кнопка финиша */}
       <div
@@ -34,8 +39,9 @@ const Sidebar = () => {
         onDragStart={(e) => onDragStart(e, 'end')}
         className="sidebar-button end-button"
         role="button"
+        aria-label={t('quizFlow.addEnd')}
       >
-        <span>Конец</span>
+        <span>{t('quizFlow.endNode')}</span>
       </div>
     </div>
   );

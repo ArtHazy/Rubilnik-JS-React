@@ -1,4 +1,4 @@
-import React, {lazy} from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { App } from '../2 App/App.jsx';
 import { createBrowserRouter,RouterProvider} from "react-router-dom";
@@ -9,10 +9,8 @@ import { ViewJoin } from '../2 App/ViewJoin.jsx';
 import { ViewError } from '../4 Error/ViewError.jsx';
 import { NotificationProvider } from '../Components/ContextNotification.jsx';
 import { Play } from '../3 Play/Play.jsx'
-import LanguageSwitcher from '../Components/LanguageSwitcher.jsx';
-// import './main.scss'
-
-// const Play = lazy(() => import('../3 Play/Play.jsx'));
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
 
 const router = createBrowserRouter([
   { path: "/", element: <App/> },
@@ -26,8 +24,11 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <NotificationProvider>
-    <RouterProvider router={router} />
-    <LanguageSwitcher />
-  </NotificationProvider>
+  <React.StrictMode>
+      <I18nextProvider i18n={i18n}>
+        <NotificationProvider>
+          <RouterProvider router={router} />
+        </NotificationProvider>
+    </I18nextProvider>
+  </React.StrictMode>
 )

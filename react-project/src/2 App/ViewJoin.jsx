@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react"
 import { getSelfFromLocalStorage, putSelfInLocalStorage } from "../functions.mjs"
 import { limits } from "../values.mjs"
+import { useTranslation } from 'react-i18next';
+import { Header } from '../Components/Header'; 
 import "./ViewJoin.scss"
 
 export const ViewJoin = () => {
+    const { t } = useTranslation(); 
     const params = new URLSearchParams(window.location.search);
     var roomKeyParam = params.get("roomkey") || '';
     const [roomkey, setRoomkey] = useState(roomKeyParam)
@@ -21,13 +24,16 @@ export const ViewJoin = () => {
     function upd(isInDB){ self.isInDB = isInDB? true:false, putSelfInLocalStorage(self), setFlag(!flag) }
 
     return <div className="ViewJoin">
-        <header>Join the game</header>
+        <Header title={t('join.title')} />
         <div className="form">
-            <vstack>
-                name:<input id='name' type="text" value={self?.name} maxLength={limits.maxNameLength} onChange={(e)=>{self.name = e.target.value, upd()}} onKeyDown={(e) => handleEnterKey(e, '.form', null, true)}/>
-            </vstack>
-            <vstack>key:<RoomKeyInput roomkey={roomkey} onRoomkeyChange={setRoomkey} onEnterPress={handleEnterPress}/></vstack>
-            <button className="big" style={{width:"100%"}} onClick={(e)=>{navigatePlay(roomkey)}}>join</button>
+            <div className="form-field">
+                {t('join.nameLabel')}<input id='name' type="text" value={self?.name} maxLength={limits.maxNameLength} onChange={(e)=>{self.name = e.target.value, upd()}} onKeyDown={(e) => handleEnterKey(e, '.form', null, true)}/>
+            </div>
+            <div className="form-field">
+                <label className="form-label">{t('join.keyLabel')}</label>
+                <RoomKeyInput roomkey={roomkey} onRoomkeyChange={setRoomkey} onEnterPress={handleEnterPress}/>
+            </div>
+            <button className="big" style={{width:"100%"}} onClick={(e)=>{navigatePlay(roomkey)}}>{t('join.button')}</button>
         </div>
     </div>
 
@@ -125,6 +131,7 @@ const RoomKeyInput = ({ roomkey, onRoomkeyChange, onEnterPress }) => {
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onClick={() => setActiveIndex(index)}
+                className="key-input"
             />
         ))}
     </div>

@@ -102,7 +102,7 @@
 }
 
 @mixin base-view {
-    padding-bottom: 2rem; // Заменяем cm на rem
+    padding-bottom: 2rem;
     @include view();
     
     // Общие стили для всех вьюх

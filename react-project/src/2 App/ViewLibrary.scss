@@ -1,4 +1,3 @@
-@import "../main/mixin.scss";
 @import "../main/main.scss";
 
 .ViewLibrary{
@@ -15,6 +14,7 @@
   .grid{
     @include grid();
     padding: 0;
+    padding-top: 2.2rem;
     margin: var(--def-gap) 0;
     grid-template-columns: repeat(auto-fill, minmax(8cm,1fr));
     grid-auto-rows: 155px; 
@@ -133,15 +133,6 @@
         mix-blend-mode: overlay;
         pointer-events: none; // Чтобы сетка не перехватывала клики
       }
-    
-      // // Для темных тем можно добавить альтернативный вариант
-      // @media (prefers-color-scheme: dark) {
-      //   &::before {
-      //     background:
-      //       linear-gradient(to right, rgba(0,0,0,0.15) 1px, transparent 1px),
-      //       linear-gradient(to bottom, rgba(0,0,0,0.15) 1px, transparent 1px);
-      //   }
-      // }
   
       span {
         color: var(--color-dark);
@@ -152,7 +143,7 @@
   
     .delete-btn,
     .run-btn {
-      position: absolute; // Добавляем для позиционирования псевдоэлемента
+      position: absolute;
       opacity: 0;
       visibility: hidden;
       transition: all 0.3s;
@@ -175,6 +166,13 @@
       .material-symbols-outlined {
         font-size: 24px;
         color: var(--color-dark);
+      }
+
+      @media (max-height: 768px) and (max-width: 1024px), 
+        (max-width: 768px) {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
       }
     }
   
@@ -214,5 +212,20 @@
         0 0 10px var(--input-focus-glow),
         0 2px 4px rgba(0,0,0,0.15);
     }  
+
+    @media (max-height: 768px) and (max-width: 1024px), 
+      (max-width: 768px) {
+      .quiz-tile-container {
+        &:hover {
+          box-shadow: none;
+          
+          .delete-btn,
+          .run-btn {
+            opacity: 1;
+            visibility: visible;
+          }
+        }
+      }
+    }
   }
 }

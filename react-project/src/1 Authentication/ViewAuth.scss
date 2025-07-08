@@ -6,11 +6,24 @@
   @include grid-overlay();
   height: 100svh;
 
+  .language-switcher {
+    position: absolute; //relative
+    top: 16px;
+    margin-top: -4px;
+  }
+
   .accent{ font-size: 2em; }
   .log,.reg{ color: var(--color-split1); }
   .in, .ister{ color: var(--color-split2); }
 
   button.big {
+    margin-top: 16px;
+    height: 2em;
+    width: 50%;
+  }
+
+  .hstack {
+    gap: 0;
     margin-top: 12px;
   }
 

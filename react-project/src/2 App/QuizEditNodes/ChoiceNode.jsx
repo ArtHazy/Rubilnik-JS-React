@@ -1,6 +1,7 @@
 import { Position } from '@xyflow/react';
 import Terminal from './Terminal';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const isImageUrl = (url) => {
   return /^(https?:\/\/|data:image\/).+\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i.test(url);
@@ -8,6 +9,7 @@ const isImageUrl = (url) => {
 
 /** @param {{data:{choice:Choice}}} */
 const ChoiceNode = ({ data, onUpdate }) => {
+  const { t } = useTranslation();
   const { choice, isHighlighted } = data
 
   const [inputTitle, setInputTitle] = useState(choice.title)
@@ -26,9 +28,6 @@ const ChoiceNode = ({ data, onUpdate }) => {
       choice.value = inputValue;
     setIsImage(isImageUrl(inputTitle));
     
-    // if (typeof onUpdate === 'function') {
-    //   onUpdate(choice);
-    // }
     if (onUpdate) {
       onUpdate(choice);
     }
@@ -95,7 +94,7 @@ const ChoiceNode = ({ data, onUpdate }) => {
         <div style={{ flex: 1, position: 'relative' }}>
           <input
             value={inputTitle}
-            placeholder="Введите текст или вставьте изображение (Ctrl+V)"
+            placeholder={t('quizFlow.choicePlaceholder')}
             className="nodrag"
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
@@ -122,7 +121,7 @@ const ChoiceNode = ({ data, onUpdate }) => {
             }}>
               <img
                 src={inputTitle}
-                alt="Вставленное изображение"
+                alt={t('quizFlow.imageAlt')}
                 style={{
                   maxWidth: '100%',
                   maxHeight: '150px',
