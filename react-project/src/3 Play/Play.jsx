@@ -70,14 +70,17 @@ export const Play = () => {
       try {
         player.next()
         const newState = player.getCurrentState()
+        console.log("test", newState);
         setCurrentQuestion(newState.node?.data?.question ?? null)
         setIsFinished(newState.isFinished)
 
         const newIndex = currentQuestionInd + 1
         setCurrentQuestionInd(newIndex)
 
+        console.log("111", isFinished, newState.node.type);
+
         // Синхронизация с сервером
-        isFinished ? socket.emitEnd() 
+        (isFinished) ? socket.emitEnd() 
           : newState.node.type === 'question' && socket.emitNext(newState.node.data.question.id);
       } catch (error) {
         console.error(t('play.errors.nextQuestion'), error)

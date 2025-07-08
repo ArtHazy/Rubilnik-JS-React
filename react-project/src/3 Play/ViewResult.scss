@@ -2,13 +2,19 @@
 
 .ViewResult{
     @include view();
+    justify-content: flex-start;
+
     .scores{
         @include grid();
         padding: 0;
         max-width: 30cm;
+
         .entry{
             border-radius: var(--def-border-radius);
-            &.first{ background-color:  var(--color-split2); color: var(--color-dark) }
+            &.first{ 
+                background-color:  var(--color-split2); 
+                color: var(--color-dark) 
+            }
             @include grid();
             grid-template-columns: 1fr 5fr 1fr;
         }

@@ -9,7 +9,6 @@ import "./ViewSelf.scss"
 export const ViewSelf = () => {
     const { t } = useTranslation();
     const [flag, setFlag] = useState(false);
-    const [showPassword, setShowPassword] = useState(false); 
     const self = getSelfFromLocalStorage();
 
     function upd(isInDB){ self.isInDB = isInDB? true:false, putSelfInLocalStorage(self), setFlag(!flag) }
@@ -34,20 +33,12 @@ export const ViewSelf = () => {
                 <div className="password-container">
                     <input 
                         id='password' 
-                        type={showPassword ? "text" : "password"} 
+                        type="password" 
                         value={self?.password} 
                         maxLength={limits.maxPassLength} 
-                        onChange={(e)=>handleInputChange(passwordRef, 'password', e.target.value)}
+                        onChange={(e)=>{self.password = e.target.value; upd()}}
                         onKeyDown={(e) => handleEnterKey(e, '.form', null, true)}
                     />
-                    <button
-                        type="button"
-                        className="toggle-password"
-                        onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? t('profile.hidePassword') : t('profile.showPassword')}
-                    >
-                        {showPassword ? '👁️' : '🗨️'}
-                    </button>
                 </div>
             </div>
             <button className="big" onClick={()=>{

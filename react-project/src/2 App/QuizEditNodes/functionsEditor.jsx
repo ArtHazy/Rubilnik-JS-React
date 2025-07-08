@@ -100,8 +100,7 @@ export const getValidSourceNode = (targetPosition, targetNode, nodes, parentNode
       ['start', 'end'],
       ['start', 'choice'],
       ['question', 'question'],
-      ['choice', 'choice'],
-      ['choice', 'question'],
+      ['choice', 'choice']
     ];
   
     const sourceNode = nodes.find(node => {
@@ -123,7 +122,7 @@ export const getValidSourceNode = (targetPosition, targetNode, nodes, parentNode
   
     const isForbidden = forbiddenConnections.some(
         ([srcType, tgtType]) => 
-            sourceNode?.type === srcType && targetNode.type === tgtType &&
+            sourceNode?.type === srcType && targetNode.type === tgtType ||
             sourceNode?.type === tgtType && targetNode.type === srcType
     );
   
@@ -131,7 +130,6 @@ export const getValidSourceNode = (targetPosition, targetNode, nodes, parentNode
   
     // Проверка на максимальное кол-во ответов
     if (sourceNode.type === 'question' && targetNode.type === 'choice') {
-        console.log("!!!!!!!!!!!!!", targetNode);
         const choicesCount = sourceNode.data?.question?.choices?.length || 0;
         return checkMaxChoices(choicesCount) ? null : sourceNode;
     }

@@ -411,6 +411,11 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
   const onNodeDrag = useCallback(throttle((event, draggedNode) => {
     if (!tempEdge) return;
 
+    if (draggedNode.parentId || draggedNode.type !== 'choice') {
+      setTempEdge(prev => ({ ...prev, hidden: true }));
+      return;
+    }  
+
     const targetNode = draggedNode;
     const parentTargetNode = targetNode?.parentId? getNode(targetNode.parentId) : null;
     // console.log("parentTargetNode", parentTargetNode);
@@ -461,7 +466,10 @@ const ReactFlowComponent = ({ self, quiz, onQuizChange }) => {
     setIsDragging(false);
     setTempEdge(null);
 
-    if (draggedNode.parentId !== null) saveChanges(); 
+    if (draggedNode.parentId !== null || draggedNode.type !== 'choice')  {
+      saveChanges();
+      return; //УДАЛИТЬ
+    } //ПОТОМ ИСПРАВИТЬ
 
     const parentNodedragged = getNode(draggedNode.parentId);
     const dropPosition = getSourceTargetPosition(draggedNode, parentNodedragged);

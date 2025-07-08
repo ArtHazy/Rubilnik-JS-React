@@ -6,6 +6,11 @@
     height: 100svh;
     position: relative;
 
+    @media only screen and (orientation: landscape) and (max-height: 700px) and (max-width: 1200px) {
+        height: 100%;
+        padding-top: 2.5rem;
+    }
+
     input{ text-align: center; }
     
     .RoomKeyInput{

@@ -67,7 +67,7 @@
   "play": {
     "qrLabels": {
       "joinLan": "LAN",
-      "joinRoom": "комната"
+      "joinRoom": "Комната"
     },
     "serverLabel": "Сервер",
     "errors": {
@@ -99,9 +99,9 @@
   "lobby": {
     "qrLabels": {
       "joinLan": "LAN",
-      "joinRoom": "Код комнаты"
+      "joinRoom": "Комната"
     },
-    "connectionCode": "Код комнаты",
+    "connectionCode": "Комната",
     "serverLabel": "Сервер",
     "startButton": "НАЧАТЬ"
   },

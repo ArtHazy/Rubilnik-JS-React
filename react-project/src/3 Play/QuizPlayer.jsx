@@ -1,4 +1,5 @@
 import { convertToFlowElements } from "../2 App/QuizEditNodes/functionsEditor";
+import { useNotification } from "../Components/ContextNotification";
 
 export class QuizPlayer {
     constructor(quiz, onQuizChange, ind) {
@@ -10,6 +11,7 @@ export class QuizPlayer {
 
         this.userAnswers = new Map(); // questionId -> Map(userId -> choiceInd)
         this.choiceCounts = new Map(); // questionId -> Map(choiceInd -> count)
+        const { showNotification } = useNotification();
     }
 
     getNodeById(id) {
@@ -188,6 +190,7 @@ export class QuizPlayer {
         const questionDbId = this.getCurrentQuestionDbId();
         if (!questionDbId) {
             console.log("No question DB ID, returning null");
+            showNotification("No question DB ID, returning null", 'error') //БЕЗ ПЕРЕВОДА
             console.groupEnd();
             return null;
         }
@@ -195,6 +198,36 @@ export class QuizPlayer {
         console.log(`Processing question DB ID: ${questionDbId}`);
         const choices = this.getChildChoices(this.currentNode.id);
         console.log("Child choices:", choices);
+
+        // 1. Проверка на единственный путь к следующему вопросу
+        const questionEdges = [];
+        for (const choice of choices) {
+            // Находим все ребра, исходящие из этого choice
+            const edgesFromChoice = this.edges.filter(e => e.source === choice.id);
+            
+            // Проверяем каждое ребро на подключение к вопросу
+            for (const edge of edgesFromChoice) {
+                const targetNode = this.getNodeById(edge.target);
+                if (targetNode.type === 'question') {
+                    questionEdges.push({
+                        choice,
+                        edge,
+                        targetNode
+                    });
+                }
+            }
+        }
+        
+        console.log("Edges leading to questions:", questionEdges);
+        
+        // Если только одно ребро ведет к вопросу
+        if (questionEdges.length === 1) {
+            console.log("Single path to next question found");
+            console.groupEnd();
+            return questionEdges[0].edge.target;
+        }
+
+        // 2. Продолжаем стандартную логику
 
         const totalAnswers = this.getTotalAnswers(questionDbId);
         console.log(`Total answers: ${totalAnswers}`);
@@ -209,7 +242,7 @@ export class QuizPlayer {
         // Собираем данные о всех вариантах
         const choicesData = choices.map((choice, index) => {
             const count = this.getChoiceCount(questionDbId, index);
-            const percentage = count / totalAnswers * 100;
+            const percentage = (totalAnswers <= 0)? 0 : count / totalAnswers * 100;
             
             // Находим ребро для этого варианта
             const edge = this.edges.find(e => e.source === choice.id);

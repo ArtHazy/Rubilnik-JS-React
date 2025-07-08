@@ -15,7 +15,7 @@ export const QR = ({ label, data, isSmall }) => {
         }
     }, [data]);
 
-    console.log("qrDataUrl: "+qrDataUrl)
+    // console.log("qrDataUrl: "+qrDataUrl)
 
     return (
         <div className={classname}>

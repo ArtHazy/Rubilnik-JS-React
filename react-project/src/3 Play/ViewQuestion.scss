@@ -6,20 +6,16 @@
     padding: 0;
     font-size: 1.2em;
     max-width: 1200px;
-    //overflow: scroll;
     @include scrollbar-hidden();
+
+    // button {
+    //     color: var(--color-dark);
+    // }
+
     .head{
         display: grid;
-        //min-height: 10%;
         align-content: center;
         justify-content: center;
-        
-        .title{
-            width:  100%;
-            height: 100%;
-            overflow: scroll;
-            @include scrollbar-hidden();
-        }
         background: var(--color-light);
         padding: 8px;
         box-sizing: border-box;
@@ -29,12 +25,42 @@
         max-height: 12em;
         min-height: 4.5em;
         margin-top: 1cm;
-        //display: flex;
-        //flex-direction: column;
-        //justify-content: end;
         margin-bottom: 1cm;
         width: 100%;
         max-width: 20cm;
+        position: relative;
+        overflow: hidden;
+        
+        .title{
+            width:  100%;
+            height: 100%;
+            overflow: scroll;
+            @include scrollbar-hidden();
+
+            word-wrap: break-word; /* Перенос длинных слов */
+            overflow-wrap: break-word; /* Современный вариант */
+            white-space: normal; /* Разрешаем перенос строк */
+        }        
+
+        .question-media {
+            width: 100%;
+            height: auto;
+            max-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-top: 8px;
+
+            img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                display: block;
+            }
+        }
     }
     .body{
         width: 100%;
@@ -69,10 +95,41 @@
                 position: relative;
                 padding: var(--def-gap);
                 width: 100%;
+                height: 100%;
                 @media (orientation: landscape){ height: 100%; }
                 @media (orientation: portrait){ min-height: 1.5cm;}
                 border-radius: var(--def-border-radius);
                 box-sizing: border-box;
+                overflow: hidden;
+                    
+                .choice-text {
+                    flex: 1;
+                    overflow: auto;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                    white-space: normal;
+                    display: block;
+                }
+                
+                .choice-media {
+                    flex-shrink: 0;
+                    width: 100%;
+                    max-height: 100%;
+                    margin-top: 8px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    overflow: hidden;
+                    border-radius: 8px;
+                    box-sizing: border-box;
+                    
+                    img {
+                        max-width: 100%;
+                        max-height: 100%;
+                        object-fit: contain;
+                    }
+                }
+
                 .letter{
                     position: absolute;
                     right: var(--def-gap);
@@ -84,29 +141,37 @@
                 &._0{
                     background: var(--choice-1-color);
                     &.revealed { 
-                    background: var(--choice-wrong-1-color);
-                    &.correct { background: var(--choice-1-color); }
+                        background: var(--choice-wrong-1-color);
+                        &.correct { 
+                            background: var(--choice-1-color); 
+                        }
                     }
                 }
                 &._1{
                     background: var(--choice-2-color);
                     &.revealed { 
-                    background: var(--choice-wrong-2-color);
-                    &.correct { background: var(--choice-2-color); }
+                        background: var(--choice-wrong-2-color);
+                        &.correct { 
+                            background: var(--choice-2-color); 
+                        }
                     }
                 }
                 &._2{
                     background: var(--choice-3-color);
                     &.revealed { 
-                    background: var(--choice-wrong-3-color);
-                    &.correct { background: var(--choice-3-color); }
+                        background: var(--choice-wrong-3-color);
+                        &.correct { 
+                            background: var(--choice-3-color); 
+                        }
                     }
                 }
                 &._3{
                     background: var(--choice-4-color);
                     &.revealed { 
-                    background: var(--choice-wrong-4-color);
-                    &.correct { background: var(--choice-4-color); }
+                        background: var(--choice-wrong-4-color);
+                        &.correct { 
+                            background: var(--choice-4-color); 
+                        }
                     }
                 }
             }
@@ -114,13 +179,9 @@
     }
     .controls{
         margin: var(--def-gap);
-        @include hstack();
+        // @include hstack();
         button{
-            font-family: Arial;
-            font-size: 0.7em;
-            color: var(--color-light);
-            min-width: 3cm;
-            min-height: .8cm;
+            padding: 8px;
         }
     }
 }
