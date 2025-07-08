@@ -5,6 +5,10 @@
     @include grid();
     grid-template-rows: 1fr auto auto 1fr;
 
+    .hstack {
+        gap: 24px;
+    }
+
     .id{ font-size: max( 3em, 12vw); color: var(--color-split1) };
     .text{ font-size: max( 1em, 4vw);  opacity: 20%;}
 }
